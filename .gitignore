@@ -1,0 +1,7 @@
+/target/
+/matplotlib/
+/logs/
+/build/
+.classpath
+.project
+.settings
