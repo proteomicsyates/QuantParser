@@ -126,7 +126,7 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 	@Override
 	public void process() {
 		processed = false;
-		log.info("reading census chro file...");
+		log.info("reading " + remoteFileRetrievers.size() + " census chro file(s) from parser " + hashCode() + "...");
 
 		try {
 

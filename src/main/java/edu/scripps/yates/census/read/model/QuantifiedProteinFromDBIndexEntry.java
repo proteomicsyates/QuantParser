@@ -321,4 +321,16 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractContainsQuantifie
 			quantifiedPSMInterface.setDiscarded(discarded);
 		}
 	}
+
+	@Override
+	public Set<QuantifiedPeptideInterface> getNonDiscardedQuantifiedPeptides() {
+		Set<QuantifiedPeptideInterface> ret = new HashSet<QuantifiedPeptideInterface>();
+		for (QuantifiedPeptideInterface peptide : getQuantifiedPeptides()) {
+			if (!peptide.isDiscarded()) {
+				ret.add(peptide);
+			}
+		}
+		return ret;
+
+	}
 }

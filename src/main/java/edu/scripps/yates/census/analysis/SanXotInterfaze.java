@@ -31,7 +31,6 @@ import edu.scripps.yates.utilities.util.Pair;
 
 public class SanXotInterfaze extends SwingWorker<Object, Void> {
 	private static final Logger log = Logger.getLogger(SanXotInterfaze.class);
-	private static final String defaultSanxotLocation = "C:\\Users\\Salva\\Desktop\\Dropbox\\Scripps\\Isotopolgue\\SanXoT_workflow";
 	private static final String SANXOT_EXE = "sanxot.exe";
 	private static final String KLIBRATE_EXE = "klibrate.exe";
 	private static final String SANXOT_SIEVE_EXE = "sanxotsieve.exe";
@@ -49,38 +48,23 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 	private static final String OUTLIER_REMOVAL_DONE = "outlier removal done";
 	public static final String STARTING_COMMAND = "starting_command";
 	public static final String END_COMMAND = "end_command";
-	public static final long DEFAULT_TIMEOUT = 1000 * 60 * 1;// 1 min
-	public final static int DEFAULT_MAX_ITERATIONS = 300;
 
 	public static final String END_ANALYSIS = "end analysis";
 	private static final String PYTHON = "python";
 
-	private static String sanxotLocation;
 	private final FileMappingResults fileMappingResults;
-	private final boolean performCalibration;
-	private final boolean performRemoveOutliers;
-	private final double fdr;
+
 	private FileWriter logFileWriter;
 	private final SanXotAnalysisResult result;
 	private boolean keepExperimentsSeparated;
-	private static long timeout = DEFAULT_TIMEOUT;
-	private static int maxIterations = DEFAULT_MAX_ITERATIONS;
-	private static boolean usePython = true;
+	private final QuantParameters quantParameters;
 
 	public SanXotInterfaze(FileMappingResults fileMappingResults, QuantParameters quantParameters) {
-		this(fileMappingResults, quantParameters, DEFAULT_TIMEOUT);
-	}
-
-	public SanXotInterfaze(FileMappingResults fileMappingResults, QuantParameters quantParameters, long timeout) {
-		sanxotLocation = defaultSanxotLocation;
+		this.quantParameters = quantParameters;
 		this.fileMappingResults = fileMappingResults;
-		performCalibration = quantParameters.isPerformCalibration();
-		performRemoveOutliers = quantParameters.isPerformRemoveOutliers();
 		// TODO customize the FDR depending on the level
-		fdr = quantParameters.getOutlierRemovalFdr();
 		result = new SanXotAnalysisResult(fileMappingResults);
-		SanXotInterfaze.timeout = timeout;
-		maxIterations = DEFAULT_MAX_ITERATIONS;
+
 	}
 
 	/**
@@ -98,8 +82,8 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 		this.keepExperimentsSeparated = keepExperimentsSeparated;
 	}
 
-	public void setSanxotLocation(String path) {
-		sanxotLocation = path;
+	public void setSanxotLocation(File folder) {
+		quantParameters.setSanxotScriptsFolder(folder);
 	}
 
 	/*
@@ -134,7 +118,7 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 		logFileWriter = new FileWriter(new File("C:\\Users\\Salva\\Desktop\\tmp\\sanxot_cmds.txt"));
 
 		log.info("Starting SanXot interfaze");
-		log.info("Timeout set at " + timeout / 1000 + " sg.");
+		log.info("Timeout set at " + quantParameters.getTimeout() / 1000 + " sg.");
 		int lowLevel = 0;
 		int upperLevel = 0;
 		File dataFile = fileMappingResults.getDataFile();
@@ -171,9 +155,9 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 					lowLevel = fileMappingResults.getFirstLevel().getFirstelement();
 					upperLevel = fileMappingResults.getNextAvailableLevel(lowLevel).getFirstelement();
 					// CALIBRATION
-					if (performCalibration) {
+					if (quantParameters.isPerformCalibration()) {
 						final KalibrateResultWrapper calibrationResult = calibrate(lowLevel, upperLevel, relatFile,
-								dataFile, "_" + datasetName);
+								dataFile, "_" + datasetName, quantParameters.getTimeout());
 						result.setKalibrationResult(calibrationResult);
 						if (calibrationResult.getCalibratedDataFile() != null) {
 							dataFile = calibrationResult.getCalibratedDataFile();
@@ -235,14 +219,14 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 									result.addExperimentIntegrationResult(integrationResult, experimentName);
 								}
 								// remove outliers
-								if (performRemoveOutliers) {
+								if (quantParameters.getOutlierRemovalFDR() != null) {
 									// not perform in the last interation
 									if (fileMappingResults.getNextAvailableLevel(upperLevel) == null) {
 									} else {
 										infoFile = integrationResult.getInfoFile();
 										final OutlierRemovalResultWrapper removeOutliers = removeOutliers(
 												lowLevelPair.getFirstelement(), upperLevelPair.getFirstelement(),
-												lowLevelPair.getSecondElement(), dataFile, infoFile, fdr);
+												lowLevelPair.getSecondElement(), dataFile, infoFile, quantParameters);
 										relatFile = removeOutliers.getRelatFile();
 										// second integration, using the
 										// variance
@@ -424,15 +408,16 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 	}
 
 	private OutlierRemovalResultWrapper removeOutliers(int lowLevel, int upperLevel, File relatFile, File dataFile,
-			File infoFile, Double fdr) throws IOException, InterruptedException, ExecutionException {
+			File infoFile, QuantParameters quantParameters)
+			throws IOException, InterruptedException, ExecutionException {
 		final String msg = "Removing outliers data from level " + lowLevel + " to " + upperLevel + "...";
 		log.info(msg);
 		firePropertyChange(OUTLIER_REMOVAL, null, msg);
 		String prefix = OutlierRemovalResultWrapper.DEFAULT_OUTLIER_REMOVAL_PREFIX + lowLevel + "-" + upperLevel;
-		CommandLine removeOutlierCommandLine = getRemoveOutliersCommandLine(relatFile, prefix, dataFile, infoFile, fdr,
-				fileMappingResults.getWorkingFolder());
+		CommandLine removeOutlierCommandLine = getRemoveOutliersCommandLine(relatFile, prefix, dataFile, infoFile,
+				fileMappingResults.getWorkingFolder(), quantParameters);
 
-		Long exitCode = runCommand(removeOutlierCommandLine);
+		Long exitCode = runCommand(removeOutlierCommandLine, quantParameters.getTimeout());
 		if (exitCode.longValue() != 0)
 			throw new IllegalArgumentException("Some error happen while outlier removal process");
 		OutlierRemovalResultWrapper outliersRemovalResults = new OutlierRemovalResultWrapper(
@@ -467,17 +452,18 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 		firePropertyChange(INTEGRATING, null, msg);
 		String prefixString = lowLevel + "-" + upperLevel + "_" + prefix;
 		CommandLine integratingCommandLine = getIntegrationCommandLine(relatFile, dataFile, infoFile, prefixString,
-				forzedVariance, fileMappingResults.getWorkingFolder());
+				forzedVariance, fileMappingResults.getWorkingFolder(), quantParameters);
 
-		final Long exitCode = runCommand(integratingCommandLine);
+		final Long exitCode = runCommand(integratingCommandLine, quantParameters.getTimeout());
 		if (exitCode.longValue() != 0) {
 			if (exitCode.longValue() == ProcessExecutor.TIMEOUT_ERROR_CODE) {
-				final String message = "The process cound't finish before the timeout of " + timeout + " ms";
+				final String message = "The process cound't finish before the timeout of "
+						+ quantParameters.getTimeout() + " ms";
 				log.warn(message);
 				log.info("Trying to fix the problem by forzing variance to 0 (Using -f v0)");
 				integratingCommandLine = getIntegrationCommandLine(relatFile, dataFile, infoFile, prefixString, 0.0,
-						fileMappingResults.getWorkingFolder());
-				Long newExitCode = runCommand(integratingCommandLine);
+						fileMappingResults.getWorkingFolder(), quantParameters);
+				Long newExitCode = runCommand(integratingCommandLine, quantParameters.getTimeout());
 				if (newExitCode.longValue() != 0) {
 					if (newExitCode.longValue() == ProcessExecutor.TIMEOUT_ERROR_CODE) {
 						log.warn(message);
@@ -550,17 +536,17 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 		return true;
 	}
 
-	private KalibrateResultWrapper calibrate(int lowLevel, int upperLevel, File relatFile, File dataFile, String key)
-			throws IOException, InterruptedException, ExecutionException {
+	private KalibrateResultWrapper calibrate(int lowLevel, int upperLevel, File relatFile, File dataFile, String key,
+			long timeout) throws IOException, InterruptedException, ExecutionException {
 		final String msg = "Calibrating data " + lowLevel + " - " + upperLevel + "...";
 
 		log.info(msg);
 		firePropertyChange(CALIBRATING, null, msg);
 		String prefix = KalibrateResultWrapper.DEFAULT_CALIBRATED_PREFIX + lowLevel + "-" + upperLevel + key;
 		CommandLine calibratingCommandLine = getCalibratingCommandLine(relatFile, dataFile, prefix,
-				fileMappingResults.getWorkingFolder());
+				fileMappingResults.getWorkingFolder(), quantParameters);
 
-		Long exitCode = runCommand(calibratingCommandLine);
+		Long exitCode = runCommand(calibratingCommandLine, timeout);
 		if (exitCode.longValue() != 0) {
 			throw new IllegalArgumentException(
 					"Some error happen while calibration process. You may consider to increase the timeout time by saxotInterface.setTimeout(long timeout) method");
@@ -581,41 +567,41 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 	}
 
 	public static CommandLine getCalibratingCommandLine(File relatFile, File dataFile, String prefix,
-			File workingFolder) {
+			File workingFolder, QuantParameters quantParameters) {
 		// klibrate -p"%directory%" -d%datafile% -r%level_1_2_file%
 		// -a%level_1_2_prefix% -g
 		CommandLine commandline = null;
-		if (usePython) {
+		if (quantParameters.isUsePython()) {
 			commandline = new CommandLine(PYTHON);
 
 		} else {
-			commandline = new CommandLine(new File(sanxotLocation) + File.separator + KLIBRATE_EXE);
+			commandline = new CommandLine(quantParameters.getSanxotScriptsFolder() + File.separator + KLIBRATE_EXE);
 		}
 		// String dataFileName = FilenameUtils.getName(fileMappingResults
 		// .getDataFile().getAbsolutePath());
 		String dataFileName = FilenameUtils.getName(dataFile.getAbsolutePath());
 		String level1File = FilenameUtils.getName(relatFile.getAbsolutePath());
-		if (usePython) {
-			commandline.addArgument(new File(sanxotLocation) + File.separator + KLIBRATE_PY);
+		if (quantParameters.isUsePython()) {
+			commandline.addArgument(quantParameters.getSanxotScriptsFolder() + File.separator + KLIBRATE_PY);
 		}
 		commandline.addArgument("-d" + dataFileName);
 		commandline.addArgument("-r" + level1File);
 		commandline.addArgument("-a" + prefix);
 		commandline.addArgument("-p" + workingFolder.getAbsolutePath());
-		commandline.addArgument("-m" + maxIterations);
+		commandline.addArgument("-m" + quantParameters.getMaxIterations());
 		commandline.addArgument("-g");
 		return commandline;
 	}
 
 	public static CommandLine getIntegrationCommandLine(File relatFile, File dataFile, File infoFile, String prefix,
-			Double forcedVariance, File workingFolder) {
+			Double forcedVariance, File workingFolder, QuantParameters quantParameters) {
 		// sanxot -d%level_1_2_prefix%_calibrated.xls -p"%directory%"
 		// -r%level_1_2_file% -a%level_1_2_prefix%%outliers_sufix% -g
 		CommandLine commandline = null;
-		if (usePython) {
+		if (quantParameters.isUsePython()) {
 			commandline = new CommandLine(PYTHON);
 		} else {
-			commandline = new CommandLine(new File(sanxotLocation) + File.separator + SANXOT_EXE);
+			commandline = new CommandLine(quantParameters.getSanxotScriptsFolder() + File.separator + SANXOT_EXE);
 		}
 
 		String dataFileName = FilenameUtils.getName(dataFile.getAbsolutePath());
@@ -623,8 +609,8 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 		String infoFileName = null;
 		if (infoFile != null)
 			infoFileName = FilenameUtils.getName(infoFile.getAbsolutePath());
-		if (usePython) {
-			commandline.addArgument(new File(sanxotLocation) + File.separator + SANXOT_PY);
+		if (quantParameters.isUsePython()) {
+			commandline.addArgument(quantParameters.getSanxotScriptsFolder() + File.separator + SANXOT_PY);
 		}
 		commandline.addArgument("-d" + dataFileName);
 		if (relatFile != null) {
@@ -648,33 +634,34 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 	}
 
 	public static CommandLine getRemoveOutliersCommandLine(File relatFile, String prefix, File dataFile, File infoFile,
-			Double fdr, File workingFolder) {
+			File workingFolder, QuantParameters quantParameters) {
 		// sanxotsieve -d%level_1_2_prefix%_calibrated.xls -p"%directory%"
 		// -r%level_1_2_file% -V%level_1_2_prefix%%outliers_sufix%_infoFile.txt
 		// -a%level_1_2_prefix%-sanxotsieve-results -f%fdr_outliers_removal%
 		CommandLine commandline = null;
-		if (usePython) {
+		if (quantParameters.isUsePython()) {
 			commandline = new CommandLine(PYTHON);
 		} else {
-			commandline = new CommandLine(new File(sanxotLocation) + File.separator + SANXOT_SIEVE_EXE);
+			commandline = new CommandLine(quantParameters.getSanxotScriptsFolder() + File.separator + SANXOT_SIEVE_EXE);
 		}
 		String dataFileName = FilenameUtils.getName(dataFile.getAbsolutePath());
 
 		String level1FileName = FilenameUtils.getName(relatFile.getAbsolutePath());
 		String infoFileName = FilenameUtils.getName(infoFile.getAbsolutePath());
-		if (usePython) {
-			commandline.addArgument(new File(sanxotLocation) + File.separator + SANXOT_SIEVE_PY);
+		if (quantParameters.isUsePython()) {
+			commandline.addArgument(quantParameters.getSanxotScriptsFolder() + File.separator + SANXOT_SIEVE_PY);
 		}
 		commandline.addArgument("-d" + dataFileName);
 		commandline.addArgument("-p" + workingFolder.getAbsolutePath());
 		commandline.addArgument("-r" + level1FileName);
 		commandline.addArgument("-V" + infoFileName);
 		commandline.addArgument("-a" + prefix);
-		commandline.addArgument("-f" + fdr.toString());
+		commandline.addArgument("-f" + quantParameters.getOutlierRemovalFDR().toString());
 		return commandline;
 	}
 
-	private Long runCommand(CommandLine commandLine) throws IOException, InterruptedException, ExecutionException {
+	private Long runCommand(CommandLine commandLine, long timeout)
+			throws IOException, InterruptedException, ExecutionException {
 		final String commandString = commandLine.toString();
 		log.info("Running: " + commandString);
 		logFileWriter.write(commandString + "\n");
@@ -704,34 +691,11 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 		return processExitCode;
 	}
 
-	public static void setTimeout(Long timeout) {
-		SanXotInterfaze.timeout = timeout;
-	}
-
-	public static void setMaxIterations(int maxIterations) {
-		SanXotInterfaze.maxIterations = maxIterations;
-	}
-
 	/**
 	 * @return the result
 	 */
 	public SanXotAnalysisResult getResult() {
 		return result;
-	}
-
-	/**
-	 * @return the usePython
-	 */
-	public static boolean isUsePython() {
-		return usePython;
-	}
-
-	/**
-	 * @param usePython
-	 *            the usePython to set
-	 */
-	public static void setUsePython(boolean usePython) {
-		SanXotInterfaze.usePython = usePython;
 	}
 
 	public static boolean checkAnyDifferentRelationShip(File relatFile) {

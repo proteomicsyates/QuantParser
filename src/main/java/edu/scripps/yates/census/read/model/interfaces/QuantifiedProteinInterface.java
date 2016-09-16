@@ -20,6 +20,8 @@ public interface QuantifiedProteinInterface extends GroupableProtein, HasRatios,
 
 	public Set<QuantifiedPeptideInterface> getQuantifiedPeptides();
 
+	public Set<QuantifiedPeptideInterface> getNonDiscardedQuantifiedPeptides();
+
 	public Set<QuantifiedPSMInterface> getQuantifiedPSMs();
 
 	public void addPeptide(QuantifiedPeptideInterface peptide);

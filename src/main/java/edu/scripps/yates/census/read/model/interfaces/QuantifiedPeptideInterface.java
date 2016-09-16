@@ -15,6 +15,8 @@ public interface QuantifiedPeptideInterface extends PeptideSequenceInterface, Ha
 
 	public Set<QuantifiedProteinInterface> getQuantifiedProteins();
 
+	public Set<QuantifiedProteinInterface> getNonDiscardedQuantifiedProteins();
+
 	public Set<QuantifiedPSMInterface> getQuantifiedPSMs();
 
 	public boolean addQuantifiedPSM(QuantifiedPSMInterface psm);

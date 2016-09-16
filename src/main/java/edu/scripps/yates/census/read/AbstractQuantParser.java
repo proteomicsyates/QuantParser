@@ -15,6 +15,8 @@ import java.util.regex.PatternSyntaxException;
 
 import org.apache.log4j.Logger;
 
+import edu.scripps.yates.annotations.uniprot.UniprotRetriever;
+import edu.scripps.yates.annotations.uniprot.xml.Entry;
 import edu.scripps.yates.census.analysis.QuantCondition;
 import edu.scripps.yates.census.read.model.interfaces.QuantParser;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
@@ -66,6 +68,8 @@ public abstract class AbstractQuantParser implements QuantParser {
 
 	protected final Map<RemoteSSHFileReference, QuantificationLabel> numeratorLabelByFile = new HashMap<RemoteSSHFileReference, QuantificationLabel>();
 	protected final Map<RemoteSSHFileReference, QuantificationLabel> denominatorLabelByFile = new HashMap<RemoteSSHFileReference, QuantificationLabel>();
+	private UniprotRetriever uplr;
+	private String uniprotVersion;
 
 	public AbstractQuantParser() {
 
@@ -213,8 +217,9 @@ public abstract class AbstractQuantParser implements QuantParser {
 	 */
 	@Override
 	public HashMap<String, Set<String>> getProteinToPeptidesMap() {
-		if (!processed)
-			process();
+		if (!processed) {
+			startProcess();
+		}
 		return proteinToPeptidesMap;
 	}
 
@@ -223,8 +228,9 @@ public abstract class AbstractQuantParser implements QuantParser {
 	 */
 	@Override
 	public HashMap<String, Set<String>> getPeptideToSpectraMap() {
-		if (!processed)
-			process();
+		if (!processed) {
+			startProcess();
+		}
 		return peptideToSpectraMap;
 	}
 
@@ -236,16 +242,16 @@ public abstract class AbstractQuantParser implements QuantParser {
 	@Override
 	public final Map<String, QuantifiedProteinInterface> getProteinMap() {
 		if (!processed) {
-			process();
-			expandProteinMap();
+			startProcess();
 		}
 		return localProteinMap;
 	}
 
 	@Override
 	public final Map<String, QuantifiedPSMInterface> getPSMMap() {
-		if (!processed)
-			process();
+		if (!processed) {
+			startProcess();
+		}
 		return localPsmMap;
 	}
 
@@ -260,8 +266,9 @@ public abstract class AbstractQuantParser implements QuantParser {
 
 	@Override
 	public Set<String> getTaxonomies() {
-		if (!processed)
-			process();
+		if (!processed) {
+			startProcess();
+		}
 		return taxonomies;
 	}
 
@@ -270,8 +277,9 @@ public abstract class AbstractQuantParser implements QuantParser {
 	 */
 	@Override
 	public Map<String, QuantifiedPeptideInterface> getPeptideMap() {
-		if (!processed)
-			process();
+		if (!processed) {
+			startProcess();
+		}
 		return localPeptideMap;
 	}
 
@@ -290,6 +298,15 @@ public abstract class AbstractQuantParser implements QuantParser {
 	@Override
 	public void setDistinguishModifiedPeptides(boolean distinguishModifiedPeptides) {
 		this.distinguishModifiedPeptides = distinguishModifiedPeptides;
+	}
+
+	private void startProcess() {
+		// first process
+		process();
+		// second expand protein map
+		mapIPI2Uniprot();
+		// third merge proteins with secondary accessions
+		mergeProteinsWithSecondaryAccessionsInParser();
 	}
 
 	protected abstract void process();
@@ -344,16 +361,20 @@ public abstract class AbstractQuantParser implements QuantParser {
 	}
 
 	/**
-	 * To be called after process()
+	 * To be called after process().<br>
+	 * If proteins have IPI accessions, look for the mapping from IPI 2 Uniprot.
+	 * It adds new entries to the map, but it doesn't create any new
+	 * {@link QuantifiedProteinInterface}
 	 */
-	private void expandProteinMap() {
+	private void mapIPI2Uniprot() {
 		if (!localProteinMap.isEmpty()) {
 			int originalNumberOfEntries = localProteinMap.size();
 			Map<String, QuantifiedProteinInterface> newMap = new HashMap<String, QuantifiedProteinInterface>();
 			for (String accession : localProteinMap.keySet()) {
-				final QuantifiedProteinInterface quantProtein = localProteinMap.get(accession);
+
 				final Pair<String, String> acc = FastaParser.getACC(accession);
 				if (acc.getSecondElement().equals("IPI")) {
+					final QuantifiedProteinInterface quantProtein = localProteinMap.get(accession);
 					if (acc.getFirstelement().equals("IPI00114389.4")) {
 						log.info("asdf");
 					}
@@ -387,4 +408,81 @@ public abstract class AbstractQuantParser implements QuantParser {
 			}
 		}
 	}
+
+	public void enableProteinMergingBySecondaryAccessions(UniprotRetriever uplr, String uniprotVersion) {
+		this.uplr = uplr;
+		this.uniprotVersion = uniprotVersion;
+	}
+
+	private void mergeProteinsWithSecondaryAccessionsInParser() {
+		if (uplr == null) {
+			return;
+		}
+		Set<String> accessions = new HashSet<String>();
+		accessions.addAll(getProteinMap().keySet());
+		String latestVersion = "latestVersion";
+		if (uniprotVersion != null) {
+			latestVersion = "version " + uniprotVersion;
+		}
+		int numObsoletes = 0;
+		log.info("Merging proteins that have secondary accessions according to Uniprot " + latestVersion + "...");
+		Map<String, Entry> annotatedProteins = uplr.getAnnotatedProteins(uniprotVersion, accessions);
+		int initialSize = getProteinMap().size();
+		for (String accession : accessions) {
+			if (accession.equalsIgnoreCase("B7Z634")) {
+				log.info(accession);
+			}
+			QuantifiedProteinInterface quantifiedProtein = getProteinMap().get(accession);
+			Entry entry = annotatedProteins.get(accession);
+			if (entry != null && entry.getAccession() != null && !entry.getAccession().isEmpty()) {
+				String primaryAccession = entry.getAccession().get(0);
+				if (!accession.equals(primaryAccession) && !accession.contains(primaryAccession)) {
+					log.info("Replacing Uniprot accession " + quantifiedProtein.getAccession() + " by "
+							+ primaryAccession);
+					quantifiedProtein.setAccession(primaryAccession);
+					if (getProteinMap().containsKey(primaryAccession)) {
+						// there was already a protein with that
+						// primaryAccession
+						QuantifiedProteinInterface quantifiedProtein2 = getProteinMap().get(primaryAccession);
+						// merge quantifiedPRotein and quantifiedPRotein2
+						mergeProteins(quantifiedProtein, quantifiedProtein2);
+
+					} else {
+						numObsoletes++;
+					}
+					// remove old/secondary accession
+					getProteinMap().remove(accession);
+					getProteinMap().put(primaryAccession, quantifiedProtein);
+
+				}
+			} else {
+				// // remove the protein because is obsolete
+				// log.info(quantifiedProtein.getAccession());
+				// parser.getProteinMap().remove(accession);
+			}
+		}
+		int finalSize = getProteinMap().size();
+		if (initialSize != finalSize) {
+			log.info(initialSize - finalSize
+					+ " proteins with secondary accessions were merged with the corresponding protein with primary accession");
+		}
+		log.info("Obsolete accessions from " + numObsoletes + " proteins were changed to primary ones");
+	}
+
+	private static void mergeProteins(QuantifiedProteinInterface proteinReceiver,
+			QuantifiedProteinInterface proteinDonor) {
+		// PSMS
+		for (QuantifiedPSMInterface psm : proteinDonor.getQuantifiedPSMs()) {
+			proteinReceiver.addPSM(psm);
+			psm.getQuantifiedProteins().remove(proteinDonor);
+			psm.addQuantifiedProtein(proteinReceiver);
+		}
+		// Peptides
+		for (QuantifiedPeptideInterface peptide : proteinDonor.getQuantifiedPeptides()) {
+			proteinReceiver.addPeptide(peptide);
+
+			peptide.getQuantifiedProteins().remove(proteinDonor);
+		}
+	}
+
 }

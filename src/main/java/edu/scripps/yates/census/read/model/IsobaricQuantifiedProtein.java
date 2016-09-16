@@ -701,4 +701,16 @@ public class IsobaricQuantifiedProtein extends AbstractContainsQuantifiedPSMs im
 			quantifiedPSMInterface.setDiscarded(discarded);
 		}
 	}
+
+	@Override
+	public Set<QuantifiedPeptideInterface> getNonDiscardedQuantifiedPeptides() {
+		Set<QuantifiedPeptideInterface> ret = new HashSet<QuantifiedPeptideInterface>();
+		for (QuantifiedPeptideInterface peptide : getQuantifiedPeptides()) {
+			if (!peptide.isDiscarded()) {
+				ret.add(peptide);
+			}
+		}
+		return ret;
+
+	}
 }

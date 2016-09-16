@@ -250,4 +250,16 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 			quantifiedPSMInterface.setDiscarded(discarded);
 		}
 	}
+
+	@Override
+	public Set<QuantifiedProteinInterface> getNonDiscardedQuantifiedProteins() {
+		Set<QuantifiedProteinInterface> ret = new HashSet<QuantifiedProteinInterface>();
+		for (QuantifiedProteinInterface protein : getQuantifiedProteins()) {
+			if (!protein.isDiscarded()) {
+				ret.add(protein);
+			}
+		}
+		return ret;
+
+	}
 }

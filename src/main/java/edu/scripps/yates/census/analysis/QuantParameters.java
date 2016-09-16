@@ -1,15 +1,26 @@
 package edu.scripps.yates.census.analysis;
 
-public class QuantParameters {
-	private boolean performCalibration = true;
-	private boolean performRemoveOutliers = true;
-	private double fdr = 0.01;
+import java.io.File;
 
-	public QuantParameters(boolean calibration, boolean outlierRemoval,
-			double fdr) {
+public class QuantParameters {
+	public static final long DEFAULT_TIMEOUT = 1000 * 60 * 1;// 1 min
+	public static final int DEFAULT_MAX_ITERATIONS = 300;
+
+	private boolean performCalibration = true;
+	private Double outlierRemovalFDR = 0.01;
+	private File sanxotScriptsFolder;
+	private long timeout;
+	private int maxIterations;
+	private boolean usePython = true; // by default
+
+	public QuantParameters(boolean calibration, Double outlierRemovalFDR, File sanxotScriptsFolder, long timeout,
+			int maxIterations, boolean usePython) {
 		performCalibration = calibration;
-		performRemoveOutliers = outlierRemoval;
-		this.fdr = fdr;
+		this.outlierRemovalFDR = outlierRemovalFDR;
+		this.sanxotScriptsFolder = sanxotScriptsFolder;
+		setTimeout(timeout);
+		setMaxIterations(maxIterations);
+		setUsePython(usePython);
 	}
 
 	public QuantParameters() {
@@ -24,17 +35,10 @@ public class QuantParameters {
 	}
 
 	/**
-	 * @return the performRemoveOutliers
-	 */
-	public boolean isPerformRemoveOutliers() {
-		return performRemoveOutliers;
-	}
-
-	/**
 	 * @return the fdr
 	 */
-	public double getOutlierRemovalFdr() {
-		return fdr;
+	public Double getOutlierRemovalFDR() {
+		return outlierRemovalFDR;
 	}
 
 	/**
@@ -46,18 +50,70 @@ public class QuantParameters {
 	}
 
 	/**
-	 * @param performRemoveOutliers
-	 *            the performRemoveOutliers to set
-	 */
-	public void setPerformRemoveOutliers(boolean performRemoveOutliers) {
-		this.performRemoveOutliers = performRemoveOutliers;
-	}
-
-	/**
 	 * @param fdr
 	 *            the fdr to set
 	 */
-	public void setFdr(double fdr) {
-		this.fdr = fdr;
+	public void setOutlierRemovalFDR(Double fdr) {
+		outlierRemovalFDR = fdr;
+	}
+
+	/**
+	 * @return the sanxotScriptsFolder
+	 */
+	public File getSanxotScriptsFolder() {
+		return sanxotScriptsFolder;
+	}
+
+	/**
+	 * @param sanxotScriptsFolder
+	 *            the sanxotScriptsFolder to set
+	 */
+	public void setSanxotScriptsFolder(File sanxotScriptsFolder) {
+		this.sanxotScriptsFolder = sanxotScriptsFolder;
+	}
+
+	/**
+	 * @return the timeout
+	 */
+	public long getTimeout() {
+		return timeout;
+	}
+
+	/**
+	 * @param timeout
+	 *            the timeout to set
+	 */
+	public void setTimeout(long timeout) {
+		this.timeout = timeout;
+	}
+
+	/**
+	 * @return the maxIterations
+	 */
+	public int getMaxIterations() {
+		return maxIterations;
+	}
+
+	/**
+	 * @param maxIterations
+	 *            the maxIterations to set
+	 */
+	public void setMaxIterations(int maxIterations) {
+		this.maxIterations = maxIterations;
+	}
+
+	/**
+	 * @return the usePython
+	 */
+	public boolean isUsePython() {
+		return usePython;
+	}
+
+	/**
+	 * @param usePython
+	 *            the usePython to set
+	 */
+	public void setUsePython(boolean usePython) {
+		this.usePython = usePython;
 	}
 }

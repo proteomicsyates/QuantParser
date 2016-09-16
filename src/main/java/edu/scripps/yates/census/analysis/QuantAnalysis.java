@@ -55,7 +55,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 	private final QuantCondition condition1;
 	private final QuantCondition condition2;
 	private FileMappingResults fileMappingResults;
-	private final QuantParameters quantParameters = new QuantParameters();
+	private QuantParameters quantParameters = new QuantParameters();
 	private final Map<String, List<String>> replicateAndExperimentNames = new HashMap<String, List<String>>();
 	private DBIndexInterface dbIndex;
 
@@ -208,10 +208,11 @@ public class QuantAnalysis implements PropertyChangeListener {
 		if (fileMappingResults == null) {
 			writeFiles();
 		}
-		SanXotInterfaze sanxot = new SanXotInterfaze(fileMappingResults, quantParameters);
 		if (timeout != null) {
-			SanXotInterfaze.setTimeout(timeout);
+			quantParameters.setTimeout(timeout);
 		}
+		SanXotInterfaze sanxot = new SanXotInterfaze(fileMappingResults, quantParameters);
+
 		if (keepExperimentsSeparated != null) {
 			sanxot.setKeepExperimentsSeparated(keepExperimentsSeparated);
 		}
@@ -447,7 +448,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 			}
 
 		} finally {
-			log.info(numPSMsDiscarded + " PSMs were tagged as discarded ");
+			log.info(numPSMsDiscarded + " PSMs were tagged as discarded and will not be considered in the analysis");
 			if (dataFileWriter != null) {
 				dataFileWriter.close();
 			}
@@ -1545,16 +1546,16 @@ public class QuantAnalysis implements PropertyChangeListener {
 		}
 	}
 
-	public void setOutlierRemoval(boolean b) {
-		quantParameters.setPerformRemoveOutliers(b);
-	}
-
 	public void setCalibration(boolean b) {
 		quantParameters.setPerformCalibration(b);
 	}
 
-	public void setFDR(double fdr) {
-		quantParameters.setFdr(fdr);
+	public void setOutlierRemovalFDR(Double fdr) {
+		quantParameters.setOutlierRemovalFDR(fdr);
+	}
+
+	public void setSanxotScriptsLocationFolder(File folder) {
+		quantParameters.setSanxotScriptsFolder(folder);
 	}
 
 	public void setFastaFile(File fastaFile) {
@@ -1671,5 +1672,9 @@ public class QuantAnalysis implements PropertyChangeListener {
 		}
 
 		this.proteinAccClusters = proteinAccClusters;
+	}
+
+	public void setQuantParameters(QuantParameters quantParameters2) {
+		quantParameters = quantParameters2;
 	}
 }
