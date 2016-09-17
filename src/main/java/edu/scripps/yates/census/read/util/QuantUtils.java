@@ -2,8 +2,11 @@ package edu.scripps.yates.census.read.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -11,6 +14,7 @@ import java.util.Set;
 import edu.scripps.yates.census.analysis.QuantCondition;
 import edu.scripps.yates.census.read.CensusOutParser;
 import edu.scripps.yates.census.read.model.CensusRatio;
+import edu.scripps.yates.census.read.model.Ion;
 import edu.scripps.yates.census.read.model.IsobaricQuantifiedPSM;
 import edu.scripps.yates.census.read.model.IsobaricQuantifiedPeptide;
 import edu.scripps.yates.census.read.model.QuantifiedPSMFromCensusOut;
@@ -27,7 +31,7 @@ import edu.scripps.yates.utilities.model.enums.AmountType;
 import edu.scripps.yates.utilities.model.enums.CombinationType;
 import edu.scripps.yates.utilities.proteomicsmodel.Amount;
 
-public class QuantUtil {
+public class QuantUtils {
 	public static void addToPeptideMap(QuantifiedPSMInterface quantifiedPSM, Map<String, QuantifiedPeptide> map,
 			boolean distinguishModifiedPeptides) {
 		final String sequenceKey = getSequenceKey(quantifiedPSM, distinguishModifiedPeptides);
@@ -83,7 +87,7 @@ public class QuantUtil {
 		}
 
 		for (IsobaricQuantifiedPSM quantifiedPSM : quantifiedPSMs) {
-			QuantUtil.addToIsobaricPeptideMap(quantifiedPSM, peptideMap, distringuishModifiedPeptides);
+			QuantUtils.addToIsobaricPeptideMap(quantifiedPSM, peptideMap, distringuishModifiedPeptides);
 			final String sequenceKey = getSequenceKey(quantifiedPSM, distringuishModifiedPeptides);
 			final IsobaricQuantifiedPeptide createdPeptide = peptideMap.get(sequenceKey);
 
@@ -262,5 +266,108 @@ public class QuantUtil {
 			}
 		}
 		return null;
+	}
+
+	public static List<QuantifiedPeptideInterface> getSortedPeptidesByFullSequence(
+			Collection<QuantifiedPeptideInterface> peptides) {
+		List<QuantifiedPeptideInterface> ret = new ArrayList<QuantifiedPeptideInterface>();
+		ret.addAll(peptides);
+		Collections.sort(ret, new Comparator<QuantifiedPeptideInterface>() {
+
+			@Override
+			public int compare(QuantifiedPeptideInterface o1, QuantifiedPeptideInterface o2) {
+				return o1.getFullSequence().compareTo(o2.getFullSequence());
+			}
+		});
+		return ret;
+	}
+
+	/**
+	 * Get a CVS list of peptide sequences after sorting them alphabetically by
+	 * the sequence
+	 *
+	 * @param peptides
+	 * @return
+	 */
+	public static String getPeptidesFullSequenceString(Collection<QuantifiedPeptideInterface> peptides) {
+
+		StringBuilder sb = new StringBuilder();
+		for (QuantifiedPeptideInterface peptide : QuantUtils.getSortedPeptidesByFullSequence(peptides)) {
+			if (!"".equals(sb.toString()))
+				sb.append("_");
+			sb.append(peptide.getFullSequence());
+		}
+		return sb.toString();
+	}
+
+	public static List<QuantifiedProteinInterface> getSortedQuantifiedProteinsByAcc(
+			Collection<QuantifiedProteinInterface> proteinsToSort) {
+		List<QuantifiedProteinInterface> list = new ArrayList<QuantifiedProteinInterface>();
+		list.addAll(proteinsToSort);
+		Collections.sort(list, new Comparator<QuantifiedProteinInterface>() {
+			@Override
+			public int compare(QuantifiedProteinInterface o1, QuantifiedProteinInterface o2) {
+				return o1.getAccession().compareTo(o2.getAccession());
+			}
+		});
+		return list;
+	}
+
+	public static int getIonCount(QuantifiedPSMInterface psm, QuantificationLabel label) {
+		if (psm instanceof IsobaricQuantifiedPSM) {
+			IsobaricQuantifiedPSM isoPSM = (IsobaricQuantifiedPSM) psm;
+			final Set<Ion> ionsByLabel = isoPSM.getIonsByLabel(label);
+			if (ionsByLabel != null) {
+				return ionsByLabel.size();
+			}
+		}
+		return 0;
+	}
+
+	/**
+	 * Removes the peptide from its proteins and all its psms from irs proteins
+	 *
+	 * @param quantifiedPeptide
+	 */
+	public static void discardPeptide(QuantifiedPeptideInterface quantifiedPeptide) {
+
+		// remove this peptide from its proteins
+		final Set<QuantifiedProteinInterface> quantifiedProteins = quantifiedPeptide.getQuantifiedProteins();
+		for (QuantifiedProteinInterface quantifiedProtein : quantifiedProteins) {
+			quantifiedProtein.getQuantifiedPeptides().remove(quantifiedPeptide);
+		}
+		// get all psms of that peptide
+		final Set<QuantifiedPSMInterface> quantifiedPSMs = quantifiedPeptide.getQuantifiedPSMs();
+		for (QuantifiedPSMInterface quantifiedPSM : quantifiedPSMs) {
+			// remove this psms from its proteins
+			final Iterator<QuantifiedProteinInterface> quantifiedProteins2 = quantifiedPSM.getQuantifiedProteins()
+					.iterator();
+			while (quantifiedProteins2.hasNext()) {
+				final QuantifiedProteinInterface quantifiedProtein = quantifiedProteins2.next();
+				quantifiedProtein.getQuantifiedPSMs().remove(quantifiedPSM);
+			}
+			// remove this psm from the parser
+			// parser.getPSMMap().remove(quantifiedPSM.getPSMIdentifier());
+		}
+	}
+
+	/**
+	 * Removes the protein from its peptides and from its psms
+	 *
+	 * @param quantifiedProtein
+	 */
+	public static void discardProtein(QuantifiedProteinInterface quantifiedProtein) {
+
+		// remove this protein from its peptides
+		final Set<QuantifiedPeptideInterface> quantifiedPeptides = quantifiedProtein.getQuantifiedPeptides();
+		for (QuantifiedPeptideInterface quantifiedPeptide : quantifiedPeptides) {
+			quantifiedPeptide.getQuantifiedProteins().remove(quantifiedProtein);
+		}
+		// remove the protein from its psms
+		final Set<QuantifiedPSMInterface> quantifiedPSMs = quantifiedProtein.getQuantifiedPSMs();
+		for (QuantifiedPSMInterface quantifiedPSM : quantifiedPSMs) {
+			quantifiedPSM.getQuantifiedProteins().remove(quantifiedProtein);
+		}
+
 	}
 }

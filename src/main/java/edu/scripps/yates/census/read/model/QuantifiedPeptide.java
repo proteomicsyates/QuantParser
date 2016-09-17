@@ -11,7 +11,7 @@ import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
-import edu.scripps.yates.census.read.util.QuantUtil;
+import edu.scripps.yates.census.read.util.QuantUtils;
 import edu.scripps.yates.utilities.model.enums.AggregationLevel;
 import edu.scripps.yates.utilities.proteomicsmodel.Amount;
 
@@ -32,7 +32,7 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 	 * @param distinguishModifiedSequences
 	 */
 	public QuantifiedPeptide(QuantifiedPSMInterface quantPSM, boolean distinguishModifiedSequences) {
-		sequenceKey = QuantUtil.getSequenceKey(quantPSM, distinguishModifiedSequences);
+		sequenceKey = QuantUtils.getSequenceKey(quantPSM, distinguishModifiedSequences);
 		this.distinguishModifiedSequences = distinguishModifiedSequences;
 		addQuantifiedPSM(quantPSM);
 
@@ -49,7 +49,7 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 	 */
 	@Override
 	public boolean addQuantifiedPSM(QuantifiedPSMInterface quantPSM) {
-		if (sequenceKey.equals(QuantUtil.getSequenceKey(quantPSM, distinguishModifiedSequences))) {
+		if (sequenceKey.equals(QuantUtils.getSequenceKey(quantPSM, distinguishModifiedSequences))) {
 			return psms.add(quantPSM);
 		}
 		return false;
@@ -80,8 +80,8 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 		}
 
 		for (QuantifiedPSMInterface quantifiedPSM : quantifiedPSMs) {
-			QuantUtil.addToPeptideMap(quantifiedPSM, peptideMap, distringuishModifiedPeptides);
-			final String sequenceKey = QuantUtil.getSequenceKey(quantifiedPSM, distringuishModifiedPeptides);
+			QuantUtils.addToPeptideMap(quantifiedPSM, peptideMap, distringuishModifiedPeptides);
+			final String sequenceKey = QuantUtils.getSequenceKey(quantifiedPSM, distringuishModifiedPeptides);
 			final QuantifiedPeptide createdPeptide = peptideMap.get(sequenceKey);
 
 			// add it to the proteins of the psm
@@ -154,7 +154,7 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 	public Set<String> getRawFileNames() {
 		Set<String> ret = new HashSet<String>();
 		for (QuantifiedPSMInterface quantPSM : psms) {
-			ret.add(quantPSM.getRawFileName());
+			ret.addAll(quantPSM.getRawFileNames());
 		}
 		return ret;
 	}
@@ -209,7 +209,7 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 
 	@Override
 	public Set<QuantRatio> getNonInfinityRatios() {
-		return QuantUtil.getNonInfinityRatios(getRatios());
+		return QuantUtils.getNonInfinityRatios(getRatios());
 	}
 
 	@Override
@@ -226,13 +226,13 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 	@Override
 	public QuantRatio getConsensusRatio(QuantCondition quantConditionNumerator,
 			QuantCondition quantConditionDenominator) {
-		return QuantUtil.getAverageRatio(QuantUtil.getNonInfinityRatios(getRatios()), AggregationLevel.PEPTIDE);
+		return QuantUtils.getAverageRatio(QuantUtils.getNonInfinityRatios(getRatios()), AggregationLevel.PEPTIDE);
 	}
 
 	@Override
 	public QuantRatio getConsensusRatio(QuantCondition quantConditionNumerator,
 			QuantCondition quantConditionDenominator, String replicateName) {
-		return QuantUtil.getAverageRatio(QuantUtil.getNonInfinityRatios(getRatios(replicateName)),
+		return QuantUtils.getAverageRatio(QuantUtils.getNonInfinityRatios(getRatios(replicateName)),
 				AggregationLevel.PEPTIDE);
 	}
 

@@ -12,7 +12,7 @@ import edu.scripps.yates.census.read.model.interfaces.HasIsoRatios;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
-import edu.scripps.yates.census.read.util.QuantUtil;
+import edu.scripps.yates.census.read.util.QuantUtils;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
 import edu.scripps.yates.utilities.maths.Maths;
 
@@ -38,7 +38,7 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements Quan
 	 */
 
 	public boolean addPSM(IsobaricQuantifiedPSM quantPSM) {
-		if (sequenceKey.equals(QuantUtil.getSequenceKey(quantPSM, distinguishModifiedSequences))) {
+		if (sequenceKey.equals(QuantUtils.getSequenceKey(quantPSM, distinguishModifiedSequences))) {
 			return psms.add(quantPSM);
 		}
 		return false;
@@ -89,7 +89,7 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements Quan
 	public Set<String> getRawFileNames() {
 		Set<String> ret = new HashSet<String>();
 		for (QuantifiedPSMInterface quantPSM : psms) {
-			ret.add(quantPSM.getRawFileName());
+			ret.addAll(quantPSM.getRawFileNames());
 		}
 		return ret;
 	}

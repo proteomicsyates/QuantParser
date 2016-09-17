@@ -14,7 +14,7 @@ import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
-import edu.scripps.yates.census.read.util.QuantUtil;
+import edu.scripps.yates.census.read.util.QuantUtils;
 import edu.scripps.yates.utilities.fasta.FastaParser;
 import edu.scripps.yates.utilities.grouping.GroupablePSM;
 import edu.scripps.yates.utilities.grouping.ProteinEvidence;
@@ -164,7 +164,7 @@ public class QuantifiedProteinFromCensusOut extends AbstractContainsQuantifiedPS
 		Set<String> ret = new HashSet<String>();
 		final Set<QuantifiedPSMInterface> quantifiedPSMs2 = getQuantifiedPSMs();
 		for (QuantifiedPSMInterface quantifiedPSMInterface : quantifiedPSMs2) {
-			ret.add(quantifiedPSMInterface.getRawFileName());
+			ret.addAll(quantifiedPSMInterface.getRawFileNames());
 		}
 		return ret;
 	}
@@ -253,7 +253,7 @@ public class QuantifiedProteinFromCensusOut extends AbstractContainsQuantifiedPS
 
 	@Override
 	public Set<QuantRatio> getNonInfinityRatios() {
-		return QuantUtil.getNonInfinityRatios(getRatios());
+		return QuantUtils.getNonInfinityRatios(getRatios());
 	}
 
 	@Override
@@ -270,13 +270,13 @@ public class QuantifiedProteinFromCensusOut extends AbstractContainsQuantifiedPS
 	@Override
 	public QuantRatio getConsensusRatio(QuantCondition quantConditionNumerator,
 			QuantCondition quantConditionDenominator) {
-		return QuantUtil.getAverageRatio(QuantUtil.getNonInfinityRatios(getRatios()), AggregationLevel.PROTEIN);
+		return QuantUtils.getAverageRatio(QuantUtils.getNonInfinityRatios(getRatios()), AggregationLevel.PROTEIN);
 	}
 
 	@Override
 	public QuantRatio getConsensusRatio(QuantCondition quantConditionNumerator,
 			QuantCondition quantConditionDenominator, String replicateName) {
-		return QuantUtil.getAverageRatio(QuantUtil.getNonInfinityRatios(getRatios(replicateName)),
+		return QuantUtils.getAverageRatio(QuantUtils.getNonInfinityRatios(getRatios(replicateName)),
 				AggregationLevel.PROTEIN);
 	}
 

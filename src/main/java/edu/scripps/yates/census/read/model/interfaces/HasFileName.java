@@ -7,4 +7,6 @@ public interface HasFileName {
 
 	public Set<String> getFileNames();
 
+	public Set<String> getRawFileNames();
+
 }

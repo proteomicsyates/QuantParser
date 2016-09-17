@@ -1,4 +1,4 @@
-package edu.scripps.yates.census.export;
+package edu.scripps.yates.census.analysis.quant;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -212,7 +212,7 @@ public class RawQuantValuesExporter {
 		boolean dmdv = false;
 		boolean dvdm = false;
 
-		final String fileName = quantifiedPSM.getRawFileName();
+		final String fileName = quantifiedPSM.getRawFileNames().iterator().next();
 		if (fileName.contains("DmDv"))
 			dmdv = true;
 		if (fileName.contains("DvDm"))

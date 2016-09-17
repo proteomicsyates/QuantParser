@@ -11,7 +11,7 @@ import edu.scripps.yates.utilities.proteomicsmodel.HasAmounts;
  * @author Salva
  *
  */
-public interface QuantifiedPeptideInterface extends PeptideSequenceInterface, HasRatios, HasAmounts, HasFileName {
+public interface QuantifiedPeptideInterface extends PeptideSequenceInterface, HasRatios, HasAmounts, QuantifiedItem {
 
 	public Set<QuantifiedProteinInterface> getQuantifiedProteins();
 
@@ -20,11 +20,5 @@ public interface QuantifiedPeptideInterface extends PeptideSequenceInterface, Ha
 	public Set<QuantifiedPSMInterface> getQuantifiedPSMs();
 
 	public boolean addQuantifiedPSM(QuantifiedPSMInterface psm);
-
-	public Set<String> getRawFileNames();
-
-	public void setDiscarded(boolean b);
-
-	public boolean isDiscarded();
 
 }

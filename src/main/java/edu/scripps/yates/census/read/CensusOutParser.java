@@ -419,7 +419,7 @@ public class CensusOutParser extends AbstractQuantParser {
 	 */
 	private String getSpectrumPerChromatographicPeakAndPerSaltStepKey(QuantifiedPSMInterface psm) {
 		StringBuilder sb = new StringBuilder();
-		String rawFileName = psm.getRawFileName();
+		String rawFileName = psm.getRawFileNames().iterator().next();
 		if (rawFileName.startsWith("H")) {
 			rawFileName = rawFileName.substring(1);
 		}

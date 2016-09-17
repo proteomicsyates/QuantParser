@@ -12,9 +12,7 @@ import edu.scripps.yates.utilities.proteomicsmodel.HasAmounts;
  *
  */
 public interface QuantifiedPSMInterface
-		extends HasKey, PeptideSequenceInterface, GroupablePSM, HasRatios, HasAmounts, HasFileName {
-
-	public String getRawFileName();
+		extends HasKey, PeptideSequenceInterface, GroupablePSM, HasRatios, HasAmounts, QuantifiedItem {
 
 	public void setQuantifiedPeptide(QuantifiedPeptideInterface quantifiedPeptide);
 
@@ -40,10 +38,6 @@ public interface QuantifiedPSMInterface
 	 * @return
 	 */
 	public Double getMaxPeak();
-
-	public boolean isDiscarded();
-
-	public void setDiscarded(boolean discarded);
 
 	public boolean isSingleton();
 

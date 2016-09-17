@@ -12,7 +12,7 @@ import edu.scripps.yates.utilities.proteomicsmodel.HasAmounts;
  * @author Salva
  *
  */
-public interface QuantifiedProteinInterface extends GroupableProtein, HasRatios, HasAmounts, HasKey, HasFileName {
+public interface QuantifiedProteinInterface extends GroupableProtein, HasRatios, HasAmounts, HasKey, QuantifiedItem {
 
 	public String getDescription();
 
@@ -37,11 +37,5 @@ public interface QuantifiedProteinInterface extends GroupableProtein, HasRatios,
 	public void setAccession(String primaryAccession);
 
 	public void setDescription(String description);
-
-	public Set<String> getRawFileNames();
-
-	public void setDiscarded(boolean b);
-
-	public boolean isDiscarded();
 
 }

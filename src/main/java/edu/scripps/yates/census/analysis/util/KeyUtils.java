@@ -52,8 +52,8 @@ public class KeyUtils {
 	public static String getSpectrumKey(QuantifiedPSMInterface psm, boolean chargeSensible) {
 
 		StringBuilder sb = new StringBuilder();
-		if (psm.getRawFileName() != null)
-			sb.append(psm.getRawFileName());
+		if (psm.getRawFileNames() != null && !psm.getRawFileNames().isEmpty())
+			sb.append(psm.getRawFileNames().iterator().next());
 		if (!"".equals(sb.toString())) {
 			sb.append("-");
 		}

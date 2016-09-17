@@ -35,7 +35,7 @@ import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
 import edu.scripps.yates.census.read.util.IonExclusion;
-import edu.scripps.yates.census.read.util.QuantUtil;
+import edu.scripps.yates.census.read.util.QuantUtils;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
 import edu.scripps.yates.dbindex.DBIndexInterface;
 import edu.scripps.yates.dbindex.io.DBIndexSearchParams;
@@ -398,7 +398,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 							case SILAC:
 								// fittingWeight =
 								// QuantUtil.getRegressionFactor(quantifiedPSM.getAmounts());
-								fittingWeight = QuantUtil.getMaxAmountValueByAmountType(quantifiedPSM.getAmounts(),
+								fittingWeight = QuantUtils.getMaxAmountValueByAmountType(quantifiedPSM.getAmounts(),
 										AmountType.AREA);
 								if (fittingWeight == null) {
 									log.info("no regression factor");
@@ -422,7 +422,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 							// have more than one ratio per PSM, because we will
 							// write each ratio in different replicates
 							if (quantifiedPSM instanceof QuantifiedPSMFromCensusOut) {
-								QuantRatio validRatio = QuantUtil
+								QuantRatio validRatio = QuantUtils
 										.getValidRatio((QuantifiedPSMFromCensusOut) quantifiedPSM);
 								if (validRatio != null) {
 									ratioValue = validRatio.getLog2Ratio(condition1, condition2);
@@ -1307,9 +1307,14 @@ public class QuantAnalysis implements PropertyChangeListener {
 				final HashMap<String, Set<String>> map2 = new HashMap<String, Set<String>>();
 				for (String proteinKey : proteinMap.keySet()) {
 					final QuantifiedProteinInterface quantifiedProtein = proteinMap.get(proteinKey);
-
+					if (quantifiedProtein.isDiscarded()) {
+						continue;
+					}
 					final Set<QuantifiedPSMInterface> quantifiedPSMs = quantifiedProtein.getQuantifiedPSMs();
 					for (QuantifiedPSMInterface quantifiedPSM : quantifiedPSMs) {
+						if (quantifiedPSM.isDiscarded()) {
+							continue;
+						}
 						final String peptideKey = KeyUtils.getSequenceChargeKey(quantifiedPSM, chargeStateSensible);
 						if (map2.containsKey(proteinKey)) {
 							map2.get(proteinKey).add(peptideKey);
