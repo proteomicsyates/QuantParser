@@ -176,7 +176,9 @@ public class QuantUtils {
 			}
 		}
 		if (ratioValues.isEmpty()) {
-			return null;
+			CensusRatio ret = new CensusRatio(Double.NaN, false, cond1, cond2, aggregationLevel,
+					"Peptide with no PSM ratios");
+			return ret;
 		}
 		final Double[] ratioValuesArray = ratioValues.toArray(new Double[0]);
 		final double mean = Maths.mean(ratioValuesArray);
