@@ -65,7 +65,10 @@ public class CensusRatio implements QuantRatio {
 		this.labelNumerator = labelNumerator;
 		this.labelDenominator = labelDenominator;
 		this.description = description;
-		if (isLogValue != null && isLogValue && ratioValue != null) {
+		if ((ratioValue != null && ratioValue.isNaN()) || ratioValue == null) {
+			nonLogValue = Double.NaN;
+			log2Value = Double.NaN;
+		} else if (isLogValue != null && isLogValue && ratioValue != null) {
 			nonLogValue = Math.pow(2, ratioValue);
 		} else {
 			nonLogValue = ratioValue;
@@ -81,6 +84,9 @@ public class CensusRatio implements QuantRatio {
 
 	@Override
 	public Double getLog2Ratio(QuantificationLabel labelNumerator, QuantificationLabel labelDenominator) {
+		if (log2Value != null && Double.isNaN(log2Value)) {
+			return Double.NaN;
+		}
 		if (!containsLabels()) {
 			throw new IllegalArgumentException("This ratio doesn't contains labels");
 		}
@@ -95,6 +101,9 @@ public class CensusRatio implements QuantRatio {
 	}
 
 	private double getLog2Value() {
+		if (log2Value != null && Double.isNaN(log2Value)) {
+			return Double.NaN;
+		}
 		if (log2Value == null) {
 			log2Value = Math.log(nonLogValue) / Math.log(2);
 		}
@@ -103,6 +112,9 @@ public class CensusRatio implements QuantRatio {
 
 	@Override
 	public Double getNonLogRatio(QuantificationLabel labelNumerator, QuantificationLabel labelDenominator) {
+		if (nonLogValue != null && Double.isNaN(nonLogValue)) {
+			return Double.NaN;
+		}
 		if (!containsLabels()) {
 			throw new IllegalArgumentException("This ratio doesn't contains labels");
 		}
@@ -141,7 +153,9 @@ public class CensusRatio implements QuantRatio {
 
 	@Override
 	public Double getLog2Ratio(QuantCondition quantConditionNumerator, QuantCondition quantConditionDenominator) {
-
+		if (log2Value != null && Double.isNaN(log2Value)) {
+			return Double.NaN;
+		}
 		if (this.quantConditionNumerator.equals(quantConditionNumerator)
 				&& this.quantConditionDenominator.equals(quantConditionDenominator)) {
 			return getLog2Value();
@@ -158,6 +172,9 @@ public class CensusRatio implements QuantRatio {
 
 	@Override
 	public Double getNonLogRatio(QuantCondition quantConditionNumerator, QuantCondition quantConditionDenominator) {
+		if (nonLogValue != null && Double.isNaN(nonLogValue)) {
+			return Double.NaN;
+		}
 		if (this.quantConditionNumerator.equals(quantConditionNumerator)
 				&& this.quantConditionDenominator.equals(quantConditionDenominator)) {
 			return nonLogValue;
