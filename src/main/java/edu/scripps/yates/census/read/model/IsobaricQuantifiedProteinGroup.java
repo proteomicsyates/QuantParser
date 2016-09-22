@@ -16,12 +16,13 @@ import edu.scripps.yates.census.read.util.QuantificationLabel;
 import edu.scripps.yates.utilities.fasta.FastaParser;
 import edu.scripps.yates.utilities.grouping.ProteinGroup;
 import edu.scripps.yates.utilities.maths.Maths;
+import edu.scripps.yates.utilities.model.enums.AggregationLevel;
 
 public class IsobaricQuantifiedProteinGroup extends QuantifiedProteinGroup implements HasIsoRatios {
 	private static final String SEPARATOR = " ## ";
 	private final Set<IsobaricQuantifiedProtein> proteins = new HashSet<IsobaricQuantifiedProtein>();
 	private Set<IsoRatio> ratios;
-	private final Map<String, Double> countRatiosByConditionKey = new HashMap<String, Double>();
+	private final Map<String, IonCountRatio> countRatiosByConditionKey = new HashMap<String, IonCountRatio>();
 	private Map<QuantCondition, Set<Ion>> ionsByConditions;
 
 	public IsobaricQuantifiedProteinGroup(ProteinGroup proteinGroup) {
@@ -324,7 +325,7 @@ public class IsobaricQuantifiedProteinGroup extends QuantifiedProteinGroup imple
 	 * @return
 	 */
 	@Override
-	public double getCountRatio(QuantCondition cond1, QuantCondition cond2) {
+	public IonCountRatio getIonCountRatio(QuantCondition cond1, QuantCondition cond2) {
 		String conditionKey = cond1.getName() + cond2.getName();
 		if (countRatiosByConditionKey.containsKey(conditionKey)) {
 			return countRatiosByConditionKey.get(conditionKey);
@@ -339,16 +340,8 @@ public class IsobaricQuantifiedProteinGroup extends QuantifiedProteinGroup imple
 			if (ions2 != null) {
 				numIons2 = ions2.size();
 			}
-			if (numIons1 == 0 && numIons2 != 0) {
-				return Double.NEGATIVE_INFINITY;
-			}
-			if (numIons1 != 0 && numIons2 == 0) {
-				return Double.POSITIVE_INFINITY;
-			}
-			if (numIons1 == 0 && numIons2 == 0) {
-				return Double.NaN;
-			}
-			final double ratio = Math.log(1.0 * numIons1 / numIons2) / Math.log(2);
+			IonCountRatio ratio = new IonCountRatio(numIons1, numIons2, cond1, cond2, AggregationLevel.PROTEINGROUP);
+
 			countRatiosByConditionKey.put(conditionKey, ratio);
 			return ratio;
 		}

@@ -5,6 +5,7 @@ import java.util.Set;
 
 import edu.scripps.yates.census.analysis.QuantCondition;
 import edu.scripps.yates.census.read.model.Ion;
+import edu.scripps.yates.census.read.model.IonCountRatio;
 import edu.scripps.yates.census.read.model.IonSerie;
 import edu.scripps.yates.census.read.model.IsoRatio;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
@@ -35,7 +36,7 @@ public interface HasIsoRatios extends HasRatios {
 
 	public Set<Ion> getSingletonIonsByLabel(QuantificationLabel label);
 
-	public double getCountRatio(QuantCondition condition1, QuantCondition condition2);
+	public IonCountRatio getIonCountRatio(QuantCondition condition1, QuantCondition condition2);
 
 	Double getMaxPeak();
 

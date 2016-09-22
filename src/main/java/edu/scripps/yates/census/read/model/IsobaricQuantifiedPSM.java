@@ -55,7 +55,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	private final Map<QuantCondition, QuantificationLabel> labelsByConditions;
 	private final Map<QuantificationLabel, QuantCondition> conditionsByLabels;
 	private QuantifiedPeptideInterface quantifiedPeptide;
-	private final HashMap<String, Double> countRatiosByConditionKey = new HashMap<String, Double>();
+	private final HashMap<String, IonCountRatio> countRatiosByConditionKey = new HashMap<String, IonCountRatio>();
 	private final Set<Amount> amounts = new HashSet<Amount>();
 	private final Set<String> fileNames = new HashSet<String>();
 	private boolean discarded;
@@ -792,7 +792,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	 * @return
 	 */
 	@Override
-	public double getCountRatio(QuantCondition cond1, QuantCondition cond2) {
+	public IonCountRatio getIonCountRatio(QuantCondition cond1, QuantCondition cond2) {
 		String conditionKey = cond1.getName() + cond2.getName();
 		if (countRatiosByConditionKey.containsKey(conditionKey)) {
 			return countRatiosByConditionKey.get(conditionKey);
@@ -807,16 +807,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 			if (ions2 != null) {
 				numIons2 = ions2.size();
 			}
-			if (numIons1 == 0 && numIons2 != 0) {
-				return Double.NEGATIVE_INFINITY;
-			}
-			if (numIons1 != 0 && numIons2 == 0) {
-				return Double.POSITIVE_INFINITY;
-			}
-			if (numIons1 == 0 && numIons2 == 0) {
-				return Double.NaN;
-			}
-			final double ratio = Math.log(1.0 * numIons1 / numIons2) / Math.log(2);
+			IonCountRatio ratio = new IonCountRatio(numIons1, numIons2, cond1, cond2, AggregationLevel.PSM);
 			countRatiosByConditionKey.put(conditionKey, ratio);
 			return ratio;
 		}

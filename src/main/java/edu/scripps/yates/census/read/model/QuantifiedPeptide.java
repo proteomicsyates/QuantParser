@@ -226,6 +226,7 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 	@Override
 	public QuantRatio getConsensusRatio(QuantCondition quantConditionNumerator,
 			QuantCondition quantConditionDenominator) {
+
 		return QuantUtils.getAverageRatio(QuantUtils.getNonInfinityRatios(getRatios()), AggregationLevel.PEPTIDE);
 	}
 

@@ -9,15 +9,18 @@ import java.util.Set;
 
 import edu.scripps.yates.census.analysis.QuantCondition;
 import edu.scripps.yates.census.read.model.interfaces.HasIsoRatios;
+import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
 import edu.scripps.yates.census.read.util.QuantUtils;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
 import edu.scripps.yates.utilities.maths.Maths;
+import edu.scripps.yates.utilities.model.enums.AggregationLevel;
 
 public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements QuantifiedPeptideInterface, HasIsoRatios {
-	private final Map<String, Double> countRatiosByConditionKey = new HashMap<String, Double>();
+
+	private final Map<String, IonCountRatio> countRatiosByConditionKey = new HashMap<String, IonCountRatio>();
 	private Map<QuantCondition, Set<Ion>> ionsByConditions;
 
 	/**
@@ -323,7 +326,7 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements Quan
 	 * @return
 	 */
 	@Override
-	public double getCountRatio(QuantCondition cond1, QuantCondition cond2) {
+	public IonCountRatio getIonCountRatio(QuantCondition cond1, QuantCondition cond2) {
 		String conditionKey = cond1.getName() + cond2.getName();
 		if (countRatiosByConditionKey.containsKey(conditionKey)) {
 			return countRatiosByConditionKey.get(conditionKey);
@@ -338,16 +341,7 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements Quan
 			if (ions2 != null) {
 				numIons2 = ions2.size();
 			}
-			if (numIons1 == 0 && numIons2 != 0) {
-				return Double.NEGATIVE_INFINITY;
-			}
-			if (numIons1 != 0 && numIons2 == 0) {
-				return Double.POSITIVE_INFINITY;
-			}
-			if (numIons1 == 0 && numIons2 == 0) {
-				return Double.NaN;
-			}
-			final double ratio = Math.log(1.0 * numIons1 / numIons2) / Math.log(2);
+			IonCountRatio ratio = new IonCountRatio(numIons1, numIons2, cond1, cond2, AggregationLevel.PEPTIDE);
 			countRatiosByConditionKey.put(conditionKey, ratio);
 			return ratio;
 		}
@@ -372,4 +366,24 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements Quan
 		return ionsByConditions;
 	}
 
+	/**
+	 * In case of OspbaricQuantifiedPeptide, the consensusRatio is the
+	 * ionCountRatio
+	 */
+	@Override
+	public QuantRatio getConsensusRatio(QuantCondition quantConditionNumerator,
+			QuantCondition quantConditionDenominator) {
+		return getIonCountRatio(quantConditionNumerator, quantConditionDenominator);
+	}
+
+	/**
+	 * In case of OspbaricQuantifiedPeptide, the consensusRatio is the
+	 * ionCountRatio
+	 */
+	@Override
+	public QuantRatio getConsensusRatio(QuantCondition quantConditionNumerator,
+			QuantCondition quantConditionDenominator, String replicateName) {
+		// TODO Auto-generated method stub
+		return super.getConsensusRatio(quantConditionNumerator, quantConditionDenominator, replicateName);
+	}
 }
