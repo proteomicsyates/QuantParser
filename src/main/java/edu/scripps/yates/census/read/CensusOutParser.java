@@ -24,9 +24,9 @@ import edu.scripps.yates.census.analysis.util.KeyUtils;
 import edu.scripps.yates.census.read.model.CensusRatio;
 import edu.scripps.yates.census.read.model.QuantAmount;
 import edu.scripps.yates.census.read.model.QuantStaticMaps;
-import edu.scripps.yates.census.read.model.QuantifiedPSMFromCensusOut;
+import edu.scripps.yates.census.read.model.QuantifiedPSM;
 import edu.scripps.yates.census.read.model.QuantifiedPeptide;
-import edu.scripps.yates.census.read.model.QuantifiedProteinFromCensusOut;
+import edu.scripps.yates.census.read.model.QuantifiedProtein;
 import edu.scripps.yates.census.read.model.QuantifiedProteinFromDBIndexEntry;
 import edu.scripps.yates.census.read.model.RatioScore;
 import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
@@ -36,6 +36,7 @@ import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface
 import edu.scripps.yates.census.read.util.MyHashMap;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
 import edu.scripps.yates.dbindex.IndexedProtein;
+import edu.scripps.yates.dbindex.util.PeptideNotFoundInDBIndexException;
 import edu.scripps.yates.utilities.model.enums.AggregationLevel;
 import edu.scripps.yates.utilities.model.enums.AmountType;
 import edu.scripps.yates.utilities.proteomicsmodel.Amount;
@@ -150,7 +151,7 @@ public class CensusOutParser extends AbstractQuantParser {
 	@Override
 	protected void process() {
 		processed = false;
-		log.info("Processing file...");
+		log.info("Processing quant file...");
 
 		try {
 			int numDecoy = 0;
@@ -233,13 +234,10 @@ public class CensusOutParser extends AbstractQuantParser {
 							if (proteinGroup.isEmpty()) {
 								continue;
 							}
-							try {
-								processPSMLine(line, sLineHeaderList, proteinGroup, conditionsByLabels,
-										labelsByConditions, labelNumerator, labelDenominator, experimentKey,
-										remoteFileRetriever, false);
-							} catch (IllegalArgumentException e) {
-								log.error(e);
-							}
+
+							processPSMLine(line, sLineHeaderList, proteinGroup, conditionsByLabels, labelsByConditions,
+									labelNumerator, labelDenominator, experimentKey, remoteFileRetriever, false);
+
 						} else if (line.startsWith(SINGLETON_S)) {
 							if (skipSingletons) {
 								continue;
@@ -250,20 +248,23 @@ public class CensusOutParser extends AbstractQuantParser {
 							if (proteinGroup.isEmpty()) {
 								continue;
 							}
-							try {
-								processPSMLine(line, singletonSLineHeaderList, proteinGroup, conditionsByLabels,
-										labelsByConditions, labelNumerator, labelDenominator, experimentKey,
-										remoteFileRetriever, true);
-							} catch (IllegalArgumentException e) {
-								log.error(e);
-							}
+
+							processPSMLine(line, singletonSLineHeaderList, proteinGroup, conditionsByLabels,
+									labelsByConditions, labelNumerator, labelDenominator, experimentKey,
+									remoteFileRetriever, true);
+
 						}
 
 					}
 
 					br.close();
 
+				} catch (PeptideNotFoundInDBIndexException e) {
+					if (!super.ignoreNotFoundPeptidesInDB) {
+						throw e;
+					}
 				} catch (Exception e) {
+
 					e.printStackTrace();
 				} finally {
 					if (br != null) {
@@ -451,16 +452,16 @@ public class CensusOutParser extends AbstractQuantParser {
 		if (mapValues.containsKey(SCAN)) {
 			scanNumber = Double.valueOf(mapValues.get(SCAN)).intValue();
 		}
-		QuantifiedPSMInterface quantifiedPSM = new QuantifiedPSMFromCensusOut(sequence, labelsByConditions,
+		QuantifiedPSMInterface quantifiedPSM = new QuantifiedPSM(sequence, labelsByConditions,
 				peptideToSpectraMap, scanNumber, Double.valueOf(mapValues.get(CS)).intValue(), chargeStateSensible,
-				rawFileName, singleton);
+				distinguishModifiedPeptides, rawFileName, singleton);
 
 		// xcorr
 		Float xcorr = null;
 		if (mapValues.containsKey(XCORR)) {
 			try {
 				xcorr = Float.valueOf(mapValues.get(XCORR));
-				((QuantifiedPSMFromCensusOut) quantifiedPSM).setXcorr(xcorr);
+				((QuantifiedPSM) quantifiedPSM).setXcorr(xcorr);
 			} catch (NumberFormatException e) {
 
 			}
@@ -470,7 +471,7 @@ public class CensusOutParser extends AbstractQuantParser {
 		if (mapValues.containsKey(DELTACN)) {
 			try {
 				deltaCn = Float.valueOf(mapValues.get(DELTACN));
-				((QuantifiedPSMFromCensusOut) quantifiedPSM).setDeltaCN(deltaCn);
+				((QuantifiedPSM) quantifiedPSM).setDeltaCN(deltaCn);
 			} catch (NumberFormatException e) {
 
 			}
@@ -690,7 +691,7 @@ public class CensusOutParser extends AbstractQuantParser {
 
 		// create the peptide
 		QuantifiedPeptideInterface quantifiedPeptide = null;
-		final String peptideKey = KeyUtils.getSequenceChargeKey(quantifiedPSM, chargeStateSensible);
+		final String peptideKey = KeyUtils.getSequenceKey(quantifiedPSM, distinguishModifiedPeptides);
 		if (QuantStaticMaps.peptideMap.containsKey(peptideKey)) {
 			quantifiedPeptide = QuantStaticMaps.peptideMap.getItem(peptideKey);
 		} else {
@@ -698,7 +699,8 @@ public class CensusOutParser extends AbstractQuantParser {
 		}
 		QuantStaticMaps.peptideMap.addItem(quantifiedPeptide);
 		quantifiedPeptide.addFileName(inputFileName);
-		quantifiedPSM.setQuantifiedPeptide(quantifiedPeptide);
+
+		quantifiedPSM.setQuantifiedPeptide(quantifiedPeptide, true);
 		// add peptide to map
 		if (!localPeptideMap.containsKey(peptideKey)) {
 			localPeptideMap.put(peptideKey, quantifiedPeptide);
@@ -708,8 +710,10 @@ public class CensusOutParser extends AbstractQuantParser {
 			String cleanSeq = quantifiedPSM.getSequence();
 			final Set<IndexedProtein> indexedProteins = dbIndex.getProteins(cleanSeq);
 			if (indexedProteins.isEmpty()) {
-				throw new IllegalArgumentException("The peptide " + cleanSeq
-						+ " is not found in Fasta DB.\nReview the default indexing parameters such as the number of allowed misscleavages.");
+				if (!ignoreNotFoundPeptidesInDB) {
+					throw new PeptideNotFoundInDBIndexException("The peptide " + cleanSeq
+							+ " is not found in Fasta DB.\nReview the default indexing parameters such as the number of allowed misscleavages.");
+				}
 				// log.warn("The peptide " + cleanSeq +
 				// " is not found in Fasta DB.");
 				// continue;
@@ -734,16 +738,16 @@ public class CensusOutParser extends AbstractQuantParser {
 				// add to protein-experiment map
 				addToMap(experimentKey, experimentToProteinsMap, proteinKey);
 				// add psm to the protein
-				newQuantifiedProtein.addPSM(quantifiedPSM);
+				newQuantifiedProtein.addPSM(quantifiedPSM, true);
 				// add peptide to the protein
-				newQuantifiedProtein.addPeptide(quantifiedPeptide);
+				newQuantifiedProtein.addPeptide(quantifiedPeptide, true);
 				// add protein to the psm
-				quantifiedPSM.addQuantifiedProtein(newQuantifiedProtein);
+				quantifiedPSM.addQuantifiedProtein(newQuantifiedProtein, true);
 				// add to the map (if it was already
 				// there is not a problem, it will be
 				// only once)
 				addToMap(proteinKey, proteinToPeptidesMap,
-						KeyUtils.getSequenceChargeKey(quantifiedPSM, chargeStateSensible));
+						KeyUtils.getSequenceKey(quantifiedPSM, distinguishModifiedPeptides));
 
 			}
 		}
@@ -752,16 +756,16 @@ public class CensusOutParser extends AbstractQuantParser {
 
 		for (QuantifiedProteinInterface quantifiedProtein : quantifiedProteins) {
 			// add psm to the proteins
-			quantifiedProtein.addPSM(quantifiedPSM);
+			quantifiedProtein.addPSM(quantifiedPSM, true);
 			// add protein to the psm
-			quantifiedPSM.addQuantifiedProtein(quantifiedProtein);
+			quantifiedPSM.addQuantifiedProtein(quantifiedProtein, true);
 			// add peptide to the protein
-			quantifiedProtein.addPeptide(quantifiedPeptide);
+			quantifiedProtein.addPeptide(quantifiedPeptide, true);
 			// add to the map (if it was already there
 			// is not a problem, it will be only once)
 			String proteinKey = quantifiedProtein.getKey();
 			addToMap(proteinKey, proteinToPeptidesMap,
-					KeyUtils.getSequenceChargeKey(quantifiedPSM, chargeStateSensible));
+					KeyUtils.getSequenceKey(quantifiedPSM, distinguishModifiedPeptides));
 			// add protein to protein map
 			localProteinMap.put(proteinKey, quantifiedProtein);
 			// add to protein-experiment map
@@ -817,7 +821,7 @@ public class CensusOutParser extends AbstractQuantParser {
 		if (QuantStaticMaps.proteinMap.containsKey(proteinACC)) {
 			quantifiedProtein = QuantStaticMaps.proteinMap.getItem(proteinACC);
 		} else {
-			quantifiedProtein = new QuantifiedProteinFromCensusOut(proteinACC);
+			quantifiedProtein = new QuantifiedProtein(proteinACC);
 			String description = mapValues.get(DESCRIPTION);
 			quantifiedProtein.setDescription(description);
 		}

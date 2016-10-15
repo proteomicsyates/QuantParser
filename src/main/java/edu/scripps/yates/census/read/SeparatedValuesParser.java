@@ -18,9 +18,9 @@ import edu.scripps.yates.census.analysis.QuantCondition;
 import edu.scripps.yates.census.analysis.util.KeyUtils;
 import edu.scripps.yates.census.read.model.CensusRatio;
 import edu.scripps.yates.census.read.model.QuantStaticMaps;
-import edu.scripps.yates.census.read.model.QuantifiedPSMFromCensusOut;
+import edu.scripps.yates.census.read.model.QuantifiedPSM;
 import edu.scripps.yates.census.read.model.QuantifiedPeptide;
-import edu.scripps.yates.census.read.model.QuantifiedProteinFromCensusOut;
+import edu.scripps.yates.census.read.model.QuantifiedProtein;
 import edu.scripps.yates.census.read.model.QuantifiedProteinFromDBIndexEntry;
 import edu.scripps.yates.census.read.model.RatioScore;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
@@ -28,6 +28,7 @@ import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
 import edu.scripps.yates.dbindex.IndexedProtein;
+import edu.scripps.yates.dbindex.util.PeptideNotFoundInDBIndexException;
 import edu.scripps.yates.utilities.fasta.FastaParser;
 import edu.scripps.yates.utilities.model.enums.AggregationLevel;
 import edu.scripps.yates.utilities.remote.RemoteSSHFileReference;
@@ -189,6 +190,10 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 
 					br.close();
 
+				} catch (PeptideNotFoundInDBIndexException e) {
+					if (!super.ignoreNotFoundPeptidesInDB) {
+						throw e;
+					}
 				} catch (Exception e) {
 					e.printStackTrace();
 				} finally {
@@ -256,8 +261,9 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 			chargeState = Integer.valueOf(FastaParser.getChargeStateFromPSMIdentifier(psmId));
 		} catch (Exception e) {
 		}
-		QuantifiedPSMInterface quantifiedPSM = new QuantifiedPSMFromCensusOut(sequence, labelsByConditions,
-				peptideToSpectraMap, scanNumber, chargeState, chargeStateSensible, rawFileName, false);
+		QuantifiedPSMInterface quantifiedPSM = new QuantifiedPSM(sequence, labelsByConditions,
+				peptideToSpectraMap, scanNumber, chargeState, chargeStateSensible, distinguishModifiedPeptides,
+				rawFileName, false);
 
 		quantifiedPSM.addFileName(inputFileName);
 		final String psmKey = KeyUtils.getSpectrumKey(quantifiedPSM, chargeStateSensible);
@@ -280,8 +286,8 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 						labelDenominator, AggregationLevel.PSM, "RATIO");
 				// set singleton
 				if (ratioValue == 0 || Double.compare(Double.POSITIVE_INFINITY, ratioValue) == 0) {
-					if (quantifiedPSM instanceof QuantifiedPSMFromCensusOut) {
-						((QuantifiedPSMFromCensusOut) quantifiedPSM).setSingleton(true);
+					if (quantifiedPSM instanceof QuantifiedPSM) {
+						((QuantifiedPSM) quantifiedPSM).setSingleton(true);
 					}
 				}
 				if (ratioWeigth != null) {
@@ -300,7 +306,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 
 		// create the peptide
 		QuantifiedPeptideInterface quantifiedPeptide = null;
-		final String peptideKey = KeyUtils.getSequenceChargeKey(quantifiedPSM, chargeStateSensible);
+		final String peptideKey = KeyUtils.getSequenceKey(quantifiedPSM, distinguishModifiedPeptides);
 		if (QuantStaticMaps.peptideMap.containsKey(peptideKey)) {
 			quantifiedPeptide = QuantStaticMaps.peptideMap.getItem(peptideKey);
 		} else {
@@ -308,7 +314,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 		}
 		QuantStaticMaps.peptideMap.addItem(quantifiedPeptide);
 		quantifiedPeptide.addFileName(inputFileName);
-		quantifiedPSM.setQuantifiedPeptide(quantifiedPeptide);
+		quantifiedPSM.setQuantifiedPeptide(quantifiedPeptide, true);
 		// add peptide to map
 		if (!localPeptideMap.containsKey(peptideKey)) {
 			localPeptideMap.put(peptideKey, quantifiedPeptide);
@@ -318,8 +324,10 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 			String cleanSeq = quantifiedPSM.getSequence();
 			final Set<IndexedProtein> indexedProteins = dbIndex.getProteins(cleanSeq);
 			if (indexedProteins.isEmpty()) {
-				throw new IllegalArgumentException("The peptide " + cleanSeq
-						+ " is not found in Fasta DB.\nReview the default indexing parameters such as the number of allowed misscleavages.");
+				if (!super.ignoreNotFoundPeptidesInDB) {
+					throw new PeptideNotFoundInDBIndexException("The peptide " + cleanSeq
+							+ " is not found in Fasta DB.\nReview the default indexing parameters such as the number of allowed misscleavages.");
+				}
 				// log.warn("The peptide " + cleanSeq +
 				// " is not found in Fasta DB.");
 				// continue;
@@ -335,15 +343,15 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 					quantifiedProtein = new QuantifiedProteinFromDBIndexEntry(indexedProtein);
 				}
 				// add psm to the proteins
-				quantifiedProtein.addPSM(quantifiedPSM);
+				quantifiedProtein.addPSM(quantifiedPSM, true);
 				// add protein to the psm
-				quantifiedPSM.addQuantifiedProtein(quantifiedProtein);
+				quantifiedPSM.addQuantifiedProtein(quantifiedProtein, true);
 				// add peptide to the protein
-				quantifiedProtein.addPeptide(quantifiedPeptide);
+				quantifiedProtein.addPeptide(quantifiedPeptide, true);
 				// add to the map (if it was already there
 				// is not a problem, it will be only once)
 				addToMap(proteinKey, proteinToPeptidesMap,
-						KeyUtils.getSequenceChargeKey(quantifiedPSM, chargeStateSensible));
+						KeyUtils.getSequenceKey(quantifiedPSM, distinguishModifiedPeptides));
 				// add protein to protein map
 				localProteinMap.put(proteinKey, quantifiedProtein);
 				// add to protein-experiment map
@@ -358,18 +366,18 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 			if (QuantStaticMaps.proteinMap.containsKey(proteinKey)) {
 				quantifiedProtein = QuantStaticMaps.proteinMap.getItem(proteinKey);
 			} else {
-				quantifiedProtein = new QuantifiedProteinFromCensusOut(proteinKey);
+				quantifiedProtein = new QuantifiedProtein(proteinKey);
 			}
 			// add psm to the proteins
-			quantifiedProtein.addPSM(quantifiedPSM);
+			quantifiedProtein.addPSM(quantifiedPSM, true);
 			// add protein to the psm
-			quantifiedPSM.addQuantifiedProtein(quantifiedProtein);
+			quantifiedPSM.addQuantifiedProtein(quantifiedProtein, true);
 			// add peptide to the protein
-			quantifiedProtein.addPeptide(quantifiedPeptide);
+			quantifiedProtein.addPeptide(quantifiedPeptide, true);
 			// add to the map (if it was already there
 			// is not a problem, it will be only once)
 			addToMap(proteinKey, proteinToPeptidesMap,
-					KeyUtils.getSequenceChargeKey(quantifiedPSM, chargeStateSensible));
+					KeyUtils.getSequenceKey(quantifiedPSM, distinguishModifiedPeptides));
 			// add protein to protein map
 			localProteinMap.put(proteinKey, quantifiedProtein);
 			// add to protein-experiment map

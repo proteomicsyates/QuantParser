@@ -57,8 +57,12 @@ public class KeyUtils {
 		if (!"".equals(sb.toString())) {
 			sb.append("-");
 		}
-		if (psm.getScan() != null)
+		if (psm.getScan() != null) {
 			sb.append(psm.getScan());
+		}
+		if (psm.getFullSequence() != null) {
+			sb.append(psm.getFullSequence());
+		}
 		if (chargeSensible) {
 			sb.append("." + psm.getCharge());
 		}
@@ -77,7 +81,7 @@ public class KeyUtils {
 	 */
 	public static String getSpectrumKey(Peptide peptide, boolean chargeSensible) {
 
-		final String string = peptide.getFile() + "-" + peptide.getScan();
+		final String string = peptide.getFile() + "-" + peptide.getScan() + "-" + peptide.getSeq();
 		if (chargeSensible) {
 			return string + "." + peptide.getCharge();
 		} else {
@@ -148,5 +152,13 @@ public class KeyUtils {
 			key += protein.getAccession();
 		}
 		return key;
+	}
+
+	public static String getSequenceKey(QuantifiedPSMInterface quantPSM, boolean distinguishModifiedSequence) {
+		if (distinguishModifiedSequence) {
+			return quantPSM.getFullSequence();
+		} else {
+			return FastaParser.cleanSequence(quantPSM.getSequence());
+		}
 	}
 }

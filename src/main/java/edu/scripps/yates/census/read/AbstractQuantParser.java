@@ -18,6 +18,7 @@ import org.apache.log4j.Logger;
 import edu.scripps.yates.annotations.uniprot.UniprotRetriever;
 import edu.scripps.yates.annotations.uniprot.xml.Entry;
 import edu.scripps.yates.census.analysis.QuantCondition;
+import edu.scripps.yates.census.read.model.QuantStaticMaps;
 import edu.scripps.yates.census.read.model.interfaces.QuantParser;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface;
@@ -213,7 +214,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 	}
 
 	/**
-	 * @return the proteinMap
+	 * @return the proteinMap @
 	 */
 	@Override
 	public HashMap<String, Set<String>> getProteinToPeptidesMap() {
@@ -224,7 +225,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 	}
 
 	/**
-	 * @return the peptideMap
+	 * @return the peptideMap @
 	 */
 	@Override
 	public HashMap<String, Set<String>> getPeptideToSpectraMap() {
@@ -237,7 +238,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 	/**
 	 * Gets the Protein by Protein key.
 	 *
-	 * @return the proteinMap
+	 * @return the proteinMap @
 	 */
 	@Override
 	public final Map<String, QuantifiedProteinInterface> getProteinMap() {
@@ -273,7 +274,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 	}
 
 	/**
-	 * @return the peptideMap
+	 * @return the peptideMap @
 	 */
 	@Override
 	public Map<String, QuantifiedPeptideInterface> getPeptideMap() {
@@ -303,6 +304,8 @@ public abstract class AbstractQuantParser implements QuantParser {
 	private void startProcess() {
 		// first process
 		process();
+		// remove psms assigned to decoy proteins that were discarded
+		removeDecoyPSMs();
 		// second expand protein map
 		mapIPI2Uniprot();
 		// third merge proteins with secondary accessions
@@ -346,7 +349,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 	 * This function is used for getting annotations in uniprot for the proteins
 	 * that are actually from uniprot.
 	 *
-	 * @return
+	 * @return @
 	 */
 	@Override
 	public Set<String> getUniprotAccSet() {
@@ -375,9 +378,6 @@ public abstract class AbstractQuantParser implements QuantParser {
 				final Pair<String, String> acc = FastaParser.getACC(accession);
 				if (acc.getSecondElement().equals("IPI")) {
 					final QuantifiedProteinInterface quantProtein = localProteinMap.get(accession);
-					if (acc.getFirstelement().equals("IPI00114389.4")) {
-						log.info("asdf");
-					}
 					Accession primaryAccession = new AccessionEx(accession, AccessionType.IPI);
 					Pair<Accession, Set<Accession>> pair = IPI2UniprotACCMap.getInstance()
 							.getPrimaryAndSecondaryAccessionsFromIPI(primaryAccession);
@@ -424,41 +424,60 @@ public abstract class AbstractQuantParser implements QuantParser {
 		if (uniprotVersion != null) {
 			latestVersion = "version " + uniprotVersion;
 		}
+		// split into chunks of 500 accessions in order to show progress
+		int chunckSize = 500;
+		List<Set<String>> listOfSets = new ArrayList<Set<String>>();
+		Set<String> set = new HashSet<String>();
+		for (String accession : accessions) {
+			set.add(accession);
+			if (set.size() == chunckSize) {
+				listOfSets.add(set);
+				set = new HashSet<String>();
+			}
+		}
+		listOfSets.add(set);
+
 		int numObsoletes = 0;
 		log.info("Merging proteins that have secondary accessions according to Uniprot " + latestVersion + "...");
-		Map<String, Entry> annotatedProteins = uplr.getAnnotatedProteins(uniprotVersion, accessions);
+
 		int initialSize = getProteinMap().size();
-		for (String accession : accessions) {
-			if (accession.equalsIgnoreCase("B7Z634")) {
-				log.info(accession);
-			}
-			QuantifiedProteinInterface quantifiedProtein = getProteinMap().get(accession);
-			Entry entry = annotatedProteins.get(accession);
-			if (entry != null && entry.getAccession() != null && !entry.getAccession().isEmpty()) {
-				String primaryAccession = entry.getAccession().get(0);
-				if (!accession.equals(primaryAccession) && !accession.contains(primaryAccession)) {
-					log.info("Replacing Uniprot accession " + quantifiedProtein.getAccession() + " by "
-							+ primaryAccession);
-					quantifiedProtein.setAccession(primaryAccession);
-					if (getProteinMap().containsKey(primaryAccession)) {
-						// there was already a protein with that
-						// primaryAccession
-						QuantifiedProteinInterface quantifiedProtein2 = getProteinMap().get(primaryAccession);
-						// merge quantifiedPRotein and quantifiedPRotein2
-						mergeProteins(quantifiedProtein, quantifiedProtein2);
-
-					} else {
-						numObsoletes++;
+		for (Set<String> accessionSet : listOfSets) {
+			Map<String, Entry> annotatedProteins = uplr.getAnnotatedProteins(uniprotVersion, accessionSet);
+			for (String accession : accessionSet) {
+				QuantifiedProteinInterface quantifiedProtein = QuantStaticMaps.proteinMap.getItem(accession);
+				Entry entry = annotatedProteins.get(accession);
+				if (entry != null && entry.getAccession() != null && !entry.getAccession().isEmpty()) {
+					String primaryAccession = entry.getAccession().get(0);
+					if (primaryAccession.equals("Q03181")) {
+						log.info(quantifiedProtein);
 					}
-					// remove old/secondary accession
-					getProteinMap().remove(accession);
-					getProteinMap().put(primaryAccession, quantifiedProtein);
+					if (!accession.equals(primaryAccession) && !accession.contains(primaryAccession)) {
+						log.info("Replacing Uniprot accession " + quantifiedProtein.getAccession() + " by "
+								+ primaryAccession);
+						quantifiedProtein.setAccession(primaryAccession);
+						if (QuantStaticMaps.proteinMap.containsKey(primaryAccession)) {
+							// there was already a protein with that
+							// primaryAccession
+							QuantifiedProteinInterface quantifiedProtein2 = QuantStaticMaps.proteinMap
+									.getItem(primaryAccession);
+							// merge quantifiedPRotein and quantifiedPRotein2
+							mergeProteins(quantifiedProtein, quantifiedProtein2);
 
+						} else {
+							numObsoletes++;
+						}
+						// remove old/secondary accession
+						getProteinMap().remove(accession);
+						QuantStaticMaps.proteinMap.remove(accession);
+						getProteinMap().put(primaryAccession, quantifiedProtein);
+
+						QuantStaticMaps.proteinMap.addItem(quantifiedProtein);
+					}
+				} else {
+					// // remove the protein because is obsolete
+					// log.info(quantifiedProtein.getAccession());
+					// parser.getProteinMap().remove(accession);
 				}
-			} else {
-				// // remove the protein because is obsolete
-				// log.info(quantifiedProtein.getAccession());
-				// parser.getProteinMap().remove(accession);
 			}
 		}
 		int finalSize = getProteinMap().size();
@@ -473,16 +492,44 @@ public abstract class AbstractQuantParser implements QuantParser {
 			QuantifiedProteinInterface proteinDonor) {
 		// PSMS
 		for (QuantifiedPSMInterface psm : proteinDonor.getQuantifiedPSMs()) {
-			proteinReceiver.addPSM(psm);
+			proteinReceiver.addPSM(psm, true);
 			psm.getQuantifiedProteins().remove(proteinDonor);
-			psm.addQuantifiedProtein(proteinReceiver);
+			psm.addQuantifiedProtein(proteinReceiver, true);
 		}
 		// Peptides
 		for (QuantifiedPeptideInterface peptide : proteinDonor.getQuantifiedPeptides()) {
-			proteinReceiver.addPeptide(peptide);
+			proteinReceiver.addPeptide(peptide, true);
 
 			peptide.getQuantifiedProteins().remove(proteinDonor);
 		}
 	}
 
+	private void removeDecoyPSMs() {
+		if (decoyPattern != null) {
+			// in case of decoyPattern is enabled, we may have some PSMs
+			// assigned to
+			// those decoy proteins that have not been saved,
+			// so we need to discard them
+			// We iterate over the psms, and we will remove the ones with no
+			// proteins
+			Set<String> keysToDelete = new HashSet<String>();
+			for (String key : localPsmMap.keySet()) {
+				if (localPsmMap.get(key).getQuantifiedProteins().isEmpty()) {
+					keysToDelete.add(key);
+				}
+			}
+			log.info("Removing " + keysToDelete.size() + " PSMs assigned to decoy discarded proteins");
+			for (String key : keysToDelete) {
+				final QuantifiedPSMInterface psm = localPsmMap.get(key);
+				if (!psm.getQuantifiedProteins().isEmpty()) {
+					throw new IllegalArgumentException("This should not happen");
+				}
+
+				// remove psmTableByPsmID
+				localPsmMap.remove(key);
+			}
+
+			log.info(keysToDelete.size() + " PSMs discarded as decoy");
+		}
+	}
 }

@@ -14,12 +14,10 @@ public class StaticItemStorage<T extends HasKey> {
 		return map.containsKey(key);
 	}
 
-	public boolean addItem(T hasKeyObj) {
-		if (!map.containsKey(hasKeyObj.getKey())) {
-			map.put(hasKeyObj.getKey(), hasKeyObj);
-			return true;
-		}
-		return false;
+	public T addItem(T hasKeyObj) {
+
+		return map.put(hasKeyObj.getKey(), hasKeyObj);
+
 	}
 
 	public T getItem(String key) {
@@ -34,7 +32,12 @@ public class StaticItemStorage<T extends HasKey> {
 		map.clear();
 	}
 
-	public void remove(T hasKeyObj) {
-		map.remove(hasKeyObj.getKey());
+	public T remove(T hasKeyObj) {
+		return map.remove(hasKeyObj.getKey());
+	}
+
+	public T remove(String key) {
+		return map.remove(key);
+
 	}
 }

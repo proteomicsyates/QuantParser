@@ -548,7 +548,7 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 
 		Long exitCode = runCommand(calibratingCommandLine, timeout);
 		if (exitCode.longValue() != 0) {
-			throw new IllegalArgumentException(
+			throw new SanxotErrorException(
 					"Some error happen while calibration process. You may consider to increase the timeout time by saxotInterface.setTimeout(long timeout) method");
 		}
 		KalibrateResultWrapper calibrationResults = new KalibrateResultWrapper(fileMappingResults.getWorkingFolder(),
@@ -562,6 +562,7 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 		} else {
 			log.warn("Calibration of data file " + dataFile.getAbsolutePath() + " failed");
 			firePropertyChange(CALIBRATING_ERROR, null, null);
+			throw new SanxotErrorException("Error while calibrating. Command: " + calibratingCommandLine.toString());
 		}
 		return calibrationResults;
 	}

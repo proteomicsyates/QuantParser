@@ -27,13 +27,13 @@ import edu.scripps.yates.utilities.grouping.PeptideRelation;
 import edu.scripps.yates.utilities.maths.Maths;
 import edu.scripps.yates.utilities.model.enums.AggregationLevel;
 import edu.scripps.yates.utilities.proteomicsmodel.Amount;
+import edu.scripps.yates.utilities.util.StringPosition;
 
-public class QuantifiedPSMFromCensusOut
-		implements GroupablePSM, PeptideSequenceInterface, HasRatios, QuantifiedPSMInterface {
-	private static final Logger log = Logger.getLogger(QuantifiedPSMFromCensusOut.class);
+public class QuantifiedPSM implements GroupablePSM, PeptideSequenceInterface, HasRatios, QuantifiedPSMInterface {
+	private static final Logger log = Logger.getLogger(QuantifiedPSM.class);
 	private final Set<QuantifiedProteinInterface> quantifiedProteins = new HashSet<QuantifiedProteinInterface>();
-	private final HashSet<edu.scripps.yates.census.read.util.QuantificationLabel> labels = new HashSet<QuantificationLabel>();
-	private final HashSet<String> taxonomies = new HashSet<String>();
+	private final Set<edu.scripps.yates.census.read.util.QuantificationLabel> labels = new HashSet<QuantificationLabel>();
+	private final Set<String> taxonomies = new HashSet<String>();
 
 	private PeptideRelation relation;
 	private final Set<QuantRatio> ratios = new HashSet<QuantRatio>();
@@ -44,26 +44,28 @@ public class QuantifiedPSMFromCensusOut
 	private QuantifiedPeptideInterface quantifiedPeptide;
 	private final String fullSequence;
 	private final Integer charge;
-	private Float calcMHplus;
-	private Float mhPlus;
 	private Float deltaCN;
 	private Float xcorr;
-	private Float deltaMass;
 	private final Set<Amount> amounts = new HashSet<Amount>();
 	private final Set<String> fileNames = new HashSet<String>();
 	private boolean discarded;
 	private boolean singleton;
+	private List<StringPosition> ptms;
+	private String key;
 
-	public QuantifiedPSMFromCensusOut(String sequence, Map<QuantCondition, QuantificationLabel> labelsByConditions,
+	public QuantifiedPSM(String sequence, Map<QuantCondition, QuantificationLabel> labelsByConditions,
 			HashMap<String, Set<String>> peptideToSpectraMap, int scanNumber, int chargeState,
-			boolean chargeStateSensible, String rawFileName, boolean singleton) throws IOException {
-		fullSequence = sequence;
+			boolean chargeStateSensible, boolean distinguishModifiedPeptides, String rawFileName, boolean singleton)
+			throws IOException {
+		fullSequence = FastaParser.getSequenceInBetween(sequence);
 		this.sequence = FastaParser.cleanSequence(sequence);
 		scan = String.valueOf(scanNumber);
 		conditionsByLabels = new HashMap<QuantificationLabel, QuantCondition>();
-		for (QuantCondition condition : labelsByConditions.keySet()) {
-			final QuantificationLabel quantificationLabel = labelsByConditions.get(condition);
-			conditionsByLabels.put(quantificationLabel, condition);
+		if (labelsByConditions != null) {
+			for (QuantCondition condition : labelsByConditions.keySet()) {
+				final QuantificationLabel quantificationLabel = labelsByConditions.get(condition);
+				conditionsByLabels.put(quantificationLabel, condition);
+			}
 		}
 		charge = chargeState;
 		// remove the H of HEAVY
@@ -73,7 +75,7 @@ public class QuantifiedPSMFromCensusOut
 			rawFileNames.add(rawFileName);
 		}
 		this.singleton = singleton;
-		final String peptideKey = KeyUtils.getSequenceChargeKey(this, chargeStateSensible);
+		final String peptideKey = KeyUtils.getSequenceKey(this, distinguishModifiedPeptides);
 		final String spectrumKey = KeyUtils.getSpectrumKey(this, chargeStateSensible);
 
 		addToMap(peptideKey, peptideToSpectraMap, spectrumKey);
@@ -81,7 +83,15 @@ public class QuantifiedPSMFromCensusOut
 
 	@Override
 	public String getKey() {
+		if (key != null) {
+			return key;
+		}
 		return getPSMIdentifier();
+	}
+
+	@Override
+	public void setKey(String key) {
+		this.key = key;
 	}
 
 	private void addToMap(String key, HashMap<String, Set<String>> map, String value) {
@@ -118,13 +128,19 @@ public class QuantifiedPSMFromCensusOut
 	}
 
 	@Override
-	public void addQuantifiedProtein(QuantifiedProteinInterface quantifiedProtein) {
-		if (!quantifiedProteins.contains(quantifiedProtein))
-			quantifiedProteins.add(quantifiedProtein);
-
+	public boolean addQuantifiedProtein(QuantifiedProteinInterface quantifiedProtein, boolean recursive) {
+		if (quantifiedProteins.contains(quantifiedProtein)) {
+			return false;
+		}
+		quantifiedProteins.add(quantifiedProtein);
+		if (recursive) {
+			quantifiedProtein.addPeptide(getQuantifiedPeptide(), false);
+			quantifiedProtein.addPSM(this, false);
+		}
 		// get the taxonomy
 		final Set<String> taxonomies = quantifiedProtein.getTaxonomies();
 		taxonomies.addAll(taxonomies);
+		return true;
 	}
 
 	/**
@@ -145,13 +161,13 @@ public class QuantifiedPSMFromCensusOut
 	}
 
 	/**
-	 * Gets the labels that this {@link QuantifiedPSMFromCensusOut} has been
-	 * labeled ONLY with some label.<br>
+	 * Gets the labels that this {@link QuantifiedPSM} has been labeled ONLY
+	 * with some label.<br>
 	 * So, may happen that contains any ratio and it is not labeled
 	 *
 	 * @return the labels
 	 */
-	public HashSet<QuantificationLabel> getLabels() {
+	public Set<QuantificationLabel> getLabels() {
 		return labels;
 	}
 
@@ -159,7 +175,7 @@ public class QuantifiedPSMFromCensusOut
 	 * @return the taxonomies
 	 */
 	@Override
-	public HashSet<String> getTaxonomies() {
+	public Set<String> getTaxonomies() {
 		return taxonomies;
 	}
 
@@ -215,11 +231,17 @@ public class QuantifiedPSMFromCensusOut
 	}
 
 	@Override
-	public void setQuantifiedPeptide(QuantifiedPeptideInterface quantifiedPeptide) {
+	public void setQuantifiedPeptide(QuantifiedPeptideInterface quantifiedPeptide, boolean recursive) {
 		this.quantifiedPeptide = quantifiedPeptide;
 		if (quantifiedPeptide != null) {
-			quantifiedPeptide.addQuantifiedPSM(this);
+			if (recursive) {
+				quantifiedPeptide.addQuantifiedPSM(this, false);
+				for (QuantifiedProteinInterface protein : getQuantifiedProteins()) {
+					quantifiedPeptide.addQuantifiedProtein(protein, false);
+				}
+			}
 		}
+
 	}
 
 	/**
@@ -242,12 +264,12 @@ public class QuantifiedPSMFromCensusOut
 
 	@Override
 	public Float getCalcMHplus() {
-		return calcMHplus;
+		return null;
 	}
 
 	@Override
 	public Float getMHplus() {
-		return mhPlus;
+		return null;
 	}
 
 	@Override
@@ -276,7 +298,7 @@ public class QuantifiedPSMFromCensusOut
 
 	@Override
 	public Float getDeltaMass() {
-		return deltaMass;
+		return null;
 	}
 
 	/**
@@ -293,14 +315,6 @@ public class QuantifiedPSMFromCensusOut
 	 */
 	public void setXcorr(Float xcorr) {
 		this.xcorr = xcorr;
-	}
-
-	/**
-	 * @param deltaMass
-	 *            the deltaMass to set
-	 */
-	public void setDeltaMass(Float deltaMass) {
-		this.deltaMass = deltaMass;
 	}
 
 	@Override
@@ -383,5 +397,32 @@ public class QuantifiedPSMFromCensusOut
 	public void setSingleton(boolean singleton) {
 		this.singleton = singleton;
 
+	}
+
+	@Override
+	public boolean containsPTMs() {
+
+		return !getPtms().isEmpty();
+	}
+
+	/**
+	 * @return the ptms
+	 */
+	@Override
+	public List<StringPosition> getPtms() {
+		if (ptms == null) {
+			ptms = FastaParser.getInside(getFullSequence());
+		}
+		return ptms;
+	}
+
+	@Override
+	public String toString() {
+		return getKey();
+	}
+
+	@Override
+	public boolean isQuantified() {
+		return true;
 	}
 }

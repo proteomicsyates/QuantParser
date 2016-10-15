@@ -14,13 +14,13 @@ import edu.scripps.yates.utilities.proteomicsmodel.HasAmounts;
 public interface QuantifiedPSMInterface
 		extends HasKey, PeptideSequenceInterface, GroupablePSM, HasRatios, HasAmounts, QuantifiedItem {
 
-	public void setQuantifiedPeptide(QuantifiedPeptideInterface quantifiedPeptide);
+	public void setQuantifiedPeptide(QuantifiedPeptideInterface quantifiedPeptide, boolean recursive);
 
 	public QuantifiedPeptideInterface getQuantifiedPeptide();
 
 	public Integer getCharge();
 
-	public void addQuantifiedProtein(QuantifiedProteinInterface quantifiedProtein);
+	public boolean addQuantifiedProtein(QuantifiedProteinInterface quantifiedProtein, boolean recursive);
 
 	public Set<QuantifiedProteinInterface> getQuantifiedProteins();
 

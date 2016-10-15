@@ -23,20 +23,17 @@ import edu.scripps.yates.utilities.model.enums.AggregationLevel;
 import edu.scripps.yates.utilities.proteomicsmodel.Amount;
 import edu.scripps.yates.utilities.util.Pair;
 
-public class QuantifiedProteinFromCensusOut extends AbstractContainsQuantifiedPSMs
-		implements QuantifiedProteinInterface {
-	private static final Logger log = Logger.getLogger(QuantifiedProteinFromCensusOut.class);
+public class QuantifiedProtein extends AbstractContainsQuantifiedPSMs implements QuantifiedProteinInterface {
+	private static final Logger log = Logger.getLogger(QuantifiedProtein.class);
 
 	private final Set<QuantifiedPSMInterface> quantifiedPSMs = new HashSet<QuantifiedPSMInterface>();
-	private boolean distinguishModifiedPeptides;
 	private ProteinEvidence evidence;
 	private String accession;
 	private ProteinGroup proteinGroup;
 	private String accessionType;
-	private final Set<QuantifiedPeptideInterface> quantifiedPeptides = new HashSet<QuantifiedPeptideInterface>();
 	private final Set<Amount> amounts = new HashSet<Amount>();
 
-	private String description;
+	protected String description;
 
 	private String taxonomy;
 
@@ -44,7 +41,9 @@ public class QuantifiedProteinFromCensusOut extends AbstractContainsQuantifiedPS
 
 	private boolean discarded;
 
-	public QuantifiedProteinFromCensusOut(String proteinACC) {
+	private String key;
+
+	public QuantifiedProtein(String proteinACC) {
 		final Pair<String, String> accPair = FastaParser.getACC(proteinACC);
 		accession = accPair.getFirstelement();
 		accessionType = accPair.getSecondElement();
@@ -52,7 +51,15 @@ public class QuantifiedProteinFromCensusOut extends AbstractContainsQuantifiedPS
 
 	@Override
 	public String getKey() {
-		return accession;
+		if (key != null) {
+			return key;
+		}
+		return getAccession();
+	}
+
+	@Override
+	public void setKey(String key) {
+		this.key = key;
 	}
 
 	/**
@@ -68,14 +75,25 @@ public class QuantifiedProteinFromCensusOut extends AbstractContainsQuantifiedPS
 	 */
 	@Override
 	public Set<QuantifiedPeptideInterface> getQuantifiedPeptides() {
-		return quantifiedPeptides;
+		Set<QuantifiedPeptideInterface> ret = new HashSet<QuantifiedPeptideInterface>();
+		for (QuantifiedPSMInterface psm : quantifiedPSMs) {
+			if (psm.getQuantifiedPeptide() != null) {
+				ret.add(psm.getQuantifiedPeptide());
+			}
+		}
+		return ret;
 	}
 
 	@Override
-	public void addPSM(QuantifiedPSMInterface quantifiedPSM) {
+	public boolean addPSM(QuantifiedPSMInterface quantifiedPSM, boolean recursive) {
+		if (quantifiedPSMs.contains(quantifiedPSM)) {
+			return false;
+		}
 		quantifiedPSMs.add(quantifiedPSM);
-		quantifiedPSM.addQuantifiedProtein(this);
-
+		if (recursive) {
+			quantifiedPSM.addQuantifiedProtein(this, false);
+		}
+		return true;
 	}
 
 	@Override
@@ -141,21 +159,6 @@ public class QuantifiedProteinFromCensusOut extends AbstractContainsQuantifiedPS
 	}
 
 	/**
-	 * @return the distinguishModifiedPeptides
-	 */
-	public boolean isDistinguishModifiedPeptides() {
-		return distinguishModifiedPeptides;
-	}
-
-	/**
-	 * @param distinguishModifiedPeptides
-	 *            the distinguishModifiedPeptides to set
-	 */
-	public void setDistinguishModifiedPeptides(boolean distinguishModifiedPeptides) {
-		this.distinguishModifiedPeptides = distinguishModifiedPeptides;
-	}
-
-	/**
 	 * @return the rawfileNames
 	 */
 
@@ -170,10 +173,16 @@ public class QuantifiedProteinFromCensusOut extends AbstractContainsQuantifiedPS
 	}
 
 	@Override
-	public void addPeptide(QuantifiedPeptideInterface peptide) {
-		if (quantifiedPeptides.contains(peptide))
-			return;
-		quantifiedPeptides.add(peptide);
+	public boolean addPeptide(QuantifiedPeptideInterface peptide, boolean recursive) {
+		final Set<QuantifiedPSMInterface> quantifiedPSMs2 = peptide.getQuantifiedPSMs();
+		if (quantifiedPSMs.containsAll(quantifiedPSMs2)) {
+			return false;
+		}
+		quantifiedPSMs.addAll(quantifiedPSMs2);
+		if (recursive) {
+			peptide.addQuantifiedProtein(this, false);
+		}
+		return true;
 	}
 
 	/**
@@ -215,21 +224,21 @@ public class QuantifiedProteinFromCensusOut extends AbstractContainsQuantifiedPS
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append(getAccession() + ": ");
+		sb.append(getKey() + ": ");
 		List<QuantifiedPeptideInterface> list = new ArrayList<QuantifiedPeptideInterface>();
 		list.addAll(getQuantifiedPeptides());
 		Collections.sort(list, new Comparator<QuantifiedPeptideInterface>() {
 
 			@Override
 			public int compare(QuantifiedPeptideInterface o1, QuantifiedPeptideInterface o2) {
-				return o1.getSequence().compareTo(o2.getSequence());
+				return o1.getFullSequence().compareTo(o2.getFullSequence());
 			}
 		});
 		StringBuilder sb2 = new StringBuilder();
 		for (QuantifiedPeptideInterface quantifiedPeptide : list) {
 			if (!"".equals(sb2.toString()))
 				sb2.append(",");
-			sb2.append(quantifiedPeptide.getSequence());
+			sb2.append(quantifiedPeptide.getFullSequence());
 		}
 		sb.append(sb2);
 		return sb.toString();
@@ -305,5 +314,10 @@ public class QuantifiedProteinFromCensusOut extends AbstractContainsQuantifiedPS
 		}
 		return ret;
 
+	}
+
+	@Override
+	public boolean isQuantified() {
+		return true;
 	}
 }

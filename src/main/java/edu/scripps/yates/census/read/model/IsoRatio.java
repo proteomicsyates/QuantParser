@@ -38,7 +38,7 @@ public class IsoRatio extends CensusRatio {
 			QuantificationLabel quantificationLabel2, QuantCondition condition2, int numIon, IonSerieType ionSerieType,
 			AggregationLevel aggregationLevel) {
 		super(null, null, null, condition1, condition2, quantificationLabel1, quantificationLabel2, aggregationLevel,
-				"Isobaric intensity ratio");
+				"Ri");
 		if (ion1 == null && ion2 == null)
 			throw new IllegalArgumentException("Ions and Ionr cannot be null at the same time");
 

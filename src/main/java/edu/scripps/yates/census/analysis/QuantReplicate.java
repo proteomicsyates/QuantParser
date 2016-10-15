@@ -70,4 +70,11 @@ public class QuantReplicate {
 
 	}
 
+	public void setDistinguishModifiedPeptides(boolean distinguishModifiedPeptides) {
+		if (parser != null) {
+			parser.setDistinguishModifiedPeptides(distinguishModifiedPeptides);
+		}
+
+	}
+
 }

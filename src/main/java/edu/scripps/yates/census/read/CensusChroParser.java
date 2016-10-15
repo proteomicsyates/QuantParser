@@ -33,6 +33,7 @@ import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
 import edu.scripps.yates.dbindex.IndexedProtein;
+import edu.scripps.yates.dbindex.util.PeptideNotFoundInDBIndexException;
 import edu.scripps.yates.utilities.fasta.FastaParser;
 import edu.scripps.yates.utilities.remote.RemoteSSHFileReference;
 
@@ -185,7 +186,9 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 					// processing different census chro files in the same parser
 					QuantifiedProteinInterface quantifiedProtein = null;
 					final String proteinKey = KeyUtils.getProteinKey(protein);
-
+					if (proteinKey.contains("Q03181")) {
+						log.info(proteinKey);
+					}
 					if (QuantStaticMaps.proteinMap.containsKey(proteinKey)) {
 						quantifiedProtein = QuantStaticMaps.proteinMap.getItem(proteinKey);
 					} else {
@@ -196,6 +199,7 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 					final List<Peptide> peptideList = protein.getPeptide();
 					if (peptideList != null) {
 						for (Peptide peptide : peptideList) {
+
 							numTotalPeptides++;
 							if (peptide.getFrag() != null && peptide.getFrag().getBr() != null
 									&& !"".equals(peptide.getFrag().getBr())) {
@@ -209,8 +213,8 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 											peptideToSpectraMap, ionExclusions, chargeStateSensible);
 								}
 								final String spectrumKey2 = KeyUtils.getSpectrumKey(quantifiedPSM, chargeStateSensible);
-								final String peptideKey = KeyUtils.getSequenceChargeKey(quantifiedPSM,
-										chargeStateSensible);
+								final String peptideKey = KeyUtils.getSequenceKey(quantifiedPSM,
+										distinguishModifiedPeptides);
 								quantifiedPSM.addSpectrumToIonsMaps(spectrumKey2, spectrumToIonsMap, ionKeys);
 								addToMap(peptideKey, peptideToSpectraMap, spectrumKey2);
 								QuantStaticMaps.psmMap.addItem(quantifiedPSM);
@@ -235,7 +239,7 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 								}
 								QuantStaticMaps.peptideMap.addItem(quantifiedPeptide);
 								quantifiedPeptide.addFileName(fileName);
-								quantifiedPSM.setQuantifiedPeptide(quantifiedPeptide);
+								quantifiedPSM.setQuantifiedPeptide(quantifiedPeptide, true);
 								// add peptide to map
 								if (!localPeptideMap.containsKey(peptideKey)) {
 									localPeptideMap.put(peptideKey, quantifiedPeptide);
@@ -254,7 +258,7 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 									if (indexedProteins.isEmpty()) {
 										peptidesMissingInDB.add(cleanSeq);
 										if (!ignoreNotFoundPeptidesInDB) {
-											throw new IllegalArgumentException("The peptide " + cleanSeq
+											throw new PeptideNotFoundInDBIndexException("The peptide " + cleanSeq
 													+ " is not found in Fasta DB.\nReview the default indexing parameters such as the number of allowed misscleavages.");
 										}
 										// log.warn("The peptide " + cleanSeq +
@@ -312,9 +316,15 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 				throw new IllegalArgumentException("some error occurred while reading the files");
 
 			processed = true;
+		} catch (PeptideNotFoundInDBIndexException e) {
+			if (!super.ignoreNotFoundPeptidesInDB) {
+				throw e;
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
-		} finally {
+		} finally
+
+		{
 			// if (processed) {
 			// // to create the peptides at the end
 			// peptideMap.clear();
@@ -332,11 +342,11 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 		// add to protein-experiment map
 		addToMap(experimentKey, experimentToProteinsMap, protein.getAccession());
 		// add psm to the protein
-		protein.addPSM(psm);
+		protein.addPSM(psm, true);
 		// add peptide to the protein
-		protein.addPeptide(peptide);
+		protein.addPeptide(peptide, true);
 		// add protein to the psm
-		psm.addQuantifiedProtein(protein);
+		psm.addQuantifiedProtein(protein, true);
 		// add to the map (if it was already
 		// there is not a problem, it will be
 		// only once)

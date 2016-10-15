@@ -32,6 +32,7 @@ import edu.scripps.yates.utilities.maths.Maths;
 import edu.scripps.yates.utilities.model.enums.AggregationLevel;
 import edu.scripps.yates.utilities.model.factories.AmountEx;
 import edu.scripps.yates.utilities.proteomicsmodel.Amount;
+import edu.scripps.yates.utilities.util.StringPosition;
 
 public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRatios {
 	private static final Logger log = Logger.getLogger(IsobaricQuantifiedPSM.class);
@@ -59,6 +60,8 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	private final Set<Amount> amounts = new HashSet<Amount>();
 	private final Set<String> fileNames = new HashSet<String>();
 	private boolean discarded;
+	private List<StringPosition> ptms;
+	private String key;
 
 	/**
 	 *
@@ -97,7 +100,16 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 
 	@Override
 	public String getKey() {
-		return KeyUtils.getSpectrumKey(peptide, chargeStateSensible);
+		if (key != null) {
+			return key;
+		}
+		return KeyUtils.getSpectrumKey(this, false);
+		// return KeyUtils.getSpectrumKey(peptide, chargeStateSensible);
+	}
+
+	@Override
+	public void setKey(String key) {
+		this.key = key;
 	}
 
 	/**
@@ -113,9 +125,6 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	}
 
 	private void process() throws IOException {
-		final String peptideKey = KeyUtils.getSequenceChargeKey(this, chargeStateSensible);
-
-		final String spectrumKey = KeyUtils.getSpectrumKey(this, chargeStateSensible);
 
 		final Frag frag = peptide.getFrag();
 		final String yr = frag.getYr();
@@ -332,13 +341,18 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	}
 
 	@Override
-	public void addQuantifiedProtein(QuantifiedProteinInterface quantifiedProtein) {
-		if (!quantifiedProteins.contains(quantifiedProtein))
-			quantifiedProteins.add(quantifiedProtein);
-
+	public boolean addQuantifiedProtein(QuantifiedProteinInterface quantifiedProtein, boolean recursive) {
+		if (quantifiedProteins.contains(quantifiedProtein)) {
+			return false;
+		}
+		quantifiedProteins.add(quantifiedProtein);
+		if (recursive) {
+			quantifiedProtein.addPSM(this, false);
+		}
 		// get the taxonomy
 		final Set<String> taxonomies = quantifiedProtein.getTaxonomies();
 		taxonomies.addAll(taxonomies);
+		return true;
 	}
 
 	/**
@@ -761,28 +775,38 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	}
 
 	@Override
-	public void setQuantifiedPeptide(QuantifiedPeptideInterface quantifiedPeptide) {
-		if (quantifiedPeptide instanceof IsobaricQuantifiedPeptide) {
-			this.quantifiedPeptide = quantifiedPeptide;
-			if (quantifiedPeptide != null) {
-				quantifiedPeptide.addQuantifiedPSM(this);
-			}
-		} else {
-			throw new IllegalArgumentException("Only IsobaricQuantifiedPeptides are allowed");
+	public Map<QuantCondition, Set<Ion>> getIonsByCondition(String replicateName) {
+		if (getFileNames().contains(replicateName)) {
+			return getIonsByCondition();
 		}
+		Map<QuantCondition, Set<Ion>> ret = new HashMap<QuantCondition, Set<Ion>>();
+		return ret;
+	}
+
+	@Override
+	public void setQuantifiedPeptide(QuantifiedPeptideInterface quantifiedPeptide, boolean recursive) {
+
+		this.quantifiedPeptide = quantifiedPeptide;
+		if (recursive) {
+			quantifiedPeptide.addQuantifiedPSM(this, false);
+			for (QuantifiedProteinInterface protein : getQuantifiedProteins()) {
+				quantifiedPeptide.addQuantifiedProtein(protein, false);
+			}
+		}
+
 	}
 
 	/**
 	 * @return the quantifiedPeptide
 	 */
 	@Override
-	public IsobaricQuantifiedPeptide getQuantifiedPeptide() {
-		return (IsobaricQuantifiedPeptide) quantifiedPeptide;
+	public QuantifiedPeptideInterface getQuantifiedPeptide() {
+		return quantifiedPeptide;
 	}
 
 	@Override
 	public String getFullSequence() {
-		return peptide.getSeq();
+		return FastaParser.getSequenceInBetween(peptide.getSeq());
 	}
 
 	/**
@@ -807,10 +831,33 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 			if (ions2 != null) {
 				numIons2 = ions2.size();
 			}
-			IonCountRatio ratio = new IonCountRatio(numIons1, numIons2, cond1, cond2, AggregationLevel.PSM);
+			IonCountRatio ratio = new IonCountRatio(AggregationLevel.PSM);
+			ratio.addIonCount(cond1, numIons1);
+			ratio.addIonCount(cond2, numIons2);
 			countRatiosByConditionKey.put(conditionKey, ratio);
 			return ratio;
 		}
+	}
+
+	@Override
+	public IonCountRatio getIonCountRatio(QuantCondition cond1, QuantCondition cond2, String replicateName) {
+
+		Set<Ion> ions1 = getIonsByCondition(replicateName).get(cond1);
+		int numIons1 = 0;
+		if (ions1 != null) {
+			numIons1 = ions1.size();
+		}
+		Set<Ion> ions2 = getIonsByCondition(replicateName).get(cond2);
+		int numIons2 = 0;
+		if (ions2 != null) {
+			numIons2 = ions2.size();
+		}
+		IonCountRatio ratio = new IonCountRatio(AggregationLevel.PSM);
+		ratio.addIonCount(cond1, numIons1);
+		ratio.addIonCount(cond2, numIons2);
+
+		return ratio;
+
 	}
 
 	@Override
@@ -889,5 +936,32 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	@Override
 	public boolean isSingleton() {
 		return getNonInfinityIsoRatios().isEmpty();
+	}
+
+	@Override
+	public boolean containsPTMs() {
+
+		return !getPtms().isEmpty();
+	}
+
+	/**
+	 * @return the ptms
+	 */
+	@Override
+	public List<StringPosition> getPtms() {
+		if (ptms == null) {
+			ptms = FastaParser.getInside(getFullSequence());
+		}
+		return ptms;
+	}
+
+	@Override
+	public String toString() {
+		return getKey();
+	}
+
+	@Override
+	public boolean isQuantified() {
+		return true;
 	}
 }

@@ -11,6 +11,8 @@ import edu.scripps.yates.utilities.proteomicsmodel.Condition;
 import edu.scripps.yates.utilities.proteomicsmodel.Score;
 
 public class CensusRatio implements QuantRatio {
+	public static final CensusRatio NAN_RATIO = new CensusRatio(null, null, null, null);
+
 	private final QuantCondition quantConditionNumerator;
 	private final QuantCondition quantConditionDenominator;
 	private final QuantificationLabel labelNumerator;
@@ -164,7 +166,7 @@ public class CensusRatio implements QuantRatio {
 			return -getLog2Value();
 		} else {
 			throw new IllegalArgumentException(
-					"There is no ratio between these two conditions ('" + quantConditionNumerator.getName() + "','"
+					"There is no ratio between these two conditions  ('" + quantConditionNumerator.getName() + "','"
 							+ quantConditionDenominator.getName() + "'). Use these ones: ('"
 							+ this.quantConditionNumerator + "','" + quantConditionDenominator + "')");
 		}

@@ -37,7 +37,6 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractContainsQuantifie
 	private String primaryAccession;
 	private ProteinGroup proteinGroup;
 	private String accessionType;
-	private final Set<QuantifiedPeptideInterface> quantifiedPeptides = new HashSet<QuantifiedPeptideInterface>();
 	private final Set<Amount> amounts = new HashSet<Amount>();
 
 	private String description;
@@ -48,16 +47,27 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractContainsQuantifie
 
 	private boolean discarded;
 
+	private String key;
+
 	public QuantifiedProteinFromDBIndexEntry(IndexedProtein indexedProtein) throws IOException {
 		this.indexedProtein = indexedProtein;
 		final Pair<String, String> accPair = FastaParser.getACC(indexedProtein.getFastaDefLine());
 		primaryAccession = accPair.getFirstelement();
 		accessionType = accPair.getSecondElement();
+
 	}
 
 	@Override
 	public String getKey() {
+		if (key != null) {
+			return key;
+		}
 		return KeyUtils.getProteinKey(indexedProtein);
+	}
+
+	@Override
+	public void setKey(String key) {
+		this.key = key;
 	}
 
 	@Override
@@ -83,13 +93,25 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractContainsQuantifie
 	 */
 	@Override
 	public Set<QuantifiedPeptideInterface> getQuantifiedPeptides() {
-		return quantifiedPeptides;
+		Set<QuantifiedPeptideInterface> ret = new HashSet<QuantifiedPeptideInterface>();
+		for (QuantifiedPSMInterface psm : quantifiedPSMs) {
+			if (psm.getQuantifiedPeptide() != null) {
+				ret.add(psm.getQuantifiedPeptide());
+			}
+		}
+		return ret;
 	}
 
 	@Override
-	public void addPSM(QuantifiedPSMInterface quantifiedPSM) {
+	public boolean addPSM(QuantifiedPSMInterface quantifiedPSM, boolean recursive) {
+		if (quantifiedPSMs.contains(quantifiedPSM)) {
+			return false;
+		}
 		quantifiedPSMs.add(quantifiedPSM);
-		quantifiedPSM.addQuantifiedProtein(this);
+		if (recursive) {
+			quantifiedPSM.addQuantifiedProtein(this, false);
+		}
+		return true;
 	}
 
 	@Override
@@ -179,10 +201,17 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractContainsQuantifie
 	}
 
 	@Override
-	public void addPeptide(QuantifiedPeptideInterface peptide) {
-		if (quantifiedPeptides.contains(peptide))
-			return;
-		quantifiedPeptides.add(peptide);
+	public boolean addPeptide(QuantifiedPeptideInterface peptide, boolean recursive) {
+
+		final Set<QuantifiedPSMInterface> quantifiedPSMs2 = peptide.getQuantifiedPSMs();
+		if (quantifiedPSMs.containsAll(quantifiedPSMs2)) {
+			return false;
+		}
+		quantifiedPSMs.addAll(quantifiedPSMs2);
+		if (recursive) {
+			peptide.addQuantifiedProtein(this, false);
+		}
+		return true;
 	}
 
 	/**
@@ -243,14 +272,14 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractContainsQuantifie
 
 			@Override
 			public int compare(QuantifiedPeptideInterface o1, QuantifiedPeptideInterface o2) {
-				return o1.getSequence().compareTo(o2.getSequence());
+				return o1.getFullSequence().compareTo(o2.getFullSequence());
 			}
 		});
 		StringBuilder sb2 = new StringBuilder();
 		for (QuantifiedPeptideInterface quantifiedPeptide : list) {
 			if (!"".equals(sb2.toString()))
 				sb2.append(",");
-			sb2.append(quantifiedPeptide.getSequence());
+			sb2.append(quantifiedPeptide.getFullSequence());
 		}
 		sb.append(sb2);
 		return sb.toString();
@@ -331,5 +360,10 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractContainsQuantifie
 		}
 		return ret;
 
+	}
+
+	@Override
+	public boolean isQuantified() {
+		return true;
 	}
 }

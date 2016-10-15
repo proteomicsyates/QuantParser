@@ -27,7 +27,7 @@ import edu.scripps.yates.census.read.model.IonSerie.IonSerieType;
 import edu.scripps.yates.census.read.model.IsoRatio;
 import edu.scripps.yates.census.read.model.IsobaricQuantifiedPSM;
 import edu.scripps.yates.census.read.model.IsobaricQuantifiedPeptide;
-import edu.scripps.yates.census.read.model.QuantifiedPSMFromCensusOut;
+import edu.scripps.yates.census.read.model.QuantifiedPSM;
 import edu.scripps.yates.census.read.model.interfaces.IsobaricQuantParser;
 import edu.scripps.yates.census.read.model.interfaces.QuantParser;
 import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
@@ -39,7 +39,6 @@ import edu.scripps.yates.census.read.util.QuantUtils;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
 import edu.scripps.yates.dbindex.DBIndexInterface;
 import edu.scripps.yates.dbindex.io.DBIndexSearchParams;
-import edu.scripps.yates.utilities.alignment.nwalign.NWResult;
 import edu.scripps.yates.utilities.grouping.GroupablePSM;
 import edu.scripps.yates.utilities.grouping.GroupableProtein;
 import edu.scripps.yates.utilities.grouping.PAnalyzer;
@@ -63,8 +62,6 @@ public class QuantAnalysis implements PropertyChangeListener {
 	private SanXotAnalysisResult result;
 	private final ANALYSIS_LEVEL_OUTCOME analysisOutCome;
 
-	private Long timeout = null;
-
 	private boolean chargeStateSensible;
 
 	private int minAlignmentScore;
@@ -75,6 +72,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 	private Set<Set<String>> proteinAccClusters;
 	private final QuantificationType quantType;
 	private Boolean keepExperimentsSeparated;
+	private boolean distinguishModifiedPeptides;
 
 	public static enum ANALYSIS_LEVEL_OUTCOME {
 		PEPTIDE, PROTEIN, PROTEINGROUP, PROTEIN_CLUSTER, FORCED_CLUSTERS
@@ -208,9 +206,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 		if (fileMappingResults == null) {
 			writeFiles();
 		}
-		if (timeout != null) {
-			quantParameters.setTimeout(timeout);
-		}
+
 		SanXotInterfaze sanxot = new SanXotInterfaze(fileMappingResults, quantParameters);
 
 		if (keepExperimentsSeparated != null) {
@@ -421,9 +417,9 @@ public class QuantAnalysis implements PropertyChangeListener {
 							// matters if it is comming from a TMT, where we
 							// have more than one ratio per PSM, because we will
 							// write each ratio in different replicates
-							if (quantifiedPSM instanceof QuantifiedPSMFromCensusOut) {
+							if (quantifiedPSM instanceof QuantifiedPSM) {
 								QuantRatio validRatio = QuantUtils
-										.getValidRatio((QuantifiedPSMFromCensusOut) quantifiedPSM);
+										.getRatioValidForAnalysis((QuantifiedPSM) quantifiedPSM);
 								if (validRatio != null) {
 									ratioValue = validRatio.getLog2Ratio(condition1, condition2);
 									if (ratioValue == null || Double.isInfinite(ratioValue)
@@ -1315,7 +1311,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 						if (quantifiedPSM.isDiscarded()) {
 							continue;
 						}
-						final String peptideKey = KeyUtils.getSequenceChargeKey(quantifiedPSM, chargeStateSensible);
+						final String peptideKey = KeyUtils.getSequenceKey(quantifiedPSM, distinguishModifiedPeptides);
 						if (map2.containsKey(proteinKey)) {
 							map2.get(proteinKey).add(peptideKey);
 						} else {
@@ -1344,7 +1340,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 			for (GroupablePSM groupablePSM : psMs) {
 				if (groupablePSM instanceof QuantifiedPSMInterface) {
 					QuantifiedPSMInterface psm = (QuantifiedPSMInterface) groupablePSM;
-					final String peptideKey = KeyUtils.getSequenceChargeKey(psm, chargeStateSensible);
+					final String peptideKey = KeyUtils.getSequenceKey(psm, distinguishModifiedPeptides);
 					set.add(peptideKey);
 				}
 			}
@@ -1357,18 +1353,6 @@ public class QuantAnalysis implements PropertyChangeListener {
 		PAnalyzer pa = new PAnalyzer(false);
 		List<ProteinGroup> proteinGroups = pa.run(groupableProteins);
 		return proteinGroups;
-	}
-
-	private boolean passAlignmentFilter(NWResult alignResult, int minAlignmentScore, double minPercentajeOfsmilirarity,
-			int minConsecutiveLength) {
-		if (alignResult.getFinalAlignmentScore() >= minAlignmentScore) {
-			if (alignResult.getSequenceIdentity() >= minPercentajeOfsmilirarity) {
-				if (alignResult.getMaxConsecutiveIdenticalAlignment() >= minConsecutiveLength) {
-					return true;
-				}
-			}
-		}
-		return false;
 	}
 
 	/**
@@ -1573,10 +1557,6 @@ public class QuantAnalysis implements PropertyChangeListener {
 		dbIndex = DBIndexInterface.getByParam(dbIndexSearchParams);
 	}
 
-	public void setTimeout(long timeoutInMilliseconds) {
-		timeout = timeoutInMilliseconds;
-	}
-
 	/**
 	 * @return the result
 	 */
@@ -1681,5 +1661,28 @@ public class QuantAnalysis implements PropertyChangeListener {
 
 	public void setQuantParameters(QuantParameters quantParameters2) {
 		quantParameters = quantParameters2;
+	}
+
+	public void setTimeout(long timeout) {
+		quantParameters.setTimeout(timeout);
+
+	}
+
+	/**
+	 * @return the distinguishModifiedPeptides
+	 */
+	public boolean isDistinguishModifiedPeptides() {
+		return distinguishModifiedPeptides;
+	}
+
+	/**
+	 * @param distinguishModifiedPeptides
+	 *            the distinguishModifiedPeptides to set
+	 */
+	public void setDistinguishModifiedPeptides(boolean distinguishModifiedPeptides) {
+		this.distinguishModifiedPeptides = distinguishModifiedPeptides;
+		for (QuantExperiment quantExperiment : quantExperiments) {
+			quantExperiment.setDistinguishModifiedPeptides(distinguishModifiedPeptides);
+		}
 	}
 }

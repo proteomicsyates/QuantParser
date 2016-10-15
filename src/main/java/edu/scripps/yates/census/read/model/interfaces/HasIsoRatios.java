@@ -28,6 +28,8 @@ public interface HasIsoRatios extends HasRatios {
 
 	public Map<QuantCondition, Set<Ion>> getIonsByCondition();
 
+	public Map<QuantCondition, Set<Ion>> getIonsByCondition(String replicateName);
+
 	public Map<QuantificationLabel, Set<Ion>> getIons(IonSerie ionSerie);
 
 	public boolean containsAnySingletonIon(QuantificationLabel label);
@@ -37,6 +39,8 @@ public interface HasIsoRatios extends HasRatios {
 	public Set<Ion> getSingletonIonsByLabel(QuantificationLabel label);
 
 	public IonCountRatio getIonCountRatio(QuantCondition condition1, QuantCondition condition2);
+
+	public IonCountRatio getIonCountRatio(QuantCondition cond1, QuantCondition cond2, String replicateName);
 
 	Double getMaxPeak();
 

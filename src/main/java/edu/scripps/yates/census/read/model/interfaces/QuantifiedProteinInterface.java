@@ -24,11 +24,11 @@ public interface QuantifiedProteinInterface extends GroupableProtein, HasRatios,
 
 	public Set<QuantifiedPSMInterface> getQuantifiedPSMs();
 
-	public void addPeptide(QuantifiedPeptideInterface peptide);
+	public boolean addPeptide(QuantifiedPeptideInterface peptide, boolean recursive);
 
 	public String getAccessionType();
 
-	public void addPSM(QuantifiedPSMInterface quantifiedPSM);
+	public boolean addPSM(QuantifiedPSMInterface quantifiedPSM, boolean recursive);
 
 	public void setTaxonomy(String taxonomy);
 

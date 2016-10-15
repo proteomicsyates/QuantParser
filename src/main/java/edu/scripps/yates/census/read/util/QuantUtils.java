@@ -1,5 +1,6 @@
 package edu.scripps.yates.census.read.util;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -11,45 +12,54 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
+
+import edu.scripps.yates.annotations.uniprot.UniprotProteinRetriever;
 import edu.scripps.yates.census.analysis.QuantCondition;
+import edu.scripps.yates.census.analysis.util.KeyUtils;
 import edu.scripps.yates.census.read.CensusOutParser;
 import edu.scripps.yates.census.read.model.CensusRatio;
 import edu.scripps.yates.census.read.model.Ion;
+import edu.scripps.yates.census.read.model.IonCountRatio;
 import edu.scripps.yates.census.read.model.IsobaricQuantifiedPSM;
 import edu.scripps.yates.census.read.model.IsobaricQuantifiedPeptide;
-import edu.scripps.yates.census.read.model.QuantifiedPSMFromCensusOut;
+import edu.scripps.yates.census.read.model.QuantifiedPSM;
 import edu.scripps.yates.census.read.model.QuantifiedPeptide;
 import edu.scripps.yates.census.read.model.RatioScore;
 import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
-import edu.scripps.yates.utilities.fasta.FastaParser;
 import edu.scripps.yates.utilities.maths.Maths;
 import edu.scripps.yates.utilities.model.enums.AggregationLevel;
 import edu.scripps.yates.utilities.model.enums.AmountType;
 import edu.scripps.yates.utilities.model.enums.CombinationType;
 import edu.scripps.yates.utilities.proteomicsmodel.Amount;
+import edu.scripps.yates.utilities.strings.StringUtils;
+import edu.scripps.yates.utilities.util.StringPosition;
 
 public class QuantUtils {
+	private static final Logger log = Logger.getLogger(QuantUtils.class);
+	private static UniprotProteinRetriever uplr;
+
 	public static void addToPeptideMap(QuantifiedPSMInterface quantifiedPSM, Map<String, QuantifiedPeptide> map,
 			boolean distinguishModifiedPeptides) {
-		final String sequenceKey = getSequenceKey(quantifiedPSM, distinguishModifiedPeptides);
+		final String sequenceKey = KeyUtils.getSequenceKey(quantifiedPSM, distinguishModifiedPeptides);
 		QuantifiedPeptide quantifiedPeptide = null;
 		if (map.containsKey(sequenceKey)) {
 			quantifiedPeptide = map.get(sequenceKey);
-			quantifiedPeptide.addQuantifiedPSM(quantifiedPSM);
+			quantifiedPeptide.addQuantifiedPSM(quantifiedPSM, true);
 		} else {
 			quantifiedPeptide = new QuantifiedPeptide(quantifiedPSM, distinguishModifiedPeptides);
 			map.put(sequenceKey, quantifiedPeptide);
 		}
 
-		quantifiedPSM.setQuantifiedPeptide(quantifiedPeptide);
+		quantifiedPSM.setQuantifiedPeptide(quantifiedPeptide, true);
 	}
 
 	public static void addToIsobaricPeptideMap(IsobaricQuantifiedPSM quantifiedPSM,
 			Map<String, IsobaricQuantifiedPeptide> map, boolean distinguishModifiedPeptides) {
-		final String sequenceKey = getSequenceKey(quantifiedPSM, distinguishModifiedPeptides);
+		final String sequenceKey = KeyUtils.getSequenceKey(quantifiedPSM, distinguishModifiedPeptides);
 		IsobaricQuantifiedPeptide quantifiedPeptide = null;
 		if (map.containsKey(sequenceKey)) {
 			quantifiedPeptide = map.get(sequenceKey);
@@ -59,7 +69,7 @@ public class QuantUtils {
 			map.put(sequenceKey, quantifiedPeptide);
 		}
 
-		quantifiedPSM.setQuantifiedPeptide(quantifiedPeptide);
+		quantifiedPSM.setQuantifiedPeptide(quantifiedPeptide, true);
 	}
 
 	/**
@@ -80,7 +90,7 @@ public class QuantUtils {
 
 		// remove any peptide in the psms and proteins before create them
 		for (IsobaricQuantifiedPSM quantifiedPSM : quantifiedPSMs) {
-			quantifiedPSM.setQuantifiedPeptide(null);
+			quantifiedPSM.setQuantifiedPeptide(null, false);
 			for (QuantifiedProteinInterface protein : quantifiedPSM.getQuantifiedProteins()) {
 				protein.getQuantifiedPeptides().clear();
 			}
@@ -88,25 +98,17 @@ public class QuantUtils {
 
 		for (IsobaricQuantifiedPSM quantifiedPSM : quantifiedPSMs) {
 			QuantUtils.addToIsobaricPeptideMap(quantifiedPSM, peptideMap, distringuishModifiedPeptides);
-			final String sequenceKey = getSequenceKey(quantifiedPSM, distringuishModifiedPeptides);
+			final String sequenceKey = KeyUtils.getSequenceKey(quantifiedPSM, distringuishModifiedPeptides);
 			final IsobaricQuantifiedPeptide createdPeptide = peptideMap.get(sequenceKey);
 
 			// add it to the proteins of the psm
 			final Set<QuantifiedProteinInterface> quantifiedProteins = quantifiedPSM.getQuantifiedProteins();
 			for (QuantifiedProteinInterface protein : quantifiedProteins) {
-				protein.addPeptide(createdPeptide);
+				protein.addPeptide(createdPeptide, true);
 			}
 		}
 
 		return peptideMap;
-	}
-
-	public static String getSequenceKey(QuantifiedPSMInterface quantPSM, boolean distinguishModifiedSequence) {
-		if (distinguishModifiedSequence) {
-			return quantPSM.getSequence();
-		} else {
-			return FastaParser.cleanSequence(quantPSM.getSequence());
-		}
 	}
 
 	/**
@@ -122,9 +124,11 @@ public class QuantUtils {
 		Map<String, IsobaricQuantifiedPeptide> peptideMap = new HashMap<String, IsobaricQuantifiedPeptide>();
 
 		for (IsobaricQuantifiedPSM quantifiedPSM : quantifiedPSMs) {
-			final IsobaricQuantifiedPeptide quantifiedPeptide = quantifiedPSM.getQuantifiedPeptide();
-			if (!peptideMap.containsKey(quantifiedPeptide.getKey())) {
-				peptideMap.put(quantifiedPeptide.getKey(), quantifiedPeptide);
+			final QuantifiedPeptideInterface quantifiedPeptide = quantifiedPSM.getQuantifiedPeptide();
+			if (quantifiedPeptide instanceof IsobaricQuantifiedPeptide) {
+				if (!peptideMap.containsKey(quantifiedPeptide.getKey())) {
+					peptideMap.put(quantifiedPeptide.getKey(), (IsobaricQuantifiedPeptide) quantifiedPeptide);
+				}
 			}
 		}
 
@@ -241,15 +245,15 @@ public class QuantUtils {
 	}
 
 	/**
-	 * For a {@link QuantifiedPSMFromCensusOut}, depending on if it is singleton
-	 * or not, we get a different ratio.<br>
+	 * For a {@link QuantifiedPSM}, depending on if it is singleton or not, we
+	 * get a different ratio.<br>
 	 * For singletons, we get the AREA_RATIO and for non singletons, we get the
 	 * RATIO
 	 *
 	 * @param quantifiedPSM
 	 * @return
 	 */
-	public static QuantRatio getValidRatio(QuantifiedPSMFromCensusOut quantifiedPSM) {
+	public static QuantRatio getRatioValidForAnalysis(QuantifiedPSM quantifiedPSM) {
 
 		// RATIO for non singletons and AREA_RATIO for singletons
 		if (quantifiedPSM.isSingleton()) {
@@ -259,7 +263,7 @@ public class QuantUtils {
 		}
 	}
 
-	private static QuantRatio getRatioByName(QuantifiedPSMFromCensusOut quantifiedPSM, String ratioDescription) {
+	private static QuantRatio getRatioByName(QuantifiedPSM quantifiedPSM, String ratioDescription) {
 		if (quantifiedPSM != null && quantifiedPSM.getRatios() != null) {
 			for (QuantRatio ratio : quantifiedPSM.getRatios()) {
 				if (ratio.getDescription().equals(ratioDescription)) {
@@ -333,20 +337,20 @@ public class QuantUtils {
 	 */
 	public static void discardPeptide(QuantifiedPeptideInterface quantifiedPeptide) {
 
-		// remove this peptide from its proteins
-		final Set<QuantifiedProteinInterface> quantifiedProteins = quantifiedPeptide.getQuantifiedProteins();
-		for (QuantifiedProteinInterface quantifiedProtein : quantifiedProteins) {
-			quantifiedProtein.getQuantifiedPeptides().remove(quantifiedPeptide);
-		}
 		// get all psms of that peptide
 		final Set<QuantifiedPSMInterface> quantifiedPSMs = quantifiedPeptide.getQuantifiedPSMs();
 		for (QuantifiedPSMInterface quantifiedPSM : quantifiedPSMs) {
 			// remove this psms from its proteins
-			final Iterator<QuantifiedProteinInterface> quantifiedProteins2 = quantifiedPSM.getQuantifiedProteins()
+			final Iterator<QuantifiedProteinInterface> proteinsIterator = quantifiedPSM.getQuantifiedProteins()
 					.iterator();
-			while (quantifiedProteins2.hasNext()) {
-				final QuantifiedProteinInterface quantifiedProtein = quantifiedProteins2.next();
+			while (proteinsIterator.hasNext()) {
+				final QuantifiedProteinInterface quantifiedProtein = proteinsIterator.next();
 				quantifiedProtein.getQuantifiedPSMs().remove(quantifiedPSM);
+				proteinsIterator.remove();
+				final int numPSMs = quantifiedProtein.getQuantifiedPSMs().size();
+				if (quantifiedProtein.getAccession().equals("J3QTB2")) {
+					log.info(quantifiedProtein + " " + numPSMs);
+				}
 			}
 			// remove this psm from the parser
 			// parser.getPSMMap().remove(quantifiedPSM.getPSMIdentifier());
@@ -371,5 +375,144 @@ public class QuantUtils {
 			quantifiedPSM.getQuantifiedProteins().remove(quantifiedProtein);
 		}
 
+	}
+
+	/**
+	 * Gets a consensus {@link IonCountRatio} from a set of
+	 * {@link IsobaricQuantifiedPeptide} where the ions from each
+	 * {@link QuantCondition} are pulled together and normalized by the number
+	 * of {@link QuantifiedPSMInterface} per {@link QuantifiedPeptideInterface}
+	 *
+	 * @param isobaricQuantifiedPeptides
+	 * @param cond1
+	 * @param cond2
+	 * @return
+	 */
+	public static IonCountRatio getNormalizedIonCountRatioForPeptides(
+			Set<IsobaricQuantifiedPeptide> isobaricQuantifiedPeptides, QuantCondition cond1, QuantCondition cond2) {
+		return getNormalizedIonCountRatioForPeptides(isobaricQuantifiedPeptides, cond1, cond2, null);
+	}
+
+	/**
+	 * Gets a consensus {@link IonCountRatio} from a set of
+	 * {@link IsobaricQuantifiedPeptide} where the ions from each
+	 * {@link QuantCondition} are pulled together and normalized by the number
+	 * of {@link QuantifiedPSMInterface} per {@link QuantifiedPeptideInterface}
+	 *
+	 * @param isobaricQuantifiedPeptides
+	 * @param cond1
+	 * @param cond2
+	 * @param replicateName
+	 * @return
+	 */
+	public static IonCountRatio getNormalizedIonCountRatioForPeptides(
+			Set<IsobaricQuantifiedPeptide> isobaricQuantifiedPeptides, QuantCondition cond1, QuantCondition cond2,
+			String replicateName) {
+
+		IonCountRatio ratio = new IonCountRatio(AggregationLevel.PEPTIDE);
+		for (IsobaricQuantifiedPeptide isoPeptide : isobaricQuantifiedPeptides) {
+			final int numPSMs = isoPeptide.getQuantifiedPSMs().size();
+			// get number of ions in one condition, and normalize by the
+			// number of PSMs
+			int peakCount1 = 0;
+			if (isoPeptide.getIonsByCondition(replicateName).containsKey(cond1)) {
+				peakCount1 = isoPeptide.getIonsByCondition(replicateName).get(cond1).size();
+			}
+			double normalizedPeakCount1 = peakCount1 * 1.0 / numPSMs;
+			int peakCount2 = 0;
+			if (isoPeptide.getIonsByCondition(replicateName).containsKey(cond2)) {
+				peakCount2 = isoPeptide.getIonsByCondition(replicateName).get(cond2).size();
+			}
+			double normalizedPeakCount2 = peakCount2 * 1.0 / numPSMs;
+			ratio.addIonCount(cond1, normalizedPeakCount1);
+			ratio.addIonCount(cond2, normalizedPeakCount2);
+
+		}
+		return ratio;
+	}
+
+	/**
+	 * Gets a consensus {@link IonCountRatio} from a set of
+	 * {@link IsobaricQuantifiedPeptide} where the ions from each
+	 * {@link QuantCondition} are pulled together and normalized by the number
+	 * of {@link QuantifiedPSMInterface} per {@link QuantifiedPeptideInterface}
+	 *
+	 * @param isobaricQuantifiedPeptides
+	 * @param cond1
+	 * @param cond2
+	 * @return
+	 */
+	public static IonCountRatio getIonCountRatioForPeptide(IsobaricQuantifiedPeptide isoPeptide, QuantCondition cond1,
+			QuantCondition cond2) {
+		return getIonCountRatioForPeptide(isoPeptide, cond1, cond2, null);
+	}
+
+	/**
+	 * Gets a consensus {@link IonCountRatio} from a set of
+	 * {@link IsobaricQuantifiedPeptide} where the ions from each
+	 * {@link QuantCondition} are pulled together and normalized by the number
+	 * of {@link QuantifiedPSMInterface} per {@link QuantifiedPeptideInterface}
+	 *
+	 * @param isobaricQuantifiedPeptides
+	 * @param cond1
+	 * @param cond2
+	 * @return
+	 */
+	public static IonCountRatio getIonCountRatioForPeptide(IsobaricQuantifiedPeptide isoPeptide, QuantCondition cond1,
+			QuantCondition cond2, String replicateName) {
+
+		IonCountRatio ratio = new IonCountRatio(AggregationLevel.PEPTIDE);
+
+		// get number of ions in one condition, and normalize by the
+		// number of PSMs
+		int peakCount1 = 0;
+		if (isoPeptide.getIonsByCondition().containsKey(cond1)) {
+			peakCount1 = isoPeptide.getIonsByCondition(replicateName).get(cond1).size();
+		}
+
+		int peakCount2 = 0;
+		if (isoPeptide.getIonsByCondition().containsKey(cond2)) {
+			peakCount2 = isoPeptide.getIonsByCondition(replicateName).get(cond2).size();
+		}
+
+		ratio.addIonCount(cond1, peakCount1);
+		ratio.addIonCount(cond2, peakCount2);
+
+		return ratio;
+	}
+
+	public static List<StringPosition> getPTMPositionsInProtein(String accession, QuantifiedPeptideInterface peptide,
+			String uniprotVersion, File uniprotAnnotationsFolder) {
+		List<StringPosition> ptmPositionsInProtein = new ArrayList<StringPosition>();
+		UniprotProteinRetriever uplr2 = getUniprotProteinLocalRetriever(uniprotVersion, uniprotAnnotationsFolder);
+		// get protein sequence from uniprot
+		final Map<String, String> annotatedProteinSequence = uplr2.getAnnotatedProteinSequence(accession);
+		if (annotatedProteinSequence.containsKey(accession)) {
+			final String proteinSequence = annotatedProteinSequence.get(accession);
+			List<Integer> positionsInProteinSequence = StringUtils.allPositionsOf(proteinSequence,
+					peptide.getSequence());
+			if (!positionsInProteinSequence.isEmpty()) {
+				for (Integer startingPosition : positionsInProteinSequence) {
+					final List<StringPosition> ptms = peptide.getPtms();
+					for (StringPosition ptmPositionInPeptide : ptms) {
+						final int positionInPeptide = ptmPositionInPeptide.position;
+						StringPosition ptmPositionInProtein = new StringPosition(ptmPositionInPeptide.string,
+								positionInPeptide + startingPosition - 1);
+						ptmPositionsInProtein.add(ptmPositionInProtein);
+					}
+				}
+
+			}
+		}
+
+		return ptmPositionsInProtein;
+	}
+
+	private static UniprotProteinRetriever getUniprotProteinLocalRetriever(String uniprotVersion,
+			File uniprotAnnotationsFolder) {
+		if (uplr == null) {
+			uplr = new UniprotProteinRetriever(uniprotVersion, uniprotAnnotationsFolder, true);
+		}
+		return uplr;
 	}
 }

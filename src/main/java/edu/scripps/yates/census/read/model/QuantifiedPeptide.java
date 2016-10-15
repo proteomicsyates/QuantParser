@@ -3,25 +3,32 @@ package edu.scripps.yates.census.read.model;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import edu.scripps.yates.census.analysis.QuantCondition;
+import edu.scripps.yates.census.analysis.util.KeyUtils;
 import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
 import edu.scripps.yates.census.read.util.QuantUtils;
+import edu.scripps.yates.utilities.fasta.FastaParser;
 import edu.scripps.yates.utilities.model.enums.AggregationLevel;
 import edu.scripps.yates.utilities.proteomicsmodel.Amount;
+import edu.scripps.yates.utilities.util.StringPosition;
 
 public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements QuantifiedPeptideInterface {
-	protected final String sequenceKey;
+	protected String sequenceKey;
 	protected final boolean distinguishModifiedSequences;
 	protected final Set<QuantifiedPSMInterface> psms = new HashSet<QuantifiedPSMInterface>();
 	private final Set<Amount> amounts = new HashSet<Amount>();
 	private final Set<String> fileNames = new HashSet<String>();
 	private boolean discarded;
+	private List<StringPosition> ptms;
+	private final String fullSequence;
+	private final String sequence;
 
 	/**
 	 * Creates a {@link QuantifiedPeptide} object, adding the
@@ -32,9 +39,11 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 	 * @param distinguishModifiedSequences
 	 */
 	public QuantifiedPeptide(QuantifiedPSMInterface quantPSM, boolean distinguishModifiedSequences) {
-		sequenceKey = QuantUtils.getSequenceKey(quantPSM, distinguishModifiedSequences);
+		sequenceKey = KeyUtils.getSequenceKey(quantPSM, distinguishModifiedSequences);
+		sequence = quantPSM.getSequence();
+		fullSequence = quantPSM.getFullSequence();
 		this.distinguishModifiedSequences = distinguishModifiedSequences;
-		addQuantifiedPSM(quantPSM);
+		addQuantifiedPSM(quantPSM, true);
 
 	}
 
@@ -43,14 +52,28 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 		return sequenceKey;
 	}
 
+	@Override
+	public void setKey(String key) {
+		sequenceKey = key;
+	}
+
 	/**
 	 * It assures that has the same sequence, taking into account the
 	 * distinguishModifiedSequences of the instance
 	 */
 	@Override
-	public boolean addQuantifiedPSM(QuantifiedPSMInterface quantPSM) {
-		if (sequenceKey.equals(QuantUtils.getSequenceKey(quantPSM, distinguishModifiedSequences))) {
-			return psms.add(quantPSM);
+	public boolean addQuantifiedPSM(QuantifiedPSMInterface quantPSM, boolean recursive) {
+		if (sequenceKey.equals(KeyUtils.getSequenceKey(quantPSM, distinguishModifiedSequences))) {
+			if (!psms.contains(quantPSM)) {
+				psms.add(quantPSM);
+				if (recursive) {
+					quantPSM.setQuantifiedPeptide(this, false);
+					final Set<QuantifiedProteinInterface> quantifiedProteins = quantPSM.getQuantifiedProteins();
+					for (QuantifiedProteinInterface protein : quantifiedProteins) {
+						protein.addPeptide(this, false);
+					}
+				}
+			}
 		}
 		return false;
 	}
@@ -73,7 +96,7 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 
 		// remove any peptide in the psms and proteins before create them
 		for (QuantifiedPSMInterface quantifiedPSM : quantifiedPSMs) {
-			quantifiedPSM.setQuantifiedPeptide(null);
+			quantifiedPSM.setQuantifiedPeptide(null, false);
 			for (QuantifiedProteinInterface protein : quantifiedPSM.getQuantifiedProteins()) {
 				protein.getQuantifiedPeptides().clear();
 			}
@@ -81,13 +104,13 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 
 		for (QuantifiedPSMInterface quantifiedPSM : quantifiedPSMs) {
 			QuantUtils.addToPeptideMap(quantifiedPSM, peptideMap, distringuishModifiedPeptides);
-			final String sequenceKey = QuantUtils.getSequenceKey(quantifiedPSM, distringuishModifiedPeptides);
+			final String sequenceKey = KeyUtils.getSequenceKey(quantifiedPSM, distringuishModifiedPeptides);
 			final QuantifiedPeptide createdPeptide = peptideMap.get(sequenceKey);
 
 			// add it to the proteins of the psm
 			final Set<QuantifiedProteinInterface> quantifiedProteins = quantifiedPSM.getQuantifiedProteins();
 			for (QuantifiedProteinInterface protein : quantifiedProteins) {
-				protein.addPeptide(createdPeptide);
+				protein.addPeptide(createdPeptide, true);
 			}
 		}
 
@@ -121,7 +144,7 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 
 	@Override
 	public String getSequence() {
-		return sequenceKey;
+		return sequence;
 	}
 
 	/**
@@ -161,12 +184,12 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 
 	@Override
 	public String toString() {
-		return getSequence();
+		return getFullSequence();
 	}
 
 	@Override
 	public String getFullSequence() {
-		return getSequence();
+		return fullSequence;
 	}
 
 	@Override
@@ -262,5 +285,43 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 		}
 		return ret;
 
+	}
+
+	@Override
+	public boolean containsPTMs() {
+
+		return !getPtms().isEmpty();
+	}
+
+	/**
+	 * @return the ptms
+	 */
+	@Override
+	public List<StringPosition> getPtms() {
+		if (ptms == null) {
+			ptms = FastaParser.getInside(getFullSequence());
+		}
+		return ptms;
+	}
+
+	@Override
+	public boolean addQuantifiedProtein(QuantifiedProteinInterface protein, boolean recursive) {
+		for (QuantifiedPSMInterface psm : psms) {
+			psm.addQuantifiedProtein(protein, false);
+		}
+		if (recursive) {
+			protein.addPeptide(this, false);
+		}
+		return true;
+	}
+
+	@Override
+	public boolean isQuantified() {
+		for (QuantifiedPSMInterface psm : getQuantifiedPSMs()) {
+			if (psm.isQuantified()) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

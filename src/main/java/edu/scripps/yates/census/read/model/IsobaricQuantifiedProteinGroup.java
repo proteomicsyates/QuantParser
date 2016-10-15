@@ -340,11 +340,32 @@ public class IsobaricQuantifiedProteinGroup extends QuantifiedProteinGroup imple
 			if (ions2 != null) {
 				numIons2 = ions2.size();
 			}
-			IonCountRatio ratio = new IonCountRatio(numIons1, numIons2, cond1, cond2, AggregationLevel.PROTEINGROUP);
-
+			IonCountRatio ratio = new IonCountRatio(AggregationLevel.PROTEINGROUP);
+			ratio.addIonCount(cond1, numIons1);
+			ratio.addIonCount(cond2, numIons2);
 			countRatiosByConditionKey.put(conditionKey, ratio);
 			return ratio;
 		}
+	}
+
+	@Override
+	public IonCountRatio getIonCountRatio(QuantCondition cond1, QuantCondition cond2, String replicateName) {
+
+		Set<Ion> ions1 = getIonsByCondition(replicateName).get(cond1);
+		int numIons1 = 0;
+		if (ions1 != null) {
+			numIons1 = ions1.size();
+		}
+		Set<Ion> ions2 = getIonsByCondition(replicateName).get(cond2);
+		int numIons2 = 0;
+		if (ions2 != null) {
+			numIons2 = ions2.size();
+		}
+		IonCountRatio ratio = new IonCountRatio(AggregationLevel.PSM);
+		ratio.addIonCount(cond1, numIons1);
+		ratio.addIonCount(cond2, numIons2);
+		return ratio;
+
 	}
 
 	@Override
@@ -364,5 +385,24 @@ public class IsobaricQuantifiedProteinGroup extends QuantifiedProteinGroup imple
 			}
 		}
 		return ionsByConditions;
+	}
+
+	@Override
+	public Map<QuantCondition, Set<Ion>> getIonsByCondition(String replicateName) {
+		Map<QuantCondition, Set<Ion>> ionsByConditions2 = new HashMap<QuantCondition, Set<Ion>>();
+		for (IsobaricQuantifiedPSM quantPSM : getIsobaricQuantifiedPSMs()) {
+			if (quantPSM.getFileNames().contains(replicateName)) {
+				final Map<QuantCondition, Set<Ion>> ions = quantPSM.getIonsByCondition();
+				for (QuantCondition condition : ions.keySet()) {
+					final Set<Ion> c = ions.get(condition);
+					if (ionsByConditions2.containsKey(condition)) {
+						ionsByConditions2.get(condition).addAll(c);
+					} else {
+						ionsByConditions2.put(condition, c);
+					}
+				}
+			}
+		}
+		return ionsByConditions2;
 	}
 }
