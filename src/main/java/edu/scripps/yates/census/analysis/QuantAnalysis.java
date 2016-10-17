@@ -72,7 +72,6 @@ public class QuantAnalysis implements PropertyChangeListener {
 	private Set<Set<String>> proteinAccClusters;
 	private final QuantificationType quantType;
 	private Boolean keepExperimentsSeparated;
-	private boolean distinguishModifiedPeptides;
 
 	public static enum ANALYSIS_LEVEL_OUTCOME {
 		PEPTIDE, PROTEIN, PROTEINGROUP, PROTEIN_CLUSTER, FORCED_CLUSTERS
@@ -1311,7 +1310,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 						if (quantifiedPSM.isDiscarded()) {
 							continue;
 						}
-						final String peptideKey = KeyUtils.getSequenceKey(quantifiedPSM, distinguishModifiedPeptides);
+						final String peptideKey = KeyUtils.getSequenceKey(quantifiedPSM, true);
 						if (map2.containsKey(proteinKey)) {
 							map2.get(proteinKey).add(peptideKey);
 						} else {
@@ -1340,7 +1339,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 			for (GroupablePSM groupablePSM : psMs) {
 				if (groupablePSM instanceof QuantifiedPSMInterface) {
 					QuantifiedPSMInterface psm = (QuantifiedPSMInterface) groupablePSM;
-					final String peptideKey = KeyUtils.getSequenceKey(psm, distinguishModifiedPeptides);
+					final String peptideKey = KeyUtils.getSequenceKey(psm, true);
 					set.add(peptideKey);
 				}
 			}
@@ -1668,21 +1667,4 @@ public class QuantAnalysis implements PropertyChangeListener {
 
 	}
 
-	/**
-	 * @return the distinguishModifiedPeptides
-	 */
-	public boolean isDistinguishModifiedPeptides() {
-		return distinguishModifiedPeptides;
-	}
-
-	/**
-	 * @param distinguishModifiedPeptides
-	 *            the distinguishModifiedPeptides to set
-	 */
-	public void setDistinguishModifiedPeptides(boolean distinguishModifiedPeptides) {
-		this.distinguishModifiedPeptides = distinguishModifiedPeptides;
-		for (QuantExperiment quantExperiment : quantExperiments) {
-			quantExperiment.setDistinguishModifiedPeptides(distinguishModifiedPeptides);
-		}
-	}
 }

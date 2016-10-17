@@ -46,10 +46,4 @@ public class QuantExperiment {
 
 	}
 
-	public void setDistinguishModifiedPeptides(boolean distinguishModifiedPeptides) {
-		for (QuantReplicate quantReplicate : replicates) {
-			quantReplicate.setDistinguishModifiedPeptides(distinguishModifiedPeptides);
-		}
-
-	}
 }

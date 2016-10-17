@@ -21,7 +21,6 @@ import edu.scripps.yates.utilities.util.StringPosition;
 
 public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements QuantifiedPeptideInterface {
 	protected String sequenceKey;
-	protected final boolean distinguishModifiedSequences;
 	protected final Set<QuantifiedPSMInterface> psms = new HashSet<QuantifiedPSMInterface>();
 	private final Set<Amount> amounts = new HashSet<Amount>();
 	private final Set<String> fileNames = new HashSet<String>();
@@ -38,11 +37,10 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 	 * @param quantPSM
 	 * @param distinguishModifiedSequences
 	 */
-	public QuantifiedPeptide(QuantifiedPSMInterface quantPSM, boolean distinguishModifiedSequences) {
-		sequenceKey = KeyUtils.getSequenceKey(quantPSM, distinguishModifiedSequences);
+	public QuantifiedPeptide(QuantifiedPSMInterface quantPSM) {
+		sequenceKey = KeyUtils.getSequenceKey(quantPSM, true);
 		sequence = quantPSM.getSequence();
 		fullSequence = quantPSM.getFullSequence();
-		this.distinguishModifiedSequences = distinguishModifiedSequences;
 		addQuantifiedPSM(quantPSM, true);
 
 	}
@@ -63,7 +61,7 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 	 */
 	@Override
 	public boolean addQuantifiedPSM(QuantifiedPSMInterface quantPSM, boolean recursive) {
-		if (sequenceKey.equals(KeyUtils.getSequenceKey(quantPSM, distinguishModifiedSequences))) {
+		if (sequenceKey.equals(KeyUtils.getSequenceKey(quantPSM, true))) {
 			if (!psms.contains(quantPSM)) {
 				psms.add(quantPSM);
 				if (recursive) {
@@ -76,45 +74,6 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 			}
 		}
 		return false;
-	}
-
-	/**
-	 * Create a Map of {@link QuantifiedPeptide} from a collection of
-	 * {@link QuantifiedPSMInterface}s. The resulting peptides will be added
-	 * also automatically to all the {@link QuantifiedProteinInterface}s of the
-	 * {@link QuantifiedPSMInterface}s, removing fist the
-	 * {@link QuantifiedPeptide}s linked to any {@link QuantifiedPSMInterface}
-	 * and {@link QuantifiedProteinInterface}
-	 *
-	 * @param quantifiedPSMs
-	 * @param distringuishModifiedPeptides
-	 * @return
-	 */
-	public static Map<String, QuantifiedPeptide> getQuantifiedPeptides(
-			Collection<QuantifiedPSMInterface> quantifiedPSMs, boolean distringuishModifiedPeptides) {
-		Map<String, QuantifiedPeptide> peptideMap = new HashMap<String, QuantifiedPeptide>();
-
-		// remove any peptide in the psms and proteins before create them
-		for (QuantifiedPSMInterface quantifiedPSM : quantifiedPSMs) {
-			quantifiedPSM.setQuantifiedPeptide(null, false);
-			for (QuantifiedProteinInterface protein : quantifiedPSM.getQuantifiedProteins()) {
-				protein.getQuantifiedPeptides().clear();
-			}
-		}
-
-		for (QuantifiedPSMInterface quantifiedPSM : quantifiedPSMs) {
-			QuantUtils.addToPeptideMap(quantifiedPSM, peptideMap, distringuishModifiedPeptides);
-			final String sequenceKey = KeyUtils.getSequenceKey(quantifiedPSM, distringuishModifiedPeptides);
-			final QuantifiedPeptide createdPeptide = peptideMap.get(sequenceKey);
-
-			// add it to the proteins of the psm
-			final Set<QuantifiedProteinInterface> quantifiedProteins = quantifiedPSM.getQuantifiedProteins();
-			for (QuantifiedProteinInterface protein : quantifiedProteins) {
-				protein.addPeptide(createdPeptide, true);
-			}
-		}
-
-		return peptideMap;
 	}
 
 	/**

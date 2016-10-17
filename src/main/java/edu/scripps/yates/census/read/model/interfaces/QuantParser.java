@@ -22,10 +22,6 @@ public interface QuantParser {
 			Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelNumerator,
 			QuantificationLabel labelDenominator);
 
-	void setDistinguishModifiedPeptides(boolean distinguishModifiedPeptides);
-
-	boolean isDistinguishModifiedPeptides();
-
 	Map<String, QuantifiedPeptideInterface> getPeptideMap();
 
 	Set<String> getTaxonomies();

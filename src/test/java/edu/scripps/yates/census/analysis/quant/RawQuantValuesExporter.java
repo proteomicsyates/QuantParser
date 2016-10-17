@@ -21,9 +21,7 @@ import edu.scripps.yates.census.read.model.Ion;
 import edu.scripps.yates.census.read.model.IsoRatio;
 import edu.scripps.yates.census.read.model.IsobaricQuantifiedPSM;
 import edu.scripps.yates.census.read.model.IsobaricQuantifiedPeptide;
-import edu.scripps.yates.census.read.model.IsobaricQuantifiedProtein;
 import edu.scripps.yates.census.read.model.IsobaricQuantifiedProteinGroup;
-import edu.scripps.yates.census.read.model.QuantifiedPeptide;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
@@ -140,28 +138,6 @@ public class RawQuantValuesExporter {
 				+ "Ion Isob Ratio" + TAB + "Mass(LIGHT)" + TAB + "Mass(HEAVY)" + TAB + "Iso_ratio_Intensity1" + TAB
 				+ "Iso_ratio_Intensity2");
 		bw.write("\n");
-	}
-
-	public void printRawQuantTableValuesAtProteinLevel(BufferedWriter bw, QuantCondition conditionNumerator,
-			QuantCondition conditionDenominator, CensusChroParser parser, DBIndexInterface dbIndex) throws IOException {
-
-		printProteinHeader(bw);
-		final Map<String, QuantifiedProteinInterface> proteinMap = parser.getProteinMap();
-		PAnalyzer panalyzer = new PAnalyzer(false);
-		Set<GroupableProtein> proteins = new HashSet<GroupableProtein>();
-		proteins.addAll(proteinMap.values());
-		panalyzer.run(proteins);
-		Map<String, QuantValue> finalPeptideQuantValues = readFinalPeptideQuantValuesFromFile();
-		for (String proteinAcc : proteinMap.keySet()) {
-			QuantifiedProteinInterface quantifiedProtein = proteinMap.get(proteinAcc);
-			if (quantifiedProtein instanceof IsobaricQuantifiedProtein) {
-				printStaticQuantInfo(conditionNumerator, conditionDenominator,
-						(IsobaricQuantifiedProtein) quantifiedProtein, finalPeptideQuantValues, dbIndex, bw);
-			} else {
-				throw new IllegalArgumentException(quantifiedProtein.getClass().getName() + " is not supported yet");
-			}
-			bw.write("\n");
-		}
 	}
 
 	public void printRawQuantTableValuesAtProteinGroupLevel(BufferedWriter bw, QuantCondition conditionNumerator,
@@ -549,161 +525,6 @@ public class RawQuantValuesExporter {
 		list.addAll(fileNames);
 		Collections.sort(list);
 		return list;
-	}
-
-	private void printStaticQuantInfo(QuantCondition conditionNumerator, QuantCondition conditionDenominator,
-			IsobaricQuantifiedProtein quantifiedProtein, Map<String, QuantValue> finalPeptideQuantValues,
-			DBIndexInterface dbIndex, BufferedWriter bw) throws IOException {
-		// experiment name
-		boolean dmdv = false;
-		boolean dvdm = false;
-		final Set<String> fileNames = quantifiedProtein.getFileNames();
-		List<String> fileNamesSorted = getSorted(fileNames);
-		for (String fileName : fileNamesSorted) {
-			bw.write(fileName + ",");
-			if (fileName.contains("DmDv"))
-				dmdv = true;
-			if (fileName.contains("DvDm"))
-				dvdm = true;
-		}
-		bw.write(TAB);
-		// dmDv
-		bw.write(dmdv ? "1" : "0");
-		bw.write(TAB);
-		// dmDv
-		bw.write(dvdm ? "1" : "0");
-		bw.write(TAB);
-
-		// accession
-		bw.write(quantifiedProtein.getAccession() + TAB);
-		// gene name
-		String geneFromFastaHeader = FastaParser.getGeneFromFastaHeader(quantifiedProtein.getAccession());
-		if (geneFromFastaHeader == null) {
-			geneFromFastaHeader = FastaParser.getGeneFromFastaHeader(quantifiedProtein.getDescription());
-		}
-		bw.write(geneFromFastaHeader + TAB);
-		// description
-		bw.write(quantifiedProtein.getDescription() + TAB);
-		// Taxonomy
-		final Set<String> taxonomies = quantifiedProtein.getTaxonomies();
-
-		boolean drome = false;
-		boolean drovi = false;
-		String DROME = "DROME";
-		String DROVI = "DROVI";
-
-		for (String taxonomy : taxonomies) {
-
-			if (taxonomy.contains(DROME) || taxonomy.equalsIgnoreCase("Drosophila melanogaster")) {
-				drome = true;
-			} else if (taxonomy.contains(DROVI) || taxonomy.equalsIgnoreCase("Drosophila virilis")) {
-				drovi = true;
-			} else {
-				throw new IllegalArgumentException("only drome or drovi are supported");
-
-			}
-		}
-		// DROME
-		bw.write(drome ? "1" : "0");
-		bw.write(TAB);
-		// DROVI
-		bw.write(drovi ? "1" : "0");
-		bw.write(TAB);
-		// // BOTH
-		// bw.write(drome && drovi ? "1" : "0");
-		// bw.write(TAB);
-		// // num proteins
-		// bw.write(quantifiedProtein.getGroupableProteins().size() + TAB);
-
-		// taxonomy name
-		bw.write(quantifiedProtein.getTaxonomies() + TAB);
-
-		// num psms
-		bw.write(quantifiedProtein.getQuantifiedPSMs().size() + TAB);
-		// num sequences
-		Map<String, QuantifiedPeptideInterface> peptides = IsobaricQuantifiedPeptide
-				.getQuantifiedPeptides(quantifiedProtein.getQuantifiedPSMs());
-		bw.write(peptides.size() + TAB);
-		// num unique peptides
-		Set<QuantifiedPSMInterface> psms = new HashSet<QuantifiedPSMInterface>();
-		for (QuantifiedPSMInterface psm : quantifiedProtein.getQuantifiedPSMs()) {
-			if (psm.getQuantifiedProteins().size() == 1) {
-				psms.add(psm);
-			}
-		}
-		bw.write(IsobaricQuantifiedPeptide.getQuantifiedPeptides(psms, false).size() + TAB);
-		// protein group member type
-		bw.write(quantifiedProtein.getEvidence() + TAB);
-		// seq length
-		bw.write(quantifiedProtein.getLength() + TAB);
-		// max peak
-		bw.write(quantifiedProtein.getMaxPeak() + TAB);
-
-		List<Double> finalQuantValues = new ArrayList<Double>();
-		List<Double> finalQuantWeigth = new ArrayList<Double>();
-		final Map<String, QuantifiedPeptide> quantifiedPeptides = IsobaricQuantifiedPeptide
-				.getQuantifiedPeptides(quantifiedProtein.getQuantifiedPSMs(), true);
-		int numQuantifiedPeptides = 0;
-		for (QuantifiedPeptide quantPeptide : quantifiedPeptides.values()) {
-			if (finalPeptideQuantValues.containsKey(quantPeptide.getSequence())) {
-				numQuantifiedPeptides++;
-				final QuantValue quantValue = finalPeptideQuantValues.get(quantPeptide.getSequence());
-				finalQuantValues.add(quantValue.ratio);
-				finalQuantWeigth.add(quantValue.weight);
-			} else {
-				System.out.println(quantPeptide.getSequence() + " not found");
-			}
-		}
-		// num quant peptides
-		bw.write(numQuantifiedPeptides + TAB);
-		// final quant value mean
-		bw.write(Maths.mean(finalQuantValues.toArray(new Double[0])) + TAB);
-		// final quant value stdev
-		bw.write(Maths.stddev(finalQuantValues.toArray(new Double[0])) + TAB);
-		// final quant weight mean
-		bw.write(Maths.mean(finalQuantWeigth.toArray(new Double[0])) + TAB);
-		// final weight value stdev
-		bw.write(Maths.stddev(finalQuantWeigth.toArray(new Double[0])) + TAB);
-
-		// # isob ratios
-		bw.write(quantifiedProtein.getNonInfinityIsoRatios().size() + TAB);
-
-		// mean isob ratios
-		bw.write(quantifiedProtein.getMeanRatios(conditionNumerator, conditionDenominator) + TAB);
-
-		// STDEV isob ratios
-		bw.write(quantifiedProtein.getSTDRatios(conditionNumerator, conditionDenominator) + TAB);
-
-		final Map<QuantCondition, Set<Ion>> singletonIons = quantifiedProtein.getSingletonIonsByCondition();
-		// # singleton Light
-		int singletonNumerator = 0;
-		if (singletonIons.containsKey(conditionNumerator)) {
-			singletonNumerator = singletonIons.get(conditionNumerator).size();
-		}
-		// # light
-		int numNumeratorIons = 0;
-		if (quantifiedProtein.getIonsByCondition().containsKey(conditionNumerator)) {
-			numNumeratorIons = quantifiedProtein.getIonsByCondition().get(conditionNumerator).size();
-		}
-		// # singleton Heavy
-		int singletonDenominator = 0;
-		if (singletonIons.containsKey(conditionDenominator)) {
-			singletonDenominator = singletonIons.get(conditionDenominator).size();
-		}
-		// # heavy
-		int numDenominatorIons = 0;
-		if (quantifiedProtein.getIonsByCondition().containsKey(conditionDenominator)) {
-			numDenominatorIons = quantifiedProtein.getIonsByCondition().get(conditionDenominator).size();
-		}
-
-		bw.write(singletonNumerator + TAB);
-		bw.write(singletonDenominator + TAB);
-		// singleton count ratio
-		bw.write(getCountRatioString(singletonNumerator, singletonDenominator) + TAB);
-		bw.write(numNumeratorIons + TAB);
-		bw.write(numDenominatorIons + TAB);
-		// ion count ratio
-		bw.write(getCountRatioString(numNumeratorIons, numDenominatorIons) + TAB);
 	}
 
 	private void printStaticQuantInfo(QuantCondition conditionNumerator, QuantCondition conditionDenominator,

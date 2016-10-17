@@ -31,8 +31,8 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements Quan
 	 * @param quantPSM
 	 * @param distinguishModifiedSequences
 	 */
-	public IsobaricQuantifiedPeptide(IsobaricQuantifiedPSM quantPSM, boolean distinguishModifiedSequences) {
-		super(quantPSM, distinguishModifiedSequences);
+	public IsobaricQuantifiedPeptide(IsobaricQuantifiedPSM quantPSM) {
+		super(quantPSM);
 	}
 
 	/**
@@ -41,7 +41,7 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements Quan
 	 */
 
 	public boolean addPSM(IsobaricQuantifiedPSM quantPSM) {
-		if (sequenceKey.equals(KeyUtils.getSequenceKey(quantPSM, distinguishModifiedSequences))) {
+		if (sequenceKey.equals(KeyUtils.getSequenceKey(quantPSM, true))) {
 			return psms.add(quantPSM);
 		}
 		return false;

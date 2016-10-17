@@ -434,6 +434,7 @@ public class CensusOutParser extends AbstractQuantParser {
 			Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelNumerator,
 			QuantificationLabel labelDenominator, String experimentKey, RemoteSSHFileReference remoteFileRetriever,
 			boolean singleton) throws IOException {
+
 		// new psm
 		MyHashMap<String, String> mapValues = getMapFromSLine(sLineHeaderList, line);
 		String sequence = mapValues.get(SEQUENCE);
@@ -452,9 +453,8 @@ public class CensusOutParser extends AbstractQuantParser {
 		if (mapValues.containsKey(SCAN)) {
 			scanNumber = Double.valueOf(mapValues.get(SCAN)).intValue();
 		}
-		QuantifiedPSMInterface quantifiedPSM = new QuantifiedPSM(sequence, labelsByConditions,
-				peptideToSpectraMap, scanNumber, Double.valueOf(mapValues.get(CS)).intValue(), chargeStateSensible,
-				distinguishModifiedPeptides, rawFileName, singleton);
+		QuantifiedPSMInterface quantifiedPSM = new QuantifiedPSM(sequence, labelsByConditions, peptideToSpectraMap,
+				scanNumber, Double.valueOf(mapValues.get(CS)).intValue(), chargeStateSensible, rawFileName, singleton);
 
 		// xcorr
 		Float xcorr = null;
@@ -560,7 +560,7 @@ public class CensusOutParser extends AbstractQuantParser {
 							// note that all numbers are not log numbers.
 							if (mapValues.containsKey(AREA_RATIO)) {
 								String areaRatioValue = mapValues.get(AREA_RATIO);
-								if (Double.valueOf(areaRatioValue) > 1) {
+								if (areaRatioValue.equals("INF") || Double.valueOf(areaRatioValue) > 1) {
 									ratio = new CensusRatio(Double.POSITIVE_INFINITY, false, conditionsByLabels,
 											labelNumerator, labelDenominator, AggregationLevel.PSM, RATIO);
 									if (ratioScore != null) {
@@ -584,7 +584,18 @@ public class CensusOutParser extends AbstractQuantParser {
 		// add PSM ratios from census out
 		if (mapValues.containsKey(AREA_RATIO)) {
 			try {
-				final double ratioValue = Double.valueOf(mapValues.get(AREA_RATIO));
+				double ratioValue;
+				String ratioValueString = mapValues.get(AREA_RATIO);
+				if (ratioValueString.contains("INF")) {
+					if (ratioValueString.equals("INF")) {
+						ratioValue = Double.POSITIVE_INFINITY;
+					} else {
+						ratioValue = Double.NEGATIVE_INFINITY;
+					}
+				} else {
+					ratioValue = Double.valueOf(mapValues.get(AREA_RATIO));
+				}
+
 				CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
 						labelDenominator, AggregationLevel.PSM, AREA_RATIO);
 				// profile score
@@ -691,11 +702,11 @@ public class CensusOutParser extends AbstractQuantParser {
 
 		// create the peptide
 		QuantifiedPeptideInterface quantifiedPeptide = null;
-		final String peptideKey = KeyUtils.getSequenceKey(quantifiedPSM, distinguishModifiedPeptides);
+		final String peptideKey = KeyUtils.getSequenceKey(quantifiedPSM, true);
 		if (QuantStaticMaps.peptideMap.containsKey(peptideKey)) {
 			quantifiedPeptide = QuantStaticMaps.peptideMap.getItem(peptideKey);
 		} else {
-			quantifiedPeptide = new QuantifiedPeptide(quantifiedPSM, distinguishModifiedPeptides);
+			quantifiedPeptide = new QuantifiedPeptide(quantifiedPSM);
 		}
 		QuantStaticMaps.peptideMap.addItem(quantifiedPeptide);
 		quantifiedPeptide.addFileName(inputFileName);
@@ -746,8 +757,7 @@ public class CensusOutParser extends AbstractQuantParser {
 				// add to the map (if it was already
 				// there is not a problem, it will be
 				// only once)
-				addToMap(proteinKey, proteinToPeptidesMap,
-						KeyUtils.getSequenceKey(quantifiedPSM, distinguishModifiedPeptides));
+				addToMap(proteinKey, proteinToPeptidesMap, KeyUtils.getSequenceKey(quantifiedPSM, true));
 
 			}
 		}
@@ -764,8 +774,7 @@ public class CensusOutParser extends AbstractQuantParser {
 			// add to the map (if it was already there
 			// is not a problem, it will be only once)
 			String proteinKey = quantifiedProtein.getKey();
-			addToMap(proteinKey, proteinToPeptidesMap,
-					KeyUtils.getSequenceKey(quantifiedPSM, distinguishModifiedPeptides));
+			addToMap(proteinKey, proteinToPeptidesMap, KeyUtils.getSequenceKey(quantifiedPSM, true));
 			// add protein to protein map
 			localProteinMap.put(proteinKey, quantifiedProtein);
 			// add to protein-experiment map

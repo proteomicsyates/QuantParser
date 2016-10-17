@@ -261,9 +261,8 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 			chargeState = Integer.valueOf(FastaParser.getChargeStateFromPSMIdentifier(psmId));
 		} catch (Exception e) {
 		}
-		QuantifiedPSMInterface quantifiedPSM = new QuantifiedPSM(sequence, labelsByConditions,
-				peptideToSpectraMap, scanNumber, chargeState, chargeStateSensible, distinguishModifiedPeptides,
-				rawFileName, false);
+		QuantifiedPSMInterface quantifiedPSM = new QuantifiedPSM(sequence, labelsByConditions, peptideToSpectraMap,
+				scanNumber, chargeState, chargeStateSensible, rawFileName, false);
 
 		quantifiedPSM.addFileName(inputFileName);
 		final String psmKey = KeyUtils.getSpectrumKey(quantifiedPSM, chargeStateSensible);
@@ -306,11 +305,11 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 
 		// create the peptide
 		QuantifiedPeptideInterface quantifiedPeptide = null;
-		final String peptideKey = KeyUtils.getSequenceKey(quantifiedPSM, distinguishModifiedPeptides);
+		final String peptideKey = KeyUtils.getSequenceKey(quantifiedPSM, true);
 		if (QuantStaticMaps.peptideMap.containsKey(peptideKey)) {
 			quantifiedPeptide = QuantStaticMaps.peptideMap.getItem(peptideKey);
 		} else {
-			quantifiedPeptide = new QuantifiedPeptide(quantifiedPSM, distinguishModifiedPeptides);
+			quantifiedPeptide = new QuantifiedPeptide(quantifiedPSM);
 		}
 		QuantStaticMaps.peptideMap.addItem(quantifiedPeptide);
 		quantifiedPeptide.addFileName(inputFileName);
@@ -350,8 +349,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 				quantifiedProtein.addPeptide(quantifiedPeptide, true);
 				// add to the map (if it was already there
 				// is not a problem, it will be only once)
-				addToMap(proteinKey, proteinToPeptidesMap,
-						KeyUtils.getSequenceKey(quantifiedPSM, distinguishModifiedPeptides));
+				addToMap(proteinKey, proteinToPeptidesMap, KeyUtils.getSequenceKey(quantifiedPSM, true));
 				// add protein to protein map
 				localProteinMap.put(proteinKey, quantifiedProtein);
 				// add to protein-experiment map
@@ -376,8 +374,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 			quantifiedProtein.addPeptide(quantifiedPeptide, true);
 			// add to the map (if it was already there
 			// is not a problem, it will be only once)
-			addToMap(proteinKey, proteinToPeptidesMap,
-					KeyUtils.getSequenceKey(quantifiedPSM, distinguishModifiedPeptides));
+			addToMap(proteinKey, proteinToPeptidesMap, KeyUtils.getSequenceKey(quantifiedPSM, true));
 			// add protein to protein map
 			localProteinMap.put(proteinKey, quantifiedProtein);
 			// add to protein-experiment map

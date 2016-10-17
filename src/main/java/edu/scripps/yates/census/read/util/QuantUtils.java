@@ -42,15 +42,14 @@ public class QuantUtils {
 	private static final Logger log = Logger.getLogger(QuantUtils.class);
 	private static UniprotProteinRetriever uplr;
 
-	public static void addToPeptideMap(QuantifiedPSMInterface quantifiedPSM, Map<String, QuantifiedPeptide> map,
-			boolean distinguishModifiedPeptides) {
-		final String sequenceKey = KeyUtils.getSequenceKey(quantifiedPSM, distinguishModifiedPeptides);
+	public static void addToPeptideMap(QuantifiedPSMInterface quantifiedPSM, Map<String, QuantifiedPeptide> map) {
+		final String sequenceKey = KeyUtils.getSequenceKey(quantifiedPSM, true);
 		QuantifiedPeptide quantifiedPeptide = null;
 		if (map.containsKey(sequenceKey)) {
 			quantifiedPeptide = map.get(sequenceKey);
 			quantifiedPeptide.addQuantifiedPSM(quantifiedPSM, true);
 		} else {
-			quantifiedPeptide = new QuantifiedPeptide(quantifiedPSM, distinguishModifiedPeptides);
+			quantifiedPeptide = new QuantifiedPeptide(quantifiedPSM);
 			map.put(sequenceKey, quantifiedPeptide);
 		}
 
@@ -58,57 +57,18 @@ public class QuantUtils {
 	}
 
 	public static void addToIsobaricPeptideMap(IsobaricQuantifiedPSM quantifiedPSM,
-			Map<String, IsobaricQuantifiedPeptide> map, boolean distinguishModifiedPeptides) {
-		final String sequenceKey = KeyUtils.getSequenceKey(quantifiedPSM, distinguishModifiedPeptides);
+			Map<String, IsobaricQuantifiedPeptide> map) {
+		final String sequenceKey = KeyUtils.getSequenceKey(quantifiedPSM, true);
 		IsobaricQuantifiedPeptide quantifiedPeptide = null;
 		if (map.containsKey(sequenceKey)) {
 			quantifiedPeptide = map.get(sequenceKey);
 			quantifiedPeptide.addPSM(quantifiedPSM);
 		} else {
-			quantifiedPeptide = new IsobaricQuantifiedPeptide(quantifiedPSM, distinguishModifiedPeptides);
+			quantifiedPeptide = new IsobaricQuantifiedPeptide(quantifiedPSM);
 			map.put(sequenceKey, quantifiedPeptide);
 		}
 
 		quantifiedPSM.setQuantifiedPeptide(quantifiedPeptide, true);
-	}
-
-	/**
-	 * Create a Map of {@link IsobaricQuantifiedPeptide} from a collection of
-	 * {@link QuantifiedPSMInterface}s. The resulting peptides will be added
-	 * also automatically to all the {@link QuantifiedProteinInterface}s of the
-	 * {@link QuantifiedPSMInterface}s, removing fist the
-	 * {@link IsobaricQuantifiedPeptide}s linked to any
-	 * {@link QuantifiedPSMInterface} and {@link QuantifiedProteinInterface}
-	 *
-	 * @param quantifiedPSMs
-	 * @param distringuishModifiedPeptides
-	 * @return
-	 */
-	public static Map<String, IsobaricQuantifiedPeptide> getIsobaricQuantifiedPeptides(
-			Collection<IsobaricQuantifiedPSM> quantifiedPSMs, boolean distringuishModifiedPeptides) {
-		Map<String, IsobaricQuantifiedPeptide> peptideMap = new HashMap<String, IsobaricQuantifiedPeptide>();
-
-		// remove any peptide in the psms and proteins before create them
-		for (IsobaricQuantifiedPSM quantifiedPSM : quantifiedPSMs) {
-			quantifiedPSM.setQuantifiedPeptide(null, false);
-			for (QuantifiedProteinInterface protein : quantifiedPSM.getQuantifiedProteins()) {
-				protein.getQuantifiedPeptides().clear();
-			}
-		}
-
-		for (IsobaricQuantifiedPSM quantifiedPSM : quantifiedPSMs) {
-			QuantUtils.addToIsobaricPeptideMap(quantifiedPSM, peptideMap, distringuishModifiedPeptides);
-			final String sequenceKey = KeyUtils.getSequenceKey(quantifiedPSM, distringuishModifiedPeptides);
-			final IsobaricQuantifiedPeptide createdPeptide = peptideMap.get(sequenceKey);
-
-			// add it to the proteins of the psm
-			final Set<QuantifiedProteinInterface> quantifiedProteins = quantifiedPSM.getQuantifiedProteins();
-			for (QuantifiedProteinInterface protein : quantifiedProteins) {
-				protein.addPeptide(createdPeptide, true);
-			}
-		}
-
-		return peptideMap;
 	}
 
 	/**

@@ -55,8 +55,7 @@ public class QuantifiedPSM implements GroupablePSM, PeptideSequenceInterface, Ha
 
 	public QuantifiedPSM(String sequence, Map<QuantCondition, QuantificationLabel> labelsByConditions,
 			HashMap<String, Set<String>> peptideToSpectraMap, int scanNumber, int chargeState,
-			boolean chargeStateSensible, boolean distinguishModifiedPeptides, String rawFileName, boolean singleton)
-			throws IOException {
+			boolean chargeStateSensible, String rawFileName, boolean singleton) throws IOException {
 		fullSequence = FastaParser.getSequenceInBetween(sequence);
 		this.sequence = FastaParser.cleanSequence(sequence);
 		scan = String.valueOf(scanNumber);
@@ -75,7 +74,7 @@ public class QuantifiedPSM implements GroupablePSM, PeptideSequenceInterface, Ha
 			rawFileNames.add(rawFileName);
 		}
 		this.singleton = singleton;
-		final String peptideKey = KeyUtils.getSequenceKey(this, distinguishModifiedPeptides);
+		final String peptideKey = KeyUtils.getSequenceKey(this, true);
 		final String spectrumKey = KeyUtils.getSpectrumKey(this, chargeStateSensible);
 
 		addToMap(peptideKey, peptideToSpectraMap, spectrumKey);

@@ -58,9 +58,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 	// the key is the peptide key (the peptide sequence, distinguising between
 	// modified or not, depending on 'distinguishModifiedPeptides' variable
 	protected final Map<String, QuantifiedPeptideInterface> localPeptideMap = new HashMap<String, QuantifiedPeptideInterface>();
-	// distinguish or nt between peptides modified or not for the map of
-	// peptides
-	protected boolean distinguishModifiedPeptides = true;
+
 	protected final Set<String> taxonomies = new HashSet<String>();
 	protected boolean processed = false;
 	protected boolean chargeStateSensible = false;
@@ -282,23 +280,6 @@ public abstract class AbstractQuantParser implements QuantParser {
 			startProcess();
 		}
 		return localPeptideMap;
-	}
-
-	/**
-	 * @return the distinguishModifiedPeptides
-	 */
-	@Override
-	public boolean isDistinguishModifiedPeptides() {
-		return distinguishModifiedPeptides;
-	}
-
-	/**
-	 * @param distinguishModifiedPeptides
-	 *            the distinguishModifiedPeptides to set
-	 */
-	@Override
-	public void setDistinguishModifiedPeptides(boolean distinguishModifiedPeptides) {
-		this.distinguishModifiedPeptides = distinguishModifiedPeptides;
 	}
 
 	private void startProcess() {
