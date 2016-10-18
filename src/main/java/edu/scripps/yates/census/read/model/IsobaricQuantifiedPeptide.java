@@ -16,6 +16,7 @@ import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
 import edu.scripps.yates.census.read.util.QuantUtils;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
+import edu.scripps.yates.utilities.fasta.FastaParser;
 import edu.scripps.yates.utilities.maths.Maths;
 
 public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements QuantifiedPeptideInterface, HasIsoRatios {
@@ -59,7 +60,7 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements Quan
 
 	@Override
 	public String getSequence() {
-		return sequenceKey;
+		return FastaParser.cleanSequence(sequenceKey);
 	}
 
 	/**
