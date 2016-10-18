@@ -8,15 +8,12 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.scripps.yates.census.analysis.QuantCondition;
-import edu.scripps.yates.census.analysis.util.KeyUtils;
 import edu.scripps.yates.census.read.model.interfaces.HasIsoRatios;
 import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface;
-import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
 import edu.scripps.yates.census.read.util.QuantUtils;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
-import edu.scripps.yates.utilities.fasta.FastaParser;
 import edu.scripps.yates.utilities.maths.Maths;
 
 public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements QuantifiedPeptideInterface, HasIsoRatios {
@@ -36,18 +33,6 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements Quan
 		super(quantPSM);
 	}
 
-	/**
-	 * It assures that has the same sequence, taking into account the
-	 * distinguishModifiedSequences of the instance
-	 */
-
-	public boolean addPSM(IsobaricQuantifiedPSM quantPSM) {
-		if (sequenceKey.equals(KeyUtils.getSequenceKey(quantPSM, true))) {
-			return psms.add(quantPSM);
-		}
-		return false;
-	}
-
 	public Set<IsobaricQuantifiedPSM> getIsobaricQuantifiedPSMs() {
 		Set<IsobaricQuantifiedPSM> isoPsms = new HashSet<IsobaricQuantifiedPSM>();
 		for (QuantifiedPSMInterface quantifiedPSM : psms) {
@@ -56,73 +41,6 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements Quan
 			}
 		}
 		return isoPsms;
-	}
-
-	@Override
-	public String getSequence() {
-		return FastaParser.cleanSequence(sequenceKey);
-	}
-
-	/**
-	 *
-	 * @return NOte that the returned set is created everytime this method is
-	 *         called, because proteins are taken from the psms of the peptide
-	 */
-	@Override
-	public Set<QuantifiedProteinInterface> getQuantifiedProteins() {
-		Set<QuantifiedProteinInterface> set = new HashSet<QuantifiedProteinInterface>();
-		for (QuantifiedPSMInterface psm : psms) {
-			for (QuantifiedProteinInterface quantProtein : psm.getQuantifiedProteins()) {
-				set.add(quantProtein);
-			}
-		}
-		return set;
-	}
-
-	@Override
-	public Float getCalcMHplus() {
-		if (!psms.isEmpty())
-			return psms.iterator().next().getCalcMHplus();
-		return null;
-	}
-
-	/**
-	 * @return the fileNames
-	 */
-	@Override
-	public Set<String> getRawFileNames() {
-		Set<String> ret = new HashSet<String>();
-		for (QuantifiedPSMInterface quantPSM : psms) {
-			ret.addAll(quantPSM.getRawFileNames());
-		}
-		return ret;
-	}
-
-	@Override
-	public String toString() {
-		return getSequence() + "(x" + getQuantifiedPSMs().size() + ")";
-	}
-
-	@Override
-	public String getFullSequence() {
-		return getSequence();
-	}
-
-	@Override
-	public Set<String> getTaxonomies() {
-		Set<String> ret = new HashSet<String>();
-		for (QuantifiedPSMInterface quantifiedPSM : psms) {
-			ret.addAll(quantifiedPSM.getTaxonomies());
-		}
-		return ret;
-	}
-
-	@Override
-	public Float getMHplus() {
-		if (!psms.isEmpty()) {
-			return psms.iterator().next().getMHplus();
-		}
-		return null;
 	}
 
 	@Override

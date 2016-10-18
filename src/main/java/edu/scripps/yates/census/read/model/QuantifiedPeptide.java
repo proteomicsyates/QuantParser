@@ -143,7 +143,7 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 
 	@Override
 	public String toString() {
-		return getFullSequence();
+		return getKey() + "(x" + getQuantifiedPSMs().size() + ")";
 	}
 
 	@Override

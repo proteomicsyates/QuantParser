@@ -62,7 +62,7 @@ public class QuantUtils {
 		IsobaricQuantifiedPeptide quantifiedPeptide = null;
 		if (map.containsKey(sequenceKey)) {
 			quantifiedPeptide = map.get(sequenceKey);
-			quantifiedPeptide.addPSM(quantifiedPSM);
+			quantifiedPeptide.addQuantifiedPSM(quantifiedPSM, true);
 		} else {
 			quantifiedPeptide = new IsobaricQuantifiedPeptide(quantifiedPSM);
 			map.put(sequenceKey, quantifiedPeptide);
