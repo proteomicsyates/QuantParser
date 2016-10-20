@@ -429,9 +429,6 @@ public abstract class AbstractQuantParser implements QuantParser {
 				Entry entry = annotatedProteins.get(accession);
 				if (entry != null && entry.getAccession() != null && !entry.getAccession().isEmpty()) {
 					String primaryAccession = entry.getAccession().get(0);
-					if (primaryAccession.equals("Q03181")) {
-						log.info(quantifiedProtein);
-					}
 					if (!accession.equals(primaryAccession) && !accession.contains(primaryAccession)) {
 						log.info("Replacing Uniprot accession " + quantifiedProtein.getAccession() + " by "
 								+ primaryAccession);
