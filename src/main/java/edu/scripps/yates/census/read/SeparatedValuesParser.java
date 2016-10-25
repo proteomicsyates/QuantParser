@@ -262,10 +262,10 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 		} catch (Exception e) {
 		}
 		QuantifiedPSMInterface quantifiedPSM = new QuantifiedPSM(sequence, labelsByConditions, peptideToSpectraMap,
-				scanNumber, chargeState, chargeStateSensible, rawFileName, false);
+				scanNumber, chargeState, rawFileName, false);
 
 		quantifiedPSM.addFileName(inputFileName);
-		final String psmKey = KeyUtils.getSpectrumKey(quantifiedPSM, chargeStateSensible);
+		final String psmKey = KeyUtils.getSpectrumKey(quantifiedPSM, true);
 		// in case of TMT, the psm may have been created before
 		if (QuantStaticMaps.psmMap.containsKey(psmKey)) {
 			quantifiedPSM = QuantStaticMaps.psmMap.getItem(psmKey);

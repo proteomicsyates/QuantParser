@@ -39,11 +39,4 @@ public class QuantExperiment {
 		return "QuantExperiment [" + name + "]";
 	}
 
-	public void setChargeStateSensible(boolean chargeSensible) {
-		for (QuantReplicate quantReplicate : replicates) {
-			quantReplicate.setChargeStateSensible(chargeSensible);
-		}
-
-	}
-
 }

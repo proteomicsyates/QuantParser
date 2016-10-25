@@ -212,7 +212,15 @@ public class IsoRatio extends CensusRatio {
 	 * @return
 	 */
 	public Double getMass(QuantificationLabel label) {
-		return massesByLabel.get(label);
+		if (massesByLabel.containsKey(label)) {
+			return massesByLabel.get(label);
+		}
+		for (QuantificationLabel label2 : massesByLabel.keySet()) {
+			if (label2.isLight() == label.isLight()) {
+				return massesByLabel.get(label);
+			}
+		}
+		return null;
 	}
 
 	@Override

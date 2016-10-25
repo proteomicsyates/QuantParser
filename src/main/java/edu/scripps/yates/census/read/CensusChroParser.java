@@ -204,15 +204,15 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 							if (peptide.getFrag() != null && peptide.getFrag().getBr() != null
 									&& !"".equals(peptide.getFrag().getBr())) {
 								IsobaricQuantifiedPSM quantifiedPSM = null;
-								final String spectrumKey = KeyUtils.getSpectrumKey(peptide, chargeStateSensible);
+								final String spectrumKey = KeyUtils.getSpectrumKey(peptide, true);
 								if (QuantStaticMaps.psmMap.containsKey(spectrumKey)) {
 									quantifiedPSM = (IsobaricQuantifiedPSM) QuantStaticMaps.psmMap.getItem(spectrumKey);
 								} else {
 									quantifiedPSM = new IsobaricQuantifiedPSM(peptide,
 											labelsByConditionsByFile.get(remoteFileRetriever), spectrumToIonsMap,
-											peptideToSpectraMap, ionExclusions, chargeStateSensible);
+											peptideToSpectraMap, ionExclusions);
 								}
-								final String spectrumKey2 = KeyUtils.getSpectrumKey(quantifiedPSM, chargeStateSensible);
+								final String spectrumKey2 = KeyUtils.getSpectrumKey(quantifiedPSM, true);
 								final String peptideKey = KeyUtils.getSequenceKey(quantifiedPSM, true);
 								quantifiedPSM.addSpectrumToIonsMaps(spectrumKey2, spectrumToIonsMap, ionKeys);
 								addToMap(peptideKey, peptideToSpectraMap, spectrumKey2);

@@ -12,8 +12,8 @@ import org.apache.log4j.Logger;
 
 import edu.scripps.yates.census.analysis.util.KeyUtils;
 import edu.scripps.yates.census.read.model.IsobaricQuantifiedPSM;
-import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
+import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
 import edu.scripps.yates.utilities.maths.Maths;
 
@@ -107,7 +107,7 @@ public class StatisticsOnPSMLevel {
 				psmNumber = 0;
 			}
 			currentPeptideSequence = seq;
-			String psmID = KeyUtils.getSpectrumKey(quantifiedPSM, census.isChargeStateSensible());
+			String psmID = KeyUtils.getSpectrumKey(quantifiedPSM, true);
 			if (count++ % 500 == 0) {
 				log.info(df.format(Double.valueOf(count) * 100 / census.getPSMMap().size()) + " % of PSMs...");
 			}

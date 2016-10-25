@@ -54,8 +54,8 @@ public class QuantifiedPSM implements GroupablePSM, PeptideSequenceInterface, Ha
 	private String key;
 
 	public QuantifiedPSM(String sequence, Map<QuantCondition, QuantificationLabel> labelsByConditions,
-			HashMap<String, Set<String>> peptideToSpectraMap, int scanNumber, int chargeState,
-			boolean chargeStateSensible, String rawFileName, boolean singleton) throws IOException {
+			HashMap<String, Set<String>> peptideToSpectraMap, int scanNumber, int chargeState, String rawFileName,
+			boolean singleton) throws IOException {
 		fullSequence = FastaParser.getSequenceInBetween(sequence);
 		this.sequence = FastaParser.cleanSequence(sequence);
 		scan = String.valueOf(scanNumber);
@@ -75,17 +75,17 @@ public class QuantifiedPSM implements GroupablePSM, PeptideSequenceInterface, Ha
 		}
 		this.singleton = singleton;
 		final String peptideKey = KeyUtils.getSequenceKey(this, true);
-		final String spectrumKey = KeyUtils.getSpectrumKey(this, chargeStateSensible);
+		final String spectrumKey = KeyUtils.getSpectrumKey(this, true);
 
 		addToMap(peptideKey, peptideToSpectraMap, spectrumKey);
 	}
 
 	@Override
 	public String getKey() {
-		if (key != null) {
-			return key;
+		if (key == null) {
+			key = getPSMIdentifier();
 		}
-		return getPSMIdentifier();
+		return key;
 	}
 
 	@Override
@@ -185,7 +185,7 @@ public class QuantifiedPSM implements GroupablePSM, PeptideSequenceInterface, Ha
 
 	@Override
 	public String getPSMIdentifier() {
-		return KeyUtils.getSpectrumKey(this, false);
+		return KeyUtils.getSpectrumKey(this, true);
 	}
 
 	@Override

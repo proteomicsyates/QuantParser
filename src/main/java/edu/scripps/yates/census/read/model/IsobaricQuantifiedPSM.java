@@ -49,7 +49,6 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	private PeptideRelation relation;
 	private final Set<QuantRatio> ratios = new HashSet<QuantRatio>();
 	private final Collection<IonExclusion> ionExclusions;
-	private final boolean chargeStateSensible;
 	private final String scan;
 	private final String sequence;
 	private static int scanNum = 0;
@@ -81,8 +80,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	 */
 	public IsobaricQuantifiedPSM(Peptide peptide, Map<QuantCondition, QuantificationLabel> labelsByConditions,
 			HashMap<String, Set<String>> spectrumToIonsMap, HashMap<String, Set<String>> peptideToSpectraMap,
-			Collection<IonExclusion> ionExclusions, boolean chargeStateSensible) throws IOException {
-		this.chargeStateSensible = chargeStateSensible;
+			Collection<IonExclusion> ionExclusions) throws IOException {
 		this.peptide = peptide;
 		this.ionExclusions = ionExclusions;
 		scan = peptide.getScan();
@@ -103,7 +101,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 		if (key != null) {
 			return key;
 		}
-		return KeyUtils.getSpectrumKey(this, false);
+		return KeyUtils.getSpectrumKey(this, true);
 		// return KeyUtils.getSpectrumKey(peptide, chargeStateSensible);
 	}
 
@@ -160,7 +158,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 			Set<String> ionKeys) {
 		for (IsoRatio ratio : ratiosSerieY) {
 			ratios.add(ratio);
-			String ionKey = KeyUtils.getIonKey(ratio, peptide, chargeStateSensible);
+			String ionKey = KeyUtils.getIonKey(ratio, peptide, true);
 			if (ionKeys.contains(ionKey)) {
 				continue;
 			}
@@ -168,7 +166,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 		}
 		for (IsoRatio ratio : ratiosSerieB) {
 			ratios.add(ratio);
-			String ionKey = KeyUtils.getIonKey(ratio, peptide, chargeStateSensible);
+			String ionKey = KeyUtils.getIonKey(ratio, peptide, true);
 			if (ionKeys.contains(ionKey)) {
 				continue;
 			}
@@ -657,7 +655,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	@Override
 	public String getPSMIdentifier() {
 		if (peptide != null) {
-			return KeyUtils.getSpectrumKey(peptide, chargeStateSensible);
+			return KeyUtils.getSpectrumKey(peptide, true);
 		} else {
 			return getRawFileNames().iterator().next() + "-" + getScan();
 		}

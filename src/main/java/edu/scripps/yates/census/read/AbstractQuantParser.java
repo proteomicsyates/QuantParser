@@ -61,7 +61,6 @@ public abstract class AbstractQuantParser implements QuantParser {
 
 	protected final Set<String> taxonomies = new HashSet<String>();
 	protected boolean processed = false;
-	protected boolean chargeStateSensible = false;
 
 	protected final Map<RemoteSSHFileReference, Map<QuantCondition, QuantificationLabel>> labelsByConditionsByFile = new HashMap<RemoteSSHFileReference, Map<QuantCondition, QuantificationLabel>>();
 
@@ -176,24 +175,6 @@ public abstract class AbstractQuantParser implements QuantParser {
 		if (remoteFileRetrievers == null)
 			throw new IllegalArgumentException("Input stream is null");
 
-	}
-
-	/**
-	 * @return the chargeStateSensible
-	 */
-	public boolean isChargeStateSensible() {
-		return chargeStateSensible;
-	}
-
-	/**
-	 * @param chargeStateSensible
-	 *            the chargeStateSensible to set: It means to distinguish or not
-	 *            the distinct charges when getting data from the peptides with
-	 *            the same sequence
-	 */
-	@Override
-	public void setChargeStateSensible(boolean chargeStateSensible) {
-		this.chargeStateSensible = chargeStateSensible;
 	}
 
 	@Override

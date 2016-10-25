@@ -40,8 +40,6 @@ public interface QuantParser {
 
 	void setDecoyPattern(String patternString) throws PatternSyntaxException;
 
-	void setChargeStateSensible(boolean chargeSensible);
-
 	Set<String> getUniprotAccSet();
 
 	void setIgnoreNotFoundPeptidesInDB(boolean ignoreNotFoundPeptidesInDB);

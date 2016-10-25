@@ -60,11 +60,18 @@ public class KeyUtils {
 		if (psm.getScan() != null) {
 			sb.append(psm.getScan());
 		}
+		if (!"".equals(sb.toString())) {
+			sb.append("-");
+		}
 		if (psm.getFullSequence() != null) {
 			sb.append(psm.getFullSequence());
 		}
+
 		if (chargeSensible) {
-			sb.append("." + psm.getCharge());
+			if (!"".equals(sb.toString())) {
+				sb.append("-");
+			}
+			sb.append(psm.getCharge());
 		}
 		return sb.toString();
 	}
@@ -83,7 +90,7 @@ public class KeyUtils {
 
 		final String string = peptide.getFile() + "-" + peptide.getScan() + "-" + peptide.getSeq();
 		if (chargeSensible) {
-			return string + "." + peptide.getCharge();
+			return string + "-" + peptide.getCharge();
 		} else {
 			return string;
 		}

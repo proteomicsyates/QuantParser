@@ -4,10 +4,16 @@ import org.apache.log4j.Logger;
 
 public enum QuantificationLabel {
 
-	LIGHT, HEAVY, //
-	TMT_6PLEX_126, TMT_6PLEX_127, TMT_6PLEX_128, TMT_6PLEX_129, TMT_6PLEX_130, TMT_6PLEX_131, //
-	N14, N15;
+	LIGHT(true), HEAVY(false), //
+	TMT_6PLEX_126(true), TMT_6PLEX_127(false), TMT_6PLEX_128(false), TMT_6PLEX_129(false), TMT_6PLEX_130(
+			false), TMT_6PLEX_131(false), //
+	N14(true), N15(false);
 	private final static Logger log = Logger.getLogger(QuantificationLabel.class);
+	private final boolean isLight;
+
+	private QuantificationLabel(boolean isLight) {
+		this.isLight = isLight;
+	}
 
 	public static QuantificationLabel getByName(String labelName) {
 		if (labelName == null)
@@ -43,5 +49,12 @@ public enum QuantificationLabel {
 		}
 		log.warn("Quantification label '" + labelName + "' not recognized");
 		return null;
+	}
+
+	/**
+	 * @return the isLight
+	 */
+	public boolean isLight() {
+		return isLight;
 	}
 }

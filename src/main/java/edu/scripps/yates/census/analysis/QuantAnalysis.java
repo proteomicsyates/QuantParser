@@ -57,12 +57,10 @@ public class QuantAnalysis implements PropertyChangeListener {
 	private QuantParameters quantParameters = new QuantParameters();
 	private final Map<String, List<String>> replicateAndExperimentNames = new HashMap<String, List<String>>();
 	private DBIndexInterface dbIndex;
-
+	private boolean ignorePTMs = true;
 	private static final String QUANT_FOLDER = "quant";
 	private SanXotAnalysisResult result;
 	private final ANALYSIS_LEVEL_OUTCOME analysisOutCome;
-
-	private boolean chargeStateSensible;
 
 	private int minAlignmentScore;
 
@@ -142,6 +140,22 @@ public class QuantAnalysis implements PropertyChangeListener {
 		this.analysisOutCome = analysisOutCome;
 		this.workingFolder = createWorkingFolder(workingFolder, analysisOutCome);
 		this.quantType = quantType;
+
+	}
+
+	/**
+	 * @return the ignorePTMs
+	 */
+	public boolean isIgnorePTMs() {
+		return ignorePTMs;
+	}
+
+	/**
+	 * @param ignorePTMs
+	 *            the ignorePTMs to set
+	 */
+	public void setIgnorePTMs(boolean ignorePTMs) {
+		this.ignorePTMs = ignorePTMs;
 	}
 
 	private File createWorkingFolder(String workingPath, ANALYSIS_LEVEL_OUTCOME outcome) {
@@ -198,9 +212,6 @@ public class QuantAnalysis implements PropertyChangeListener {
 		// clear static data from censusParsers
 		// log.info("Clearing static data from parser");
 		// QuantStaticMaps.clearInfo();
-
-		// set chargeStateSesible to all experiments and replicates
-		setChargeStateSensible(chargeStateSensible);
 
 		if (fileMappingResults == null) {
 			writeFiles();
@@ -334,6 +345,9 @@ public class QuantAnalysis implements PropertyChangeListener {
 					final QuantParser parser = rep.getParser();
 					final Collection<QuantifiedPSMInterface> quantifiedPSMs = parser.getPSMMap().values();
 					for (QuantifiedPSMInterface quantifiedPSM : quantifiedPSMs) {
+						if (ignorePTMs && quantifiedPSM.containsPTMs()) {
+							continue;
+						}
 						if (quantifiedPSM.isDiscarded()) {
 							numPSMsDiscarded++;
 							continue;
@@ -356,8 +370,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 
 									IsoRatio isoRatio = (IsoRatio) ratio;
 									key = KeyUtils.getIonKey(isoRatio,
-											((IsobaricQuantifiedPSM) quantifiedPSM).getPeptide(), chargeStateSensible)
-											+ expRepKey;
+											((IsobaricQuantifiedPSM) quantifiedPSM).getPeptide(), true) + expRepKey;
 
 									fittingWeight = null;
 
@@ -410,7 +423,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 										+ " is not supported with this analysis configuration");
 							}
 
-							key = KeyUtils.getSpectrumKey(quantifiedPSM, chargeStateSensible) + expRepKey;
+							key = KeyUtils.getSpectrumKey(quantifiedPSM, true) + expRepKey;
 							// in case of not having isobaric isotopologues, we
 							// have one ratio per PSM in the replicate, not
 							// matters if it is comming from a TMT, where we
@@ -1561,20 +1574,6 @@ public class QuantAnalysis implements PropertyChangeListener {
 	 */
 	public SanXotAnalysisResult getResult() {
 		return result;
-	}
-
-	/**
-	 * States if the method should differentiate peptides with different charge
-	 * states or not. In case of not doing that, peptides with different charge
-	 * states will be merged as they are the same peptide.
-	 *
-	 * @param b
-	 */
-	public void setChargeStateSensible(boolean chargeSensible) {
-		chargeStateSensible = chargeSensible;
-		for (QuantExperiment quantExperiment : quantExperiments) {
-			quantExperiment.setChargeStateSensible(chargeSensible);
-		}
 	}
 
 	/**

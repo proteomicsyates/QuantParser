@@ -539,7 +539,7 @@ public class StatisticsOnProteinGroupLevel {
 				psmNumber = 0;
 			}
 			currentPeptideSequence = seq;
-			String psmID = KeyUtils.getSpectrumKey(quantifiedPSM, census.isChargeStateSensible());
+			String psmID = KeyUtils.getSpectrumKey(quantifiedPSM, true);
 			if (count++ % 500 == 0) {
 				log.info(df.format(Double.valueOf(count) * 100 / census.getPSMMap().size()) + " % of PSMs...");
 			}

@@ -63,11 +63,4 @@ public class QuantReplicate {
 		return parser;
 	}
 
-	public void setChargeStateSensible(boolean chargeSensible) {
-		if (parser != null) {
-			parser.setChargeStateSensible(chargeSensible);
-		}
-
-	}
-
 }

@@ -454,7 +454,7 @@ public class CensusOutParser extends AbstractQuantParser {
 			scanNumber = Double.valueOf(mapValues.get(SCAN)).intValue();
 		}
 		QuantifiedPSMInterface quantifiedPSM = new QuantifiedPSM(sequence, labelsByConditions, peptideToSpectraMap,
-				scanNumber, Double.valueOf(mapValues.get(CS)).intValue(), chargeStateSensible, rawFileName, singleton);
+				scanNumber, Double.valueOf(mapValues.get(CS)).intValue(), rawFileName, singleton);
 
 		// xcorr
 		Float xcorr = null;
@@ -478,7 +478,7 @@ public class CensusOutParser extends AbstractQuantParser {
 		}
 
 		quantifiedPSM.addFileName(inputFileName);
-		final String psmKey = KeyUtils.getSpectrumKey(quantifiedPSM, chargeStateSensible);
+		final String psmKey = KeyUtils.getSpectrumKey(quantifiedPSM, true);
 		// in case of TMT, the psm may have been created before
 		if (QuantStaticMaps.psmMap.containsKey(psmKey)) {
 			quantifiedPSM = QuantStaticMaps.psmMap.getItem(psmKey);
@@ -631,7 +631,7 @@ public class CensusOutParser extends AbstractQuantParser {
 		if (mapValues.containsKey(SAM_INT)) {
 			try {
 				final double value = Double.valueOf(mapValues.get(SAM_INT));
-				light = new QuantAmount(value, AmountType.AREA, conditionsByLabels.get(QuantificationLabel.LIGHT));
+				light = new QuantAmount(value, AmountType.AREA, getLightCondition(conditionsByLabels));
 				// add amount to PSM
 				quantifiedPSM.addAmount(light);
 			} catch (NumberFormatException e) {
@@ -644,7 +644,7 @@ public class CensusOutParser extends AbstractQuantParser {
 		if (mapValues.containsKey(REF_INT)) {
 			try {
 				final double value = Double.valueOf(mapValues.get(REF_INT));
-				heavy = new QuantAmount(value, AmountType.AREA, conditionsByLabels.get(QuantificationLabel.HEAVY));
+				heavy = new QuantAmount(value, AmountType.AREA, getHeavyCondition(conditionsByLabels));
 				// add amount to PSM
 				quantifiedPSM.addAmount(heavy);
 			} catch (NumberFormatException e) {
@@ -665,7 +665,7 @@ public class CensusOutParser extends AbstractQuantParser {
 			try {
 				final double value = Double.valueOf(mapValues.get(AmountType.REGRESSION_FACTOR.name()));
 				QuantAmount amount = new QuantAmount(value, AmountType.REGRESSION_FACTOR,
-						conditionsByLabels.get(QuantificationLabel.LIGHT));
+						getLightCondition(conditionsByLabels));
 				// add amount to PSM
 				quantifiedPSM.addAmount(amount);
 			} catch (NumberFormatException e) {
@@ -782,6 +782,24 @@ public class CensusOutParser extends AbstractQuantParser {
 			quantifiedProtein.addFileName(inputFileName);
 		}
 
+	}
+
+	private QuantCondition getLightCondition(Map<QuantificationLabel, QuantCondition> conditionsByLabels) {
+		for (QuantificationLabel label : conditionsByLabels.keySet()) {
+			if (label.isLight()) {
+				return conditionsByLabels.get(label);
+			}
+		}
+		return null;
+	}
+
+	private QuantCondition getHeavyCondition(Map<QuantificationLabel, QuantCondition> conditionsByLabels) {
+		for (QuantificationLabel label : conditionsByLabels.keySet()) {
+			if (!label.isLight()) {
+				return conditionsByLabels.get(label);
+			}
+		}
+		return null;
 	}
 
 	private boolean isTMT(QuantificationLabel label) {
