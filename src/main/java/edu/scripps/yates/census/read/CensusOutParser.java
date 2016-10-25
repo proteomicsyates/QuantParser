@@ -436,352 +436,361 @@ public class CensusOutParser extends AbstractQuantParser {
 			boolean singleton) throws IOException {
 
 		// new psm
-		MyHashMap<String, String> mapValues = getMapFromSLine(sLineHeaderList, line);
-		String sequence = mapValues.get(SEQUENCE);
+		try {
+			MyHashMap<String, String> mapValues = getMapFromSLine(sLineHeaderList, line);
 
-		// dont look into the QuantifiedPSM.map because each
-		// line is always a new PSM
-		String inputFileName = FilenameUtils.getName(remoteFileRetriever.getOutputFile().getAbsolutePath());
-		String rawFileName = null;
-		if (mapValues.containsKey(FILENAME)) {
-			rawFileName = mapValues.get(FILENAME);
-		} else {
-			rawFileName = inputFileName;
-		}
-		// scan number
-		int scanNumber = 0;
-		if (mapValues.containsKey(SCAN)) {
-			scanNumber = Double.valueOf(mapValues.get(SCAN)).intValue();
-		}
-		QuantifiedPSMInterface quantifiedPSM = new QuantifiedPSM(sequence, labelsByConditions, peptideToSpectraMap,
-				scanNumber, Double.valueOf(mapValues.get(CS)).intValue(), rawFileName, singleton);
+			String sequence = mapValues.get(SEQUENCE);
 
-		// xcorr
-		Float xcorr = null;
-		if (mapValues.containsKey(XCORR)) {
-			try {
-				xcorr = Float.valueOf(mapValues.get(XCORR));
-				((QuantifiedPSM) quantifiedPSM).setXcorr(xcorr);
-			} catch (NumberFormatException e) {
-
+			// dont look into the QuantifiedPSM.map because each
+			// line is always a new PSM
+			String inputFileName = FilenameUtils.getName(remoteFileRetriever.getOutputFile().getAbsolutePath());
+			String rawFileName = null;
+			if (mapValues.containsKey(FILENAME)) {
+				rawFileName = mapValues.get(FILENAME);
+			} else {
+				rawFileName = inputFileName;
 			}
-		}
-		// deltacn
-		Float deltaCn = null;
-		if (mapValues.containsKey(DELTACN)) {
-			try {
-				deltaCn = Float.valueOf(mapValues.get(DELTACN));
-				((QuantifiedPSM) quantifiedPSM).setDeltaCN(deltaCn);
-			} catch (NumberFormatException e) {
-
+			// scan number
+			int scanNumber = 0;
+			if (mapValues.containsKey(SCAN)) {
+				scanNumber = Double.valueOf(mapValues.get(SCAN)).intValue();
 			}
-		}
+			QuantifiedPSMInterface quantifiedPSM = new QuantifiedPSM(sequence, labelsByConditions, peptideToSpectraMap,
+					scanNumber, Double.valueOf(mapValues.get(CS)).intValue(), rawFileName, singleton);
 
-		quantifiedPSM.addFileName(inputFileName);
-		final String psmKey = KeyUtils.getSpectrumKey(quantifiedPSM, true);
-		// in case of TMT, the psm may have been created before
-		if (QuantStaticMaps.psmMap.containsKey(psmKey)) {
-			quantifiedPSM = QuantStaticMaps.psmMap.getItem(psmKey);
-		}
-		QuantStaticMaps.psmMap.addItem(quantifiedPSM);
+			// xcorr
+			Float xcorr = null;
+			if (mapValues.containsKey(XCORR)) {
+				try {
+					xcorr = Float.valueOf(mapValues.get(XCORR));
+					((QuantifiedPSM) quantifiedPSM).setXcorr(xcorr);
+				} catch (NumberFormatException e) {
 
-		// psms.add(quantifiedPSM);
-		// add to map
-		if (!localPsmMap.containsKey(quantifiedPSM.getKey())) {
-			localPsmMap.put(quantifiedPSM.getKey(), quantifiedPSM);
-		}
-		// PSM regular ratio
-		// add PSM ratios from census out
-		if (mapValues.containsKey(RATIO)) {
-			try {
-
-				final double ratioValue = Double.valueOf(mapValues.get(RATIO));
-				CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
-						labelDenominator, AggregationLevel.PSM, RATIO);
-				RatioScore ratioScore = null;
-				// profile score
-				String scoreValue = null;
-				// check in any case the regressionFactor. If that is -1, then
-				// convert the ratio from 0 to inf
-				String regressionFactor = null;
-				if (mapValues.containsKey(PROFILE_SCORE) &&
-				// because profile score will be
-				// assigned to area ratio in case of
-				// exist
-						!mapValues.containsKey(AREA_RATIO)) {
-					scoreValue = mapValues.get(PROFILE_SCORE);
-					if (!"NA".equals(scoreValue)) {
-						ratioScore = new RatioScore(scoreValue, PROFILE_SCORE,
-								"PSM-level quantification confidence metric",
-								"fitting score comparing peak and gaussian distribution");
-						ratio.setRatioScore(ratioScore);
-					}
-					// score regression p-value N15
-				} else if (mapValues.containsKey(PVALUE)) {
-					scoreValue = mapValues.get(PVALUE);
-					if (!"NA".equals(scoreValue)) {
-						ratioScore = new RatioScore(scoreValue, PVALUE, "PSM-level p-value",
-								"probability score based on LR");
-						ratio.setRatioScore(ratioScore);
-					}
-					// score regression p-value SILAC
-				} else if (mapValues.containsKey(PROBABILITY_SCORE)) {
-					scoreValue = mapValues.get(PROBABILITY_SCORE);
-					if (!"NA".equals(scoreValue)) {
-						ratioScore = new RatioScore(scoreValue, PROBABILITY_SCORE, "PSM-level p-value",
-								"probability score based on LR");
-						ratio.setRatioScore(ratioScore);
-					}
 				}
-				// get the regression_factor anyway, but add it only in case
-				// there is not any other score
-				if (mapValues.containsKey(REGRESSION_FACTOR)) {
-					regressionFactor = mapValues.get(REGRESSION_FACTOR);
-					if (!"NA".equals(regressionFactor)) {
-						// just in case there was not any other ratioScore:
-						if (ratioScore == null) {
-							ratioScore = new RatioScore(regressionFactor, REGRESSION_FACTOR,
+			}
+			// deltacn
+			Float deltaCn = null;
+			if (mapValues.containsKey(DELTACN)) {
+				try {
+					deltaCn = Float.valueOf(mapValues.get(DELTACN));
+					((QuantifiedPSM) quantifiedPSM).setDeltaCN(deltaCn);
+				} catch (NumberFormatException e) {
+
+				}
+			}
+
+			quantifiedPSM.addFileName(inputFileName);
+			final String psmKey = KeyUtils.getSpectrumKey(quantifiedPSM, true);
+			// in case of TMT, the psm may have been created before
+			if (QuantStaticMaps.psmMap.containsKey(psmKey)) {
+				quantifiedPSM = QuantStaticMaps.psmMap.getItem(psmKey);
+			}
+			QuantStaticMaps.psmMap.addItem(quantifiedPSM);
+
+			// psms.add(quantifiedPSM);
+			// add to map
+			if (!localPsmMap.containsKey(quantifiedPSM.getKey())) {
+				localPsmMap.put(quantifiedPSM.getKey(), quantifiedPSM);
+			}
+			// PSM regular ratio
+			// add PSM ratios from census out
+			if (mapValues.containsKey(RATIO)) {
+				try {
+
+					final double ratioValue = Double.valueOf(mapValues.get(RATIO));
+					CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
+							labelDenominator, AggregationLevel.PSM, RATIO);
+					RatioScore ratioScore = null;
+					// profile score
+					String scoreValue = null;
+					// check in any case the regressionFactor. If that is -1,
+					// then
+					// convert the ratio from 0 to inf
+					String regressionFactor = null;
+					if (mapValues.containsKey(PROFILE_SCORE) &&
+					// because profile score will be
+					// assigned to area ratio in case of
+					// exist
+							!mapValues.containsKey(AREA_RATIO)) {
+						scoreValue = mapValues.get(PROFILE_SCORE);
+						if (!"NA".equals(scoreValue)) {
+							ratioScore = new RatioScore(scoreValue, PROFILE_SCORE,
 									"PSM-level quantification confidence metric",
-									"Regression factor or linear regression");
+									"fitting score comparing peak and gaussian distribution");
+							ratio.setRatioScore(ratioScore);
+						}
+						// score regression p-value N15
+					} else if (mapValues.containsKey(PVALUE)) {
+						scoreValue = mapValues.get(PVALUE);
+						if (!"NA".equals(scoreValue)) {
+							ratioScore = new RatioScore(scoreValue, PVALUE, "PSM-level p-value",
+									"probability score based on LR");
+							ratio.setRatioScore(ratioScore);
+						}
+						// score regression p-value SILAC
+					} else if (mapValues.containsKey(PROBABILITY_SCORE)) {
+						scoreValue = mapValues.get(PROBABILITY_SCORE);
+						if (!"NA".equals(scoreValue)) {
+							ratioScore = new RatioScore(scoreValue, PROBABILITY_SCORE, "PSM-level p-value",
+									"probability score based on LR");
 							ratio.setRatioScore(ratioScore);
 						}
 					}
-				}
+					// get the regression_factor anyway, but add it only in case
+					// there is not any other score
+					if (mapValues.containsKey(REGRESSION_FACTOR)) {
+						regressionFactor = mapValues.get(REGRESSION_FACTOR);
+						if (!"NA".equals(regressionFactor)) {
+							// just in case there was not any other ratioScore:
+							if (ratioScore == null) {
+								ratioScore = new RatioScore(regressionFactor, REGRESSION_FACTOR,
+										"PSM-level quantification confidence metric",
+										"Regression factor or linear regression");
+								ratio.setRatioScore(ratioScore);
+							}
+						}
+					}
 
-				try {
-					// if ratio is 0 and regression factor is -1
-					if (Double.compare(ratio.getValue(), 0.0) == 0) {
-						if (regressionFactor != null && ("NA".equals(regressionFactor)
-								|| Double.valueOf(-1.0).equals(Double.valueOf(regressionFactor)))) {
-							// check area_ratio value. If the are_ratio is < 1,
-							// leave it as 0. If the area_ratio is > 1, convert
-							// it
-							// to +INF.
-							// note that all numbers are not log numbers.
-							if (mapValues.containsKey(AREA_RATIO)) {
-								String areaRatioValue = mapValues.get(AREA_RATIO);
-								if (areaRatioValue.equals("INF") || Double.valueOf(areaRatioValue) > 1) {
-									ratio = new CensusRatio(Double.POSITIVE_INFINITY, false, conditionsByLabels,
-											labelNumerator, labelDenominator, AggregationLevel.PSM, RATIO);
-									if (ratioScore != null) {
-										ratio.setRatioScore(ratioScore);
+					try {
+						// if ratio is 0 and regression factor is -1
+						if (Double.compare(ratio.getValue(), 0.0) == 0) {
+							if (regressionFactor != null && ("NA".equals(regressionFactor)
+									|| Double.valueOf(-1.0).equals(Double.valueOf(regressionFactor)))) {
+								// check area_ratio value. If the are_ratio is <
+								// 1,
+								// leave it as 0. If the area_ratio is > 1,
+								// convert
+								// it
+								// to +INF.
+								// note that all numbers are not log numbers.
+								if (mapValues.containsKey(AREA_RATIO)) {
+									String areaRatioValue = mapValues.get(AREA_RATIO);
+									if (areaRatioValue.equals("INF") || Double.valueOf(areaRatioValue) > 1) {
+										ratio = new CensusRatio(Double.POSITIVE_INFINITY, false, conditionsByLabels,
+												labelNumerator, labelDenominator, AggregationLevel.PSM, RATIO);
+										if (ratioScore != null) {
+											ratio.setRatioScore(ratioScore);
+										}
 									}
 								}
 							}
 						}
+					} catch (NumberFormatException e) {
+						// do nothing
 					}
+					// add ratio to PSM
+					quantifiedPSM.addRatio(ratio);
 				} catch (NumberFormatException e) {
-					// do nothing
+					// skip this
 				}
-				// add ratio to PSM
-				quantifiedPSM.addRatio(ratio);
-			} catch (NumberFormatException e) {
-				// skip this
 			}
-		}
 
-		// PSM area ratio
-		// add PSM ratios from census out
-		if (mapValues.containsKey(AREA_RATIO)) {
-			try {
-				double ratioValue;
-				String ratioValueString = mapValues.get(AREA_RATIO);
-				if (ratioValueString.contains("INF")) {
-					if (ratioValueString.equals("INF")) {
-						ratioValue = Double.POSITIVE_INFINITY;
+			// PSM area ratio
+			// add PSM ratios from census out
+			if (mapValues.containsKey(AREA_RATIO)) {
+				try {
+					double ratioValue;
+					String ratioValueString = mapValues.get(AREA_RATIO);
+					if (ratioValueString.contains("INF")) {
+						if (ratioValueString.equals("INF")) {
+							ratioValue = Double.POSITIVE_INFINITY;
+						} else {
+							ratioValue = Double.NEGATIVE_INFINITY;
+						}
 					} else {
-						ratioValue = Double.NEGATIVE_INFINITY;
+						ratioValue = Double.valueOf(mapValues.get(AREA_RATIO));
 					}
-				} else {
-					ratioValue = Double.valueOf(mapValues.get(AREA_RATIO));
-				}
 
+					CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
+							labelDenominator, AggregationLevel.PSM, AREA_RATIO);
+					// profile score
+					if (mapValues.containsKey(PROFILE_SCORE)) {
+						String scoreValue = mapValues.get(PROFILE_SCORE);
+						if (!"NA".equals(scoreValue)) {
+							RatioScore ratioScore = new RatioScore(scoreValue, PROFILE_SCORE,
+									"PSM-level quantification confidence metric",
+									"fitting score comparing peak and gaussian distribution");
+							ratio.setRatioScore(ratioScore);
+						}
+					} else if (mapValues.containsKey(SINGLETON_SCORE)) {
+						String scoreValue = mapValues.get(SINGLETON_SCORE);
+						if (!"NA".equals(scoreValue)) {
+							RatioScore ratioScore = new RatioScore(scoreValue, SINGLETON_SCORE,
+									"PSM-level quantification confidence metric", "Singleton score");
+							ratio.setRatioScore(ratioScore);
+						}
+					}
+					// add ratio to PSM
+					quantifiedPSM.addRatio(ratio);
+				} catch (NumberFormatException e) {
+					// skip this
+				}
+			}
+
+			// PSM amounts
+			QuantAmount light = null;
+			QuantAmount heavy = null;
+			// SAM_INT
+			// light peptide peak area from reconstructed
+			// chromatogram
+			if (mapValues.containsKey(SAM_INT)) {
+				try {
+					final double value = Double.valueOf(mapValues.get(SAM_INT));
+					light = new QuantAmount(value, AmountType.AREA, getLightCondition(conditionsByLabels));
+					// add amount to PSM
+					quantifiedPSM.addAmount(light);
+				} catch (NumberFormatException e) {
+					// skip this
+				}
+			}
+			// REF_INT
+			// heavy peptide peak area from reconstructed
+			// chromatogram
+			if (mapValues.containsKey(REF_INT)) {
+				try {
+					final double value = Double.valueOf(mapValues.get(REF_INT));
+					heavy = new QuantAmount(value, AmountType.AREA, getHeavyCondition(conditionsByLabels));
+					// add amount to PSM
+					quantifiedPSM.addAmount(heavy);
+				} catch (NumberFormatException e) {
+					// skip this
+				}
+			}
+			if (singleton && light != null && heavy != null) {
+				if (light.getValue() == 0.0) {
+					heavy.setSingleton(true);
+				}
+				if (heavy.getValue() == 0.0) {
+					light.setSingleton(true);
+				}
+			}
+			// REGRESSION_FACTOR
+			// regression score (r)
+			if (mapValues.containsKey(AmountType.REGRESSION_FACTOR.name())) {
+				try {
+					final double value = Double.valueOf(mapValues.get(AmountType.REGRESSION_FACTOR.name()));
+					QuantAmount amount = new QuantAmount(value, AmountType.REGRESSION_FACTOR,
+							getLightCondition(conditionsByLabels));
+					// add amount to PSM
+					quantifiedPSM.addAmount(amount);
+				} catch (NumberFormatException e) {
+					// skip this
+				}
+			}
+
+			// TMT
+			if (isTMT(labelNumerator) && isTMT(labelDenominator)) {
+				// numerator
+				Double numeratorIntensity = null;
+				final String headerNumerator = getHeaderForTMTLabel(labelNumerator);
+				if (mapValues.containsKey(headerNumerator)) {
+					numeratorIntensity = Double.valueOf(mapValues.get(headerNumerator));
+					QuantAmount amount = new QuantAmount(numeratorIntensity, AmountType.NORMALIZED_INTENSITY,
+							conditionsByLabels.get(labelDenominator));
+					quantifiedPSM.addAmount(amount);
+				}
+				// denominator
+				Double denominatorIntensity = null;
+				final String headerDenominator = getHeaderForTMTLabel(labelDenominator);
+				if (mapValues.containsKey(headerDenominator)) {
+					denominatorIntensity = Double.valueOf(mapValues.get(headerDenominator));
+					QuantAmount amount = new QuantAmount(denominatorIntensity, AmountType.NORMALIZED_INTENSITY,
+							conditionsByLabels.get(labelDenominator));
+					quantifiedPSM.addAmount(amount);
+				}
+				// build the ratio
+				Double ratioValue = numeratorIntensity / denominatorIntensity;
 				CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
-						labelDenominator, AggregationLevel.PSM, AREA_RATIO);
-				// profile score
-				if (mapValues.containsKey(PROFILE_SCORE)) {
-					String scoreValue = mapValues.get(PROFILE_SCORE);
-					if (!"NA".equals(scoreValue)) {
-						RatioScore ratioScore = new RatioScore(scoreValue, PROFILE_SCORE,
-								"PSM-level quantification confidence metric",
-								"fitting score comparing peak and gaussian distribution");
-						ratio.setRatioScore(ratioScore);
-					}
-				} else if (mapValues.containsKey(SINGLETON_SCORE)) {
-					String scoreValue = mapValues.get(SINGLETON_SCORE);
-					if (!"NA".equals(scoreValue)) {
-						RatioScore ratioScore = new RatioScore(scoreValue, SINGLETON_SCORE,
-								"PSM-level quantification confidence metric", "Singleton score");
-						ratio.setRatioScore(ratioScore);
-					}
-				}
-				// add ratio to PSM
+						labelDenominator, AggregationLevel.PSM, labelNumerator + "/" + labelDenominator);
 				quantifiedPSM.addRatio(ratio);
-			} catch (NumberFormatException e) {
-				// skip this
 			}
-		}
 
-		// PSM amounts
-		QuantAmount light = null;
-		QuantAmount heavy = null;
-		// SAM_INT
-		// light peptide peak area from reconstructed
-		// chromatogram
-		if (mapValues.containsKey(SAM_INT)) {
-			try {
-				final double value = Double.valueOf(mapValues.get(SAM_INT));
-				light = new QuantAmount(value, AmountType.AREA, getLightCondition(conditionsByLabels));
-				// add amount to PSM
-				quantifiedPSM.addAmount(light);
-			} catch (NumberFormatException e) {
-				// skip this
+			// create the peptide
+			QuantifiedPeptideInterface quantifiedPeptide = null;
+			final String peptideKey = KeyUtils.getSequenceKey(quantifiedPSM, true);
+			if (QuantStaticMaps.peptideMap.containsKey(peptideKey)) {
+				quantifiedPeptide = QuantStaticMaps.peptideMap.getItem(peptideKey);
+			} else {
+				quantifiedPeptide = new QuantifiedPeptide(quantifiedPSM);
 			}
-		}
-		// REF_INT
-		// heavy peptide peak area from reconstructed
-		// chromatogram
-		if (mapValues.containsKey(REF_INT)) {
-			try {
-				final double value = Double.valueOf(mapValues.get(REF_INT));
-				heavy = new QuantAmount(value, AmountType.AREA, getHeavyCondition(conditionsByLabels));
-				// add amount to PSM
-				quantifiedPSM.addAmount(heavy);
-			} catch (NumberFormatException e) {
-				// skip this
-			}
-		}
-		if (singleton && light != null && heavy != null) {
-			if (light.getValue() == 0.0) {
-				heavy.setSingleton(true);
-			}
-			if (heavy.getValue() == 0.0) {
-				light.setSingleton(true);
-			}
-		}
-		// REGRESSION_FACTOR
-		// regression score (r)
-		if (mapValues.containsKey(AmountType.REGRESSION_FACTOR.name())) {
-			try {
-				final double value = Double.valueOf(mapValues.get(AmountType.REGRESSION_FACTOR.name()));
-				QuantAmount amount = new QuantAmount(value, AmountType.REGRESSION_FACTOR,
-						getLightCondition(conditionsByLabels));
-				// add amount to PSM
-				quantifiedPSM.addAmount(amount);
-			} catch (NumberFormatException e) {
-				// skip this
-			}
-		}
+			QuantStaticMaps.peptideMap.addItem(quantifiedPeptide);
+			quantifiedPeptide.addFileName(inputFileName);
 
-		// TMT
-		if (isTMT(labelNumerator) && isTMT(labelDenominator)) {
-			// numerator
-			Double numeratorIntensity = null;
-			final String headerNumerator = getHeaderForTMTLabel(labelNumerator);
-			if (mapValues.containsKey(headerNumerator)) {
-				numeratorIntensity = Double.valueOf(mapValues.get(headerNumerator));
-				QuantAmount amount = new QuantAmount(numeratorIntensity, AmountType.NORMALIZED_INTENSITY,
-						conditionsByLabels.get(labelDenominator));
-				quantifiedPSM.addAmount(amount);
+			quantifiedPSM.setQuantifiedPeptide(quantifiedPeptide, true);
+			// add peptide to map
+			if (!localPeptideMap.containsKey(peptideKey)) {
+				localPeptideMap.put(peptideKey, quantifiedPeptide);
 			}
-			// denominator
-			Double denominatorIntensity = null;
-			final String headerDenominator = getHeaderForTMTLabel(labelDenominator);
-			if (mapValues.containsKey(headerDenominator)) {
-				denominatorIntensity = Double.valueOf(mapValues.get(headerDenominator));
-				QuantAmount amount = new QuantAmount(denominatorIntensity, AmountType.NORMALIZED_INTENSITY,
-						conditionsByLabels.get(labelDenominator));
-				quantifiedPSM.addAmount(amount);
-			}
-			// build the ratio
-			Double ratioValue = numeratorIntensity / denominatorIntensity;
-			CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator, labelDenominator,
-					AggregationLevel.PSM, labelNumerator + "/" + labelDenominator);
-			quantifiedPSM.addRatio(ratio);
-		}
 
-		// create the peptide
-		QuantifiedPeptideInterface quantifiedPeptide = null;
-		final String peptideKey = KeyUtils.getSequenceKey(quantifiedPSM, true);
-		if (QuantStaticMaps.peptideMap.containsKey(peptideKey)) {
-			quantifiedPeptide = QuantStaticMaps.peptideMap.getItem(peptideKey);
-		} else {
-			quantifiedPeptide = new QuantifiedPeptide(quantifiedPSM);
-		}
-		QuantStaticMaps.peptideMap.addItem(quantifiedPeptide);
-		quantifiedPeptide.addFileName(inputFileName);
-
-		quantifiedPSM.setQuantifiedPeptide(quantifiedPeptide, true);
-		// add peptide to map
-		if (!localPeptideMap.containsKey(peptideKey)) {
-			localPeptideMap.put(peptideKey, quantifiedPeptide);
-		}
-
-		if (dbIndex != null) {
-			String cleanSeq = quantifiedPSM.getSequence();
-			final Set<IndexedProtein> indexedProteins = dbIndex.getProteins(cleanSeq);
-			if (indexedProteins.isEmpty()) {
-				if (!ignoreNotFoundPeptidesInDB) {
-					throw new PeptideNotFoundInDBIndexException("The peptide " + cleanSeq
-							+ " is not found in Fasta DB.\nReview the default indexing parameters such as the number of allowed misscleavages.");
+			if (dbIndex != null) {
+				String cleanSeq = quantifiedPSM.getSequence();
+				final Set<IndexedProtein> indexedProteins = dbIndex.getProteins(cleanSeq);
+				if (indexedProteins.isEmpty()) {
+					if (!ignoreNotFoundPeptidesInDB) {
+						throw new PeptideNotFoundInDBIndexException("The peptide " + cleanSeq
+								+ " is not found in Fasta DB.\nReview the default indexing parameters such as the number of allowed misscleavages.");
+					}
+					// log.warn("The peptide " + cleanSeq +
+					// " is not found in Fasta DB.");
+					// continue;
 				}
-				// log.warn("The peptide " + cleanSeq +
-				// " is not found in Fasta DB.");
-				// continue;
-			}
-			// create a new Quantified Protein for each
-			// indexedProtein
-			for (IndexedProtein indexedProtein : indexedProteins) {
-				String proteinKey = KeyUtils.getProteinKey(indexedProtein);
-				QuantifiedProteinInterface newQuantifiedProtein = null;
-				if (QuantStaticMaps.proteinMap.containsKey(proteinKey)) {
-					newQuantifiedProtein = QuantStaticMaps.proteinMap.getItem(proteinKey);
+				// create a new Quantified Protein for each
+				// indexedProtein
+				for (IndexedProtein indexedProtein : indexedProteins) {
+					String proteinKey = KeyUtils.getProteinKey(indexedProtein);
+					QuantifiedProteinInterface newQuantifiedProtein = null;
+					if (QuantStaticMaps.proteinMap.containsKey(proteinKey)) {
+						newQuantifiedProtein = QuantStaticMaps.proteinMap.getItem(proteinKey);
 
-				} else {
-					newQuantifiedProtein = new QuantifiedProteinFromDBIndexEntry(indexedProtein);
+					} else {
+						newQuantifiedProtein = new QuantifiedProteinFromDBIndexEntry(indexedProtein);
+
+					}
+					QuantStaticMaps.proteinMap.addItem(newQuantifiedProtein);
+					newQuantifiedProtein.addFileName(inputFileName);
+					// add protein to protein map
+					taxonomies.addAll(newQuantifiedProtein.getTaxonomies());
+					localProteinMap.put(proteinKey, newQuantifiedProtein);
+					// add to protein-experiment map
+					addToMap(experimentKey, experimentToProteinsMap, proteinKey);
+					// add psm to the protein
+					newQuantifiedProtein.addPSM(quantifiedPSM, true);
+					// add peptide to the protein
+					newQuantifiedProtein.addPeptide(quantifiedPeptide, true);
+					// add protein to the psm
+					quantifiedPSM.addQuantifiedProtein(newQuantifiedProtein, true);
+					// add to the map (if it was already
+					// there is not a problem, it will be
+					// only once)
+					addToMap(proteinKey, proteinToPeptidesMap, KeyUtils.getSequenceKey(quantifiedPSM, true));
 
 				}
-				QuantStaticMaps.proteinMap.addItem(newQuantifiedProtein);
-				newQuantifiedProtein.addFileName(inputFileName);
+			}
+			// use the already created quantified
+			// protein
+
+			for (QuantifiedProteinInterface quantifiedProtein : quantifiedProteins) {
+				// add psm to the proteins
+				quantifiedProtein.addPSM(quantifiedPSM, true);
+				// add protein to the psm
+				quantifiedPSM.addQuantifiedProtein(quantifiedProtein, true);
+				// add peptide to the protein
+				quantifiedProtein.addPeptide(quantifiedPeptide, true);
+				// add to the map (if it was already there
+				// is not a problem, it will be only once)
+				String proteinKey = quantifiedProtein.getKey();
+				addToMap(proteinKey, proteinToPeptidesMap, KeyUtils.getSequenceKey(quantifiedPSM, true));
 				// add protein to protein map
-				taxonomies.addAll(newQuantifiedProtein.getTaxonomies());
-				localProteinMap.put(proteinKey, newQuantifiedProtein);
+				localProteinMap.put(proteinKey, quantifiedProtein);
 				// add to protein-experiment map
 				addToMap(experimentKey, experimentToProteinsMap, proteinKey);
-				// add psm to the protein
-				newQuantifiedProtein.addPSM(quantifiedPSM, true);
-				// add peptide to the protein
-				newQuantifiedProtein.addPeptide(quantifiedPeptide, true);
-				// add protein to the psm
-				quantifiedPSM.addQuantifiedProtein(newQuantifiedProtein, true);
-				// add to the map (if it was already
-				// there is not a problem, it will be
-				// only once)
-				addToMap(proteinKey, proteinToPeptidesMap, KeyUtils.getSequenceKey(quantifiedPSM, true));
-
+				quantifiedProtein.addFileName(inputFileName);
 			}
-		}
-		// use the already created quantified
-		// protein
+		} catch (IllegalArgumentException e) {
+			log.warn(e);
+			log.info("Error reading line '" + line + "' from file. Skipping it...");
 
-		for (QuantifiedProteinInterface quantifiedProtein : quantifiedProteins) {
-			// add psm to the proteins
-			quantifiedProtein.addPSM(quantifiedPSM, true);
-			// add protein to the psm
-			quantifiedPSM.addQuantifiedProtein(quantifiedProtein, true);
-			// add peptide to the protein
-			quantifiedProtein.addPeptide(quantifiedPeptide, true);
-			// add to the map (if it was already there
-			// is not a problem, it will be only once)
-			String proteinKey = quantifiedProtein.getKey();
-			addToMap(proteinKey, proteinToPeptidesMap, KeyUtils.getSequenceKey(quantifiedPSM, true));
-			// add protein to protein map
-			localProteinMap.put(proteinKey, quantifiedProtein);
-			// add to protein-experiment map
-			addToMap(experimentKey, experimentToProteinsMap, proteinKey);
-			quantifiedProtein.addFileName(inputFileName);
 		}
-
 	}
 
 	private QuantCondition getLightCondition(Map<QuantificationLabel, QuantCondition> conditionsByLabels) {
