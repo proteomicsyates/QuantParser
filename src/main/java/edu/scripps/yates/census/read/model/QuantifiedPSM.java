@@ -348,12 +348,6 @@ public class QuantifiedPSM implements GroupablePSM, PeptideSequenceInterface, Ha
 	}
 
 	@Override
-	public void addFileName(String fileName) {
-		fileNames.add(fileName);
-
-	}
-
-	@Override
 	public Set<String> getFileNames() {
 		return fileNames;
 	}

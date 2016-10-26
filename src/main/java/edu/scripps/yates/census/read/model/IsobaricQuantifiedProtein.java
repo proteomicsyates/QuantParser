@@ -49,8 +49,6 @@ public class IsobaricQuantifiedProtein extends AbstractContainsQuantifiedPSMs
 	private final Set<Amount> amounts = new HashSet<Amount>();
 	private final Map<String, IonCountRatio> countRatiosByConditionKey = new HashMap<String, IonCountRatio>();
 
-	private final Set<String> fileNames = new HashSet<String>();
-
 	private boolean discarded;
 
 	private Set<IsoRatio> isoRatios;
@@ -678,14 +676,12 @@ public class IsobaricQuantifiedProtein extends AbstractContainsQuantifiedPSMs
 	}
 
 	@Override
-	public void addFileName(String fileName) {
-		fileNames.add(fileName);
-
-	}
-
-	@Override
 	public Set<String> getFileNames() {
-		return fileNames;
+		Set<String> ret = new HashSet<String>();
+		for (QuantifiedPSMInterface quantPSM : getQuantifiedPSMs()) {
+			ret.addAll(quantPSM.getRawFileNames());
+		}
+		return ret;
 	}
 
 	@Override

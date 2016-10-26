@@ -43,8 +43,6 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractContainsQuantifie
 
 	private String taxonomy;
 
-	private final Set<String> fileNames = new HashSet<String>();
-
 	private boolean discarded;
 
 	private String key;
@@ -312,14 +310,12 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractContainsQuantifie
 	}
 
 	@Override
-	public void addFileName(String fileName) {
-		fileNames.add(fileName);
-
-	}
-
-	@Override
 	public Set<String> getFileNames() {
-		return fileNames;
+		Set<String> ret = new HashSet<String>();
+		for (QuantifiedPSMInterface quantPSM : getQuantifiedPSMs()) {
+			ret.addAll(quantPSM.getRawFileNames());
+		}
+		return ret;
 	}
 
 	@Override

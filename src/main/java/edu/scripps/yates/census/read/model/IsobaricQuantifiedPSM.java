@@ -893,12 +893,6 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	}
 
 	@Override
-	public void addFileName(String fileName) {
-		fileNames.add(fileName);
-
-	}
-
-	@Override
 	public Set<String> getFileNames() {
 		return fileNames;
 	}

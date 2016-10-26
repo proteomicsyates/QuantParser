@@ -220,7 +220,6 @@ public class CensusOutParser extends AbstractQuantParser {
 								itWasPeptides = false;
 								QuantifiedProteinInterface quantifiedProtein = processProteinLine(line, pLineHeaderList,
 										conditionsByLabels, labelNumerator, labelDenominator, numDecoy);
-								quantifiedProtein.addFileName(fileName);
 								proteinGroup.add(quantifiedProtein);
 							} catch (DiscardProteinException e) {
 								continue;
@@ -479,7 +478,7 @@ public class CensusOutParser extends AbstractQuantParser {
 				}
 			}
 
-			quantifiedPSM.addFileName(inputFileName);
+			quantifiedPSM.getFileNames().add(inputFileName);
 			final String psmKey = KeyUtils.getSpectrumKey(quantifiedPSM, true);
 			// in case of TMT, the psm may have been created before
 			if (QuantStaticMaps.psmMap.containsKey(psmKey)) {
@@ -714,7 +713,6 @@ public class CensusOutParser extends AbstractQuantParser {
 				quantifiedPeptide = new QuantifiedPeptide(quantifiedPSM);
 			}
 			QuantStaticMaps.peptideMap.addItem(quantifiedPeptide);
-			quantifiedPeptide.addFileName(inputFileName);
 
 			quantifiedPSM.setQuantifiedPeptide(quantifiedPeptide, true);
 			// add peptide to map
@@ -747,7 +745,6 @@ public class CensusOutParser extends AbstractQuantParser {
 
 					}
 					QuantStaticMaps.proteinMap.addItem(newQuantifiedProtein);
-					newQuantifiedProtein.addFileName(inputFileName);
 					// add protein to protein map
 					taxonomies.addAll(newQuantifiedProtein.getTaxonomies());
 					localProteinMap.put(proteinKey, newQuantifiedProtein);
@@ -784,7 +781,6 @@ public class CensusOutParser extends AbstractQuantParser {
 				localProteinMap.put(proteinKey, quantifiedProtein);
 				// add to protein-experiment map
 				addToMap(experimentKey, experimentToProteinsMap, proteinKey);
-				quantifiedProtein.addFileName(inputFileName);
 			}
 		} catch (IllegalArgumentException e) {
 			log.warn(e);

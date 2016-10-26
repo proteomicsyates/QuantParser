@@ -23,7 +23,6 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 	protected String sequenceKey;
 	protected final Set<QuantifiedPSMInterface> psms = new HashSet<QuantifiedPSMInterface>();
 	private final Set<Amount> amounts = new HashSet<Amount>();
-	private final Set<String> fileNames = new HashSet<String>();
 	private boolean discarded;
 	private List<StringPosition> ptms;
 	private final String fullSequence;
@@ -195,14 +194,12 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 	}
 
 	@Override
-	public void addFileName(String fileName) {
-		fileNames.add(fileName);
-
-	}
-
-	@Override
 	public Set<String> getFileNames() {
-		return fileNames;
+		Set<String> ret = new HashSet<String>();
+		for (QuantifiedPSMInterface quantPSM : psms) {
+			ret.addAll(quantPSM.getFileNames());
+		}
+		return ret;
 	}
 
 	@Override

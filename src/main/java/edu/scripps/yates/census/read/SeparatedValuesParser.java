@@ -264,7 +264,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 		QuantifiedPSMInterface quantifiedPSM = new QuantifiedPSM(sequence, labelsByConditions, peptideToSpectraMap,
 				scanNumber, chargeState, rawFileName, false);
 
-		quantifiedPSM.addFileName(inputFileName);
+		quantifiedPSM.getFileNames().add(inputFileName);
 		final String psmKey = KeyUtils.getSpectrumKey(quantifiedPSM, true);
 		// in case of TMT, the psm may have been created before
 		if (QuantStaticMaps.psmMap.containsKey(psmKey)) {
@@ -312,7 +312,6 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 			quantifiedPeptide = new QuantifiedPeptide(quantifiedPSM);
 		}
 		QuantStaticMaps.peptideMap.addItem(quantifiedPeptide);
-		quantifiedPeptide.addFileName(inputFileName);
 		quantifiedPSM.setQuantifiedPeptide(quantifiedPeptide, true);
 		// add peptide to map
 		if (!localPeptideMap.containsKey(peptideKey)) {
@@ -355,7 +354,6 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 				// add to protein-experiment map
 				addToMap(experimentKey, experimentToProteinsMap, proteinKey);
 
-				quantifiedProtein.addFileName(inputFileName);
 			}
 		}
 		if (proteinACC != null) {
@@ -380,7 +378,6 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 			// add to protein-experiment map
 			addToMap(experimentKey, experimentToProteinsMap, proteinKey);
 
-			quantifiedProtein.addFileName(inputFileName);
 		}
 	}
 }
