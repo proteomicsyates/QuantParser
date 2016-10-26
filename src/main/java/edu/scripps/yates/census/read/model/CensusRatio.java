@@ -2,6 +2,8 @@ package edu.scripps.yates.census.read.model;
 
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+
 import edu.scripps.yates.census.analysis.QuantCondition;
 import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
@@ -12,7 +14,7 @@ import edu.scripps.yates.utilities.proteomicsmodel.Score;
 
 public class CensusRatio implements QuantRatio {
 	public static final CensusRatio NAN_RATIO = new CensusRatio(null, null, null, null);
-
+	private static final Logger log = Logger.getLogger(CensusRatio.class);
 	private final QuantCondition quantConditionNumerator;
 	private final QuantCondition quantConditionDenominator;
 	private final QuantificationLabel labelNumerator;
@@ -198,11 +200,15 @@ public class CensusRatio implements QuantRatio {
 	}
 
 	private QuantCondition getConditionByName(String conditionName) {
+		log.info("Looking for condition in ratio with name: " + conditionName + " and having numerator condition as "
+				+ quantConditionNumerator.getName() + " and denominator condition as "
+				+ quantConditionDenominator.getName());
 		if (quantConditionNumerator.getName().equals(conditionName)) {
 			return quantConditionNumerator;
 		} else if (quantConditionDenominator.getName().equals(conditionName)) {
 			return quantConditionDenominator;
 		}
+		log.info("Condition not found in this ratio");
 		return null;
 	}
 
