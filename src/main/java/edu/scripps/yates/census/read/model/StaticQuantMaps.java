@@ -7,8 +7,8 @@ import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
 import edu.scripps.yates.census.read.model.interfaces.StaticItemStorage;
 
-public class QuantStaticMaps {
-	private final static Logger log = Logger.getLogger(QuantStaticMaps.class);
+public class StaticQuantMaps {
+	private final static Logger log = Logger.getLogger(StaticQuantMaps.class);
 	/**
 	 * The map that stores the {@link QuantifiedPSMInterface} by the spectrum
 	 * key

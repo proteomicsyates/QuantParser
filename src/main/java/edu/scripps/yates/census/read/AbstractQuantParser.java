@@ -18,7 +18,7 @@ import org.apache.log4j.Logger;
 import edu.scripps.yates.annotations.uniprot.UniprotRetriever;
 import edu.scripps.yates.annotations.uniprot.xml.Entry;
 import edu.scripps.yates.census.analysis.QuantCondition;
-import edu.scripps.yates.census.read.model.QuantStaticMaps;
+import edu.scripps.yates.census.read.model.StaticQuantMaps;
 import edu.scripps.yates.census.read.model.interfaces.QuantParser;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface;
@@ -265,7 +265,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 
 	private void startProcess() {
 		// clear information in static maps
-		QuantStaticMaps.clearInfo();
+		StaticQuantMaps.clearInfo();
 		// first process
 		process();
 		// remove psms assigned to decoy proteins that were discarded
@@ -408,7 +408,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 		for (Set<String> accessionSet : listOfSets) {
 			Map<String, Entry> annotatedProteins = uplr.getAnnotatedProteins(uniprotVersion, accessionSet);
 			for (String accession : accessionSet) {
-				QuantifiedProteinInterface quantifiedProtein = QuantStaticMaps.proteinMap.getItem(accession);
+				QuantifiedProteinInterface quantifiedProtein = StaticQuantMaps.proteinMap.getItem(accession);
 				Entry entry = annotatedProteins.get(accession);
 				if (entry != null && entry.getAccession() != null && !entry.getAccession().isEmpty()) {
 					String primaryAccession = entry.getAccession().get(0);
@@ -416,10 +416,10 @@ public abstract class AbstractQuantParser implements QuantParser {
 						log.info("Replacing Uniprot accession " + quantifiedProtein.getAccession() + " by "
 								+ primaryAccession);
 						quantifiedProtein.setAccession(primaryAccession);
-						if (QuantStaticMaps.proteinMap.containsKey(primaryAccession)) {
+						if (StaticQuantMaps.proteinMap.containsKey(primaryAccession)) {
 							// there was already a protein with that
 							// primaryAccession
-							QuantifiedProteinInterface quantifiedProtein2 = QuantStaticMaps.proteinMap
+							QuantifiedProteinInterface quantifiedProtein2 = StaticQuantMaps.proteinMap
 									.getItem(primaryAccession);
 							// merge quantifiedPRotein and quantifiedPRotein2
 							mergeProteins(quantifiedProtein, quantifiedProtein2);
@@ -429,10 +429,10 @@ public abstract class AbstractQuantParser implements QuantParser {
 						}
 						// remove old/secondary accession
 						getProteinMap().remove(accession);
-						QuantStaticMaps.proteinMap.remove(accession);
+						StaticQuantMaps.proteinMap.remove(accession);
 						getProteinMap().put(primaryAccession, quantifiedProtein);
 
-						QuantStaticMaps.proteinMap.addItem(quantifiedProtein);
+						StaticQuantMaps.proteinMap.addItem(quantifiedProtein);
 					}
 				} else {
 					// // remove the protein because is obsolete

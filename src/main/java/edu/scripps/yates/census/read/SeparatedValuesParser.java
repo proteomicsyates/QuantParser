@@ -17,7 +17,7 @@ import org.apache.log4j.Logger;
 import edu.scripps.yates.census.analysis.QuantCondition;
 import edu.scripps.yates.census.analysis.util.KeyUtils;
 import edu.scripps.yates.census.read.model.CensusRatio;
-import edu.scripps.yates.census.read.model.QuantStaticMaps;
+import edu.scripps.yates.census.read.model.StaticQuantMaps;
 import edu.scripps.yates.census.read.model.QuantifiedPSM;
 import edu.scripps.yates.census.read.model.QuantifiedPeptide;
 import edu.scripps.yates.census.read.model.QuantifiedProtein;
@@ -203,11 +203,11 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 				}
 
 				log.info("(" + experimentKey + ") " + localPsmMap.size() + " PSMs from this parser. "
-						+ QuantStaticMaps.psmMap.size() + " PSMs in the system");
+						+ StaticQuantMaps.psmMap.size() + " PSMs in the system");
 				log.info("(" + experimentKey + ") " + localProteinMap.size() + " Proteins from this parser. "
-						+ QuantStaticMaps.proteinMap.size() + " Proteins in the system");
+						+ StaticQuantMaps.proteinMap.size() + " Proteins in the system");
 				log.info("(" + experimentKey + ") " + localPeptideMap.size() + " Peptides from this parser. "
-						+ QuantStaticMaps.peptideMap.size() + " Peptides in the system");
+						+ StaticQuantMaps.peptideMap.size() + " Peptides in the system");
 				if (decoyPattern != null) {
 					log.info(numDecoy + " decoy Proteins were discarded  in " + experimentKey);
 				}
@@ -267,10 +267,10 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 		quantifiedPSM.getFileNames().add(inputFileName);
 		final String psmKey = KeyUtils.getSpectrumKey(quantifiedPSM, true);
 		// in case of TMT, the psm may have been created before
-		if (QuantStaticMaps.psmMap.containsKey(psmKey)) {
-			quantifiedPSM = QuantStaticMaps.psmMap.getItem(psmKey);
+		if (StaticQuantMaps.psmMap.containsKey(psmKey)) {
+			quantifiedPSM = StaticQuantMaps.psmMap.getItem(psmKey);
 		}
-		QuantStaticMaps.psmMap.addItem(quantifiedPSM);
+		StaticQuantMaps.psmMap.addItem(quantifiedPSM);
 
 		// psms.add(quantifiedPSM);
 		// add to map
@@ -306,12 +306,12 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 		// create the peptide
 		QuantifiedPeptideInterface quantifiedPeptide = null;
 		final String peptideKey = KeyUtils.getSequenceKey(quantifiedPSM, true);
-		if (QuantStaticMaps.peptideMap.containsKey(peptideKey)) {
-			quantifiedPeptide = QuantStaticMaps.peptideMap.getItem(peptideKey);
+		if (StaticQuantMaps.peptideMap.containsKey(peptideKey)) {
+			quantifiedPeptide = StaticQuantMaps.peptideMap.getItem(peptideKey);
 		} else {
 			quantifiedPeptide = new QuantifiedPeptide(quantifiedPSM);
 		}
-		QuantStaticMaps.peptideMap.addItem(quantifiedPeptide);
+		StaticQuantMaps.peptideMap.addItem(quantifiedPeptide);
 		quantifiedPSM.setQuantifiedPeptide(quantifiedPeptide, true);
 		// add peptide to map
 		if (!localPeptideMap.containsKey(peptideKey)) {
@@ -335,8 +335,8 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 			for (IndexedProtein indexedProtein : indexedProteins) {
 				String proteinKey = KeyUtils.getProteinKey(indexedProtein);
 				QuantifiedProteinInterface quantifiedProtein = null;
-				if (QuantStaticMaps.proteinMap.containsKey(proteinKey)) {
-					quantifiedProtein = QuantStaticMaps.proteinMap.getItem(proteinKey);
+				if (StaticQuantMaps.proteinMap.containsKey(proteinKey)) {
+					quantifiedProtein = StaticQuantMaps.proteinMap.getItem(proteinKey);
 				} else {
 					quantifiedProtein = new QuantifiedProteinFromDBIndexEntry(indexedProtein);
 				}
@@ -359,8 +359,8 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 		if (proteinACC != null) {
 			String proteinKey = proteinACC;
 			QuantifiedProteinInterface quantifiedProtein = null;
-			if (QuantStaticMaps.proteinMap.containsKey(proteinKey)) {
-				quantifiedProtein = QuantStaticMaps.proteinMap.getItem(proteinKey);
+			if (StaticQuantMaps.proteinMap.containsKey(proteinKey)) {
+				quantifiedProtein = StaticQuantMaps.proteinMap.getItem(proteinKey);
 			} else {
 				quantifiedProtein = new QuantifiedProtein(proteinKey);
 			}

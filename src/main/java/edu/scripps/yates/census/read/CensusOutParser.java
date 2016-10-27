@@ -23,7 +23,7 @@ import edu.scripps.yates.census.analysis.QuantCondition;
 import edu.scripps.yates.census.analysis.util.KeyUtils;
 import edu.scripps.yates.census.read.model.CensusRatio;
 import edu.scripps.yates.census.read.model.QuantAmount;
-import edu.scripps.yates.census.read.model.QuantStaticMaps;
+import edu.scripps.yates.census.read.model.StaticQuantMaps;
 import edu.scripps.yates.census.read.model.QuantifiedPSM;
 import edu.scripps.yates.census.read.model.QuantifiedPeptide;
 import edu.scripps.yates.census.read.model.QuantifiedProtein;
@@ -272,11 +272,11 @@ public class CensusOutParser extends AbstractQuantParser {
 				}
 
 				log.info("(" + experimentKey + ") " + localPsmMap.size() + " PSMs from this parser. "
-						+ QuantStaticMaps.psmMap.size() + " PSMs in the system");
+						+ StaticQuantMaps.psmMap.size() + " PSMs in the system");
 				log.info("(" + experimentKey + ") " + localProteinMap.size() + " Proteins from this parser. "
-						+ QuantStaticMaps.proteinMap.size() + " Proteins in the system");
+						+ StaticQuantMaps.proteinMap.size() + " Proteins in the system");
 				log.info("(" + experimentKey + ") " + localPeptideMap.size() + " Peptides from this parser. "
-						+ QuantStaticMaps.peptideMap.size() + " Peptides in the system");
+						+ StaticQuantMaps.peptideMap.size() + " Peptides in the system");
 				if (decoyPattern != null) {
 					log.info(numDecoy + " decoy Proteins were discarded  in " + experimentKey);
 				}
@@ -315,18 +315,18 @@ public class CensusOutParser extends AbstractQuantParser {
 							if (!toIgnore.isEmpty()) {
 								for (QuantifiedPSMInterface psmToIgnore : toIgnore) {
 									localPsmMap.remove(psmToIgnore.getKey());
-									QuantStaticMaps.psmMap.remove(psmToIgnore);
+									StaticQuantMaps.psmMap.remove(psmToIgnore);
 								}
 							}
 						}
 					}
 					log.info("AFTER FILTERING: (" + experimentKey + ") " + localPsmMap.size()
-							+ " PSMs from this parser. " + QuantStaticMaps.psmMap.size() + " PSMs in the system");
+							+ " PSMs from this parser. " + StaticQuantMaps.psmMap.size() + " PSMs in the system");
 					log.info("AFTER FILTERING: (" + experimentKey + ") " + localProteinMap.size()
-							+ " Proteins from this parser. " + QuantStaticMaps.proteinMap.size()
+							+ " Proteins from this parser. " + StaticQuantMaps.proteinMap.size()
 							+ " Proteins in the system");
 					log.info("AFTER FILTERING: (" + experimentKey + ") " + localPeptideMap.size()
-							+ " Peptides from this parser. " + QuantStaticMaps.peptideMap.size()
+							+ " Peptides from this parser. " + StaticQuantMaps.peptideMap.size()
 							+ " Peptides in the system");
 				}
 			}
@@ -481,10 +481,10 @@ public class CensusOutParser extends AbstractQuantParser {
 			quantifiedPSM.getFileNames().add(inputFileName);
 			final String psmKey = KeyUtils.getSpectrumKey(quantifiedPSM, true);
 			// in case of TMT, the psm may have been created before
-			if (QuantStaticMaps.psmMap.containsKey(psmKey)) {
-				quantifiedPSM = QuantStaticMaps.psmMap.getItem(psmKey);
+			if (StaticQuantMaps.psmMap.containsKey(psmKey)) {
+				quantifiedPSM = StaticQuantMaps.psmMap.getItem(psmKey);
 			}
-			QuantStaticMaps.psmMap.addItem(quantifiedPSM);
+			StaticQuantMaps.psmMap.addItem(quantifiedPSM);
 
 			// psms.add(quantifiedPSM);
 			// add to map
@@ -707,12 +707,12 @@ public class CensusOutParser extends AbstractQuantParser {
 			// create the peptide
 			QuantifiedPeptideInterface quantifiedPeptide = null;
 			final String peptideKey = KeyUtils.getSequenceKey(quantifiedPSM, true);
-			if (QuantStaticMaps.peptideMap.containsKey(peptideKey)) {
-				quantifiedPeptide = QuantStaticMaps.peptideMap.getItem(peptideKey);
+			if (StaticQuantMaps.peptideMap.containsKey(peptideKey)) {
+				quantifiedPeptide = StaticQuantMaps.peptideMap.getItem(peptideKey);
 			} else {
 				quantifiedPeptide = new QuantifiedPeptide(quantifiedPSM);
 			}
-			QuantStaticMaps.peptideMap.addItem(quantifiedPeptide);
+			StaticQuantMaps.peptideMap.addItem(quantifiedPeptide);
 
 			quantifiedPSM.setQuantifiedPeptide(quantifiedPeptide, true);
 			// add peptide to map
@@ -737,14 +737,14 @@ public class CensusOutParser extends AbstractQuantParser {
 				for (IndexedProtein indexedProtein : indexedProteins) {
 					String proteinKey = KeyUtils.getProteinKey(indexedProtein);
 					QuantifiedProteinInterface newQuantifiedProtein = null;
-					if (QuantStaticMaps.proteinMap.containsKey(proteinKey)) {
-						newQuantifiedProtein = QuantStaticMaps.proteinMap.getItem(proteinKey);
+					if (StaticQuantMaps.proteinMap.containsKey(proteinKey)) {
+						newQuantifiedProtein = StaticQuantMaps.proteinMap.getItem(proteinKey);
 
 					} else {
 						newQuantifiedProtein = new QuantifiedProteinFromDBIndexEntry(indexedProtein);
 
 					}
-					QuantStaticMaps.proteinMap.addItem(newQuantifiedProtein);
+					StaticQuantMaps.proteinMap.addItem(newQuantifiedProtein);
 					// add protein to protein map
 					taxonomies.addAll(newQuantifiedProtein.getTaxonomies());
 					localProteinMap.put(proteinKey, newQuantifiedProtein);
@@ -850,14 +850,14 @@ public class CensusOutParser extends AbstractQuantParser {
 		String proteinACC = mapValues.get(LOCUS);
 
 		QuantifiedProteinInterface quantifiedProtein = null;
-		if (QuantStaticMaps.proteinMap.containsKey(proteinACC)) {
-			quantifiedProtein = QuantStaticMaps.proteinMap.getItem(proteinACC);
+		if (StaticQuantMaps.proteinMap.containsKey(proteinACC)) {
+			quantifiedProtein = StaticQuantMaps.proteinMap.getItem(proteinACC);
 		} else {
 			quantifiedProtein = new QuantifiedProtein(proteinACC);
 			String description = mapValues.get(DESCRIPTION);
 			quantifiedProtein.setDescription(description);
 		}
-		QuantStaticMaps.proteinMap.addItem(quantifiedProtein);
+		StaticQuantMaps.proteinMap.addItem(quantifiedProtein);
 
 		// apply the pattern if available
 		if (decoyPattern != null) {

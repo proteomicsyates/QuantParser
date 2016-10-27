@@ -27,7 +27,7 @@ import edu.scripps.yates.census.quant.xml.RelexChro;
 import edu.scripps.yates.census.read.model.IsobaricQuantifiedPSM;
 import edu.scripps.yates.census.read.model.IsobaricQuantifiedPeptide;
 import edu.scripps.yates.census.read.model.IsobaricQuantifiedProtein;
-import edu.scripps.yates.census.read.model.QuantStaticMaps;
+import edu.scripps.yates.census.read.model.StaticQuantMaps;
 import edu.scripps.yates.census.read.model.QuantifiedProteinFromDBIndexEntry;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
@@ -189,12 +189,12 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 					if (proteinKey.contains("Q03181")) {
 						log.info(proteinKey);
 					}
-					if (QuantStaticMaps.proteinMap.containsKey(proteinKey)) {
-						quantifiedProtein = QuantStaticMaps.proteinMap.getItem(proteinKey);
+					if (StaticQuantMaps.proteinMap.containsKey(proteinKey)) {
+						quantifiedProtein = StaticQuantMaps.proteinMap.getItem(proteinKey);
 					} else {
 						quantifiedProtein = new IsobaricQuantifiedProtein(protein);
 					}
-					QuantStaticMaps.proteinMap.addItem(quantifiedProtein);
+					StaticQuantMaps.proteinMap.addItem(quantifiedProtein);
 
 					final List<Peptide> peptideList = protein.getPeptide();
 					if (peptideList != null) {
@@ -205,8 +205,8 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 									&& !"".equals(peptide.getFrag().getBr())) {
 								IsobaricQuantifiedPSM quantifiedPSM = null;
 								final String spectrumKey = KeyUtils.getSpectrumKey(peptide, true);
-								if (QuantStaticMaps.psmMap.containsKey(spectrumKey)) {
-									quantifiedPSM = (IsobaricQuantifiedPSM) QuantStaticMaps.psmMap.getItem(spectrumKey);
+								if (StaticQuantMaps.psmMap.containsKey(spectrumKey)) {
+									quantifiedPSM = (IsobaricQuantifiedPSM) StaticQuantMaps.psmMap.getItem(spectrumKey);
 								} else {
 									quantifiedPSM = new IsobaricQuantifiedPSM(peptide,
 											labelsByConditionsByFile.get(remoteFileRetriever), spectrumToIonsMap,
@@ -216,7 +216,7 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 								final String peptideKey = KeyUtils.getSequenceKey(quantifiedPSM, true);
 								quantifiedPSM.addSpectrumToIonsMaps(spectrumKey2, spectrumToIonsMap, ionKeys);
 								addToMap(peptideKey, peptideToSpectraMap, spectrumKey2);
-								QuantStaticMaps.psmMap.addItem(quantifiedPSM);
+								StaticQuantMaps.psmMap.addItem(quantifiedPSM);
 								quantifiedPSM.getFileNames().add(fileName);
 								psms.add(quantifiedPSM);
 								// add to map
@@ -229,13 +229,13 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 
 								// create the peptide
 								IsobaricQuantifiedPeptide quantifiedPeptide = null;
-								if (QuantStaticMaps.peptideMap.containsKey(peptideKey)) {
-									quantifiedPeptide = (IsobaricQuantifiedPeptide) QuantStaticMaps.peptideMap
+								if (StaticQuantMaps.peptideMap.containsKey(peptideKey)) {
+									quantifiedPeptide = (IsobaricQuantifiedPeptide) StaticQuantMaps.peptideMap
 											.getItem(peptideKey);
 								} else {
 									quantifiedPeptide = new IsobaricQuantifiedPeptide(quantifiedPSM);
 								}
-								QuantStaticMaps.peptideMap.addItem(quantifiedPeptide);
+								StaticQuantMaps.peptideMap.addItem(quantifiedPeptide);
 
 								quantifiedPSM.setQuantifiedPeptide(quantifiedPeptide, true);
 								// add peptide to map
@@ -276,14 +276,14 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 										String proteinKey2 = KeyUtils.getProteinKey(indexedProtein);
 
 										QuantifiedProteinInterface newQuantifiedProtein = null;
-										if (QuantStaticMaps.proteinMap.containsKey(proteinKey2)) {
-											newQuantifiedProtein = QuantStaticMaps.proteinMap.getItem(proteinKey2);
+										if (StaticQuantMaps.proteinMap.containsKey(proteinKey2)) {
+											newQuantifiedProtein = StaticQuantMaps.proteinMap.getItem(proteinKey2);
 
 										} else {
 											newQuantifiedProtein = new QuantifiedProteinFromDBIndexEntry(
 													indexedProtein);
 										}
-										QuantStaticMaps.proteinMap.addItem(newQuantifiedProtein);
+										StaticQuantMaps.proteinMap.addItem(newQuantifiedProtein);
 										registerProteins(newQuantifiedProtein, experimentKey, quantifiedPSM,
 												quantifiedPeptide, remoteFileRetriever.getRemotePath());
 
@@ -299,15 +299,15 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 				}
 				log.info(psms.size() + " out of " + numTotalPeptides
 						+ " PSMs in Census file containing non empty series");
-				log.info(psms.size() + " PSMs from this parser. " + QuantStaticMaps.psmMap.size()
+				log.info(psms.size() + " PSMs from this parser. " + StaticQuantMaps.psmMap.size()
 						+ " PSMs in the system");
 				log.info(localProteinMap.size() + " Proteins created");
-				log.info(localProteinMap.size() + " Proteins from this parser. " + QuantStaticMaps.proteinMap.size()
+				log.info(localProteinMap.size() + " Proteins from this parser. " + StaticQuantMaps.proteinMap.size()
 						+ " Proteins in the system");
 				log.info(numDecoy + " decoy Proteins were discarded out of " + proteins.size() + " Proteins in "
 						+ experimentKey);
 				log.info(localPeptideMap.size() + " Peptides created");
-				log.info(localPeptideMap.size() + " Peptides from this parser. " + QuantStaticMaps.peptideMap.size()
+				log.info(localPeptideMap.size() + " Peptides from this parser. " + StaticQuantMaps.peptideMap.size()
 						+ " Peptides in the system");
 			}
 			if (!someValidFile)
