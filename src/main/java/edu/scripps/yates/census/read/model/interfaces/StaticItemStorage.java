@@ -40,4 +40,8 @@ public class StaticItemStorage<T extends HasKey> {
 		return map.remove(key);
 
 	}
+
+	public boolean isEmpty() {
+		return map.isEmpty();
+	}
 }

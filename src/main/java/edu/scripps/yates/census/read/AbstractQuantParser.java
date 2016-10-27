@@ -264,6 +264,8 @@ public abstract class AbstractQuantParser implements QuantParser {
 	}
 
 	private void startProcess() {
+		// clear information in static maps
+		QuantStaticMaps.clearInfo();
 		// first process
 		process();
 		// remove psms assigned to decoy proteins that were discarded

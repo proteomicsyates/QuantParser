@@ -200,9 +200,11 @@ public class CensusRatio implements QuantRatio {
 	}
 
 	private QuantCondition getConditionByName(String conditionName) {
-		log.info("Looking for condition in ratio with name: " + conditionName + " and having numerator condition as "
-				+ quantConditionNumerator.getName() + " and denominator condition as "
-				+ quantConditionDenominator.getName());
+		// log.info("Looking for condition in ratio with name: " + conditionName
+		// + " and having numerator condition as "
+		// + quantConditionNumerator.getName() + " and denominator condition as
+		// "
+		// + quantConditionDenominator.getName());
 		if (quantConditionNumerator.getName().equals(conditionName)) {
 			return quantConditionNumerator;
 		} else if (quantConditionDenominator.getName().equals(conditionName)) {
