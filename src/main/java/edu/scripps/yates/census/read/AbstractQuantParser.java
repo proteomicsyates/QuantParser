@@ -68,6 +68,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 	protected final Map<RemoteSSHFileReference, QuantificationLabel> denominatorLabelByFile = new HashMap<RemoteSSHFileReference, QuantificationLabel>();
 	private UniprotRetriever uplr;
 	private String uniprotVersion;
+	protected boolean clearStaticMapsBeforeReading = true;
 
 	public AbstractQuantParser() {
 
@@ -264,8 +265,10 @@ public abstract class AbstractQuantParser implements QuantParser {
 	}
 
 	private void startProcess() {
-		// clear information in static maps
-		StaticQuantMaps.clearInfo();
+		if (clearStaticMapsBeforeReading) {
+			// clear information in static maps
+			StaticQuantMaps.clearInfo();
+		}
 		// first process
 		process();
 		// remove psms assigned to decoy proteins that were discarded
