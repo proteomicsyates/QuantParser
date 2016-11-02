@@ -115,7 +115,7 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 	}
 
 	public void analyze() throws IOException, InterruptedException, ExecutionException {
-		logFileWriter = new FileWriter(new File("C:\\Users\\Salva\\Desktop\\tmp\\sanxot_cmds.txt"));
+		logFileWriter = new FileWriter(new File(System.getProperty("user.dir") + File.separator + "sanxot_cmds.log"));
 
 		log.info("Starting SanXot interfaze");
 		log.info("Timeout set at " + quantParameters.getTimeout() / 1000 + " sg.");
