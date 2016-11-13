@@ -17,12 +17,12 @@ import org.apache.log4j.Logger;
 import edu.scripps.yates.census.analysis.QuantCondition;
 import edu.scripps.yates.census.analysis.util.KeyUtils;
 import edu.scripps.yates.census.read.model.CensusRatio;
-import edu.scripps.yates.census.read.model.StaticQuantMaps;
 import edu.scripps.yates.census.read.model.QuantifiedPSM;
 import edu.scripps.yates.census.read.model.QuantifiedPeptide;
 import edu.scripps.yates.census.read.model.QuantifiedProtein;
 import edu.scripps.yates.census.read.model.QuantifiedProteinFromDBIndexEntry;
 import edu.scripps.yates.census.read.model.RatioScore;
+import edu.scripps.yates.census.read.model.StaticQuantMaps;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
@@ -154,13 +154,13 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 							Double ratioWeigth = null;
 							String proteinAcc = null;
 							final String[] split = line.split(separator);
-							if (split.length > PSM_ID_COL + 1) {
+							if (split.length > PSM_ID_COL) {
 								psmID = split[PSM_ID_COL];
 							}
-							if (split.length > SEQ_COL + 1) {
+							if (split.length > SEQ_COL) {
 								seq = split[SEQ_COL];
 							}
-							if (split.length > RATIO_COL + 1) {
+							if (split.length > RATIO_COL && !"".equals(split[RATIO_COL])) {
 								try {
 									ratio = Double.valueOf(split[RATIO_COL]);
 								} catch (NumberFormatException e) {
@@ -169,7 +169,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 											+ 1 + "\t" + e.getMessage());
 								}
 							}
-							if (split.length > RATIO_WEIGHT_COL + 1) {
+							if (split.length > RATIO_WEIGHT_COL && !"".equals(split[RATIO_WEIGHT_COL])) {
 								try {
 									ratioWeigth = Double.valueOf(split[RATIO_WEIGHT_COL]);
 								} catch (NumberFormatException e) {
@@ -178,7 +178,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 											+ RATIO_WEIGHT_COL + 1 + "\t" + e.getMessage());
 								}
 							}
-							if (split.length > PROTEIN_ACC_COL + 1) {
+							if (split.length > PROTEIN_ACC_COL) {
 								proteinAcc = split[PROTEIN_ACC_COL];
 							}
 							processPSMLine(psmID, seq, ratio, ratioWeigth, proteinAcc, conditionsByLabels,
