@@ -340,6 +340,8 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 				} else {
 					quantifiedProtein = new QuantifiedProteinFromDBIndexEntry(indexedProtein);
 				}
+				StaticQuantMaps.proteinMap.addItem(quantifiedProtein);
+
 				// add psm to the proteins
 				quantifiedProtein.addPSM(quantifiedPSM, true);
 				// add protein to the psm
@@ -364,6 +366,8 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 			} else {
 				quantifiedProtein = new QuantifiedProtein(proteinKey);
 			}
+			StaticQuantMaps.proteinMap.addItem(quantifiedProtein);
+
 			// add psm to the proteins
 			quantifiedProtein.addPSM(quantifiedPSM, true);
 			// add protein to the psm
