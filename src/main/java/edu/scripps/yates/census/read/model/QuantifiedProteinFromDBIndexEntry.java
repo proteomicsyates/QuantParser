@@ -165,7 +165,9 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractContainsQuantifie
 			taxonomy = organismNameFromFastaHeader;
 		}
 		Set<String> set = new HashSet<String>();
-		set.add(taxonomy);
+		if (taxonomy != null) {
+			set.add(taxonomy);
+		}
 		return set;
 	}
 
@@ -285,7 +287,8 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractContainsQuantifie
 
 	@Override
 	public void setTaxonomy(String taxonomy) {
-		this.taxonomy = taxonomy;
+		if (taxonomy != null)
+			this.taxonomy = taxonomy;
 	}
 
 	@Override

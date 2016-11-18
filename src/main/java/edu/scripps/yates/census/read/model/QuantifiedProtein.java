@@ -141,14 +141,16 @@ public class QuantifiedProtein extends AbstractContainsQuantifiedPSMs implements
 			taxonomy = FastaParser.getOrganismNameFromFastaHeader(fastaHeader, accession);
 		}
 		Set<String> set = new HashSet<String>();
-		set.add(taxonomy);
+		if (taxonomy != null)
+			set.add(taxonomy);
 		return set;
 
 	}
 
 	@Override
 	public void setTaxonomy(String taxonomy) {
-		this.taxonomy = taxonomy;
+		if (taxonomy != null)
+			this.taxonomy = taxonomy;
 	}
 
 	@Override
