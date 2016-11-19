@@ -27,8 +27,8 @@ import edu.scripps.yates.census.quant.xml.RelexChro;
 import edu.scripps.yates.census.read.model.IsobaricQuantifiedPSM;
 import edu.scripps.yates.census.read.model.IsobaricQuantifiedPeptide;
 import edu.scripps.yates.census.read.model.IsobaricQuantifiedProtein;
-import edu.scripps.yates.census.read.model.StaticQuantMaps;
 import edu.scripps.yates.census.read.model.QuantifiedProteinFromDBIndexEntry;
+import edu.scripps.yates.census.read.model.StaticQuantMaps;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
@@ -176,6 +176,7 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 						final Matcher matcher = decoyPattern.matcher(protein.getLocus());
 
 						if (matcher.find()) {
+							log.info("Discarding decoy: " + protein.getLocus());
 							numDecoy++;
 							continue;
 						}
@@ -270,6 +271,8 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 										if (decoyPattern != null) {
 											final Matcher matcher = decoyPattern.matcher(indexedProtein.getAccession());
 											if (matcher.find()) {
+												log.info("Discarding decoy: " + indexedProtein.getAccession());
+
 												continue;
 											}
 										}
