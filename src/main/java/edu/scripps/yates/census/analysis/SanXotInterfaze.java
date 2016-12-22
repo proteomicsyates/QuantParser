@@ -549,7 +549,9 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 		Long exitCode = runCommand(calibratingCommandLine, timeout);
 		if (exitCode.longValue() != 0) {
 			throw new SanxotErrorException(
-					"Some error happen while calibration process. You may consider to increase the timeout time by saxotInterface.setTimeout(long timeout) method");
+					"Some error happen while calibration process. You may consider the following actions:\n"
+							+ "-If you are running the software in a remote terminal, make sure that you have X11 activated.\n"
+							+ "-For developers only: Increase the timeout time by saxotInterface.setTimeout(long timeout) method");
 		}
 		KalibrateResultWrapper calibrationResults = new KalibrateResultWrapper(fileMappingResults.getWorkingFolder(),
 				prefix);
