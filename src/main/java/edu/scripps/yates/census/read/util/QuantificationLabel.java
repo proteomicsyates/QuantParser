@@ -4,15 +4,20 @@ import org.apache.log4j.Logger;
 
 public enum QuantificationLabel {
 
-	LIGHT(true), HEAVY(false), //
-	TMT_6PLEX_126(true), TMT_6PLEX_127(false), TMT_6PLEX_128(false), TMT_6PLEX_129(false), TMT_6PLEX_130(
-			false), TMT_6PLEX_131(false), //
-	N14(true), N15(false);
+	LIGHT(true, false, false), HEAVY(false, false, true), MEDIUM(false, true, false), //
+	TMT_6PLEX_126(true, false, false), TMT_6PLEX_127(false, false, false), TMT_6PLEX_128(false, false,
+			false), TMT_6PLEX_129(false, false,
+					false), TMT_6PLEX_130(false, false, false), TMT_6PLEX_131(false, false, true), //
+	N14(true, false, false), N15(false, false, true);
 	private final static Logger log = Logger.getLogger(QuantificationLabel.class);
 	private final boolean isLight;
+	private final boolean isMedium;
+	private final boolean isHeavy;
 
-	private QuantificationLabel(boolean isLight) {
+	private QuantificationLabel(boolean isLight, boolean isMedium, boolean isHeavy) {
 		this.isLight = isLight;
+		this.isMedium = isMedium;
+		this.isHeavy = isHeavy;
 	}
 
 	public static QuantificationLabel getByName(String labelName) {
@@ -22,7 +27,8 @@ public enum QuantificationLabel {
 			return LIGHT;
 		if (labelName.equalsIgnoreCase("h"))
 			return HEAVY;
-
+		if (labelName.equalsIgnoreCase("m"))
+			return MEDIUM;
 		final QuantificationLabel[] values = values();
 		for (QuantificationLabel quantificationLabel : values) {
 			if (quantificationLabel.name().equalsIgnoreCase(labelName))
@@ -56,5 +62,20 @@ public enum QuantificationLabel {
 	 */
 	public boolean isLight() {
 		return isLight;
+	}
+
+	/**
+	 * @return the isLight
+	 */
+	public boolean isMedium() {
+
+		return isMedium;
+	}
+
+	/**
+	 * @return the isHeavy
+	 */
+	public boolean isHeavy() {
+		return isHeavy;
 	}
 }

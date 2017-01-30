@@ -18,9 +18,16 @@ public interface QuantParser {
 	void addFile(File xmlFile, Map<QuantCondition, QuantificationLabel> labelsByConditions,
 			QuantificationLabel labelNumerator, QuantificationLabel labelDenominator) throws FileNotFoundException;
 
+	void addFile(File xmlFile, Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelL,
+			QuantificationLabel labelM, QuantificationLabel labelH) throws FileNotFoundException;
+
 	void addFile(RemoteSSHFileReference remoteFileReference,
 			Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelNumerator,
 			QuantificationLabel labelDenominator);
+
+	void addFile(RemoteSSHFileReference remoteFileReference,
+			Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelL,
+			QuantificationLabel labelM, QuantificationLabel labelH);
 
 	Map<String, QuantifiedPeptideInterface> getPeptideMap();
 

@@ -18,6 +18,7 @@ import org.apache.log4j.Logger;
 import edu.scripps.yates.annotations.uniprot.UniprotRetriever;
 import edu.scripps.yates.annotations.uniprot.xml.Entry;
 import edu.scripps.yates.census.analysis.QuantCondition;
+import edu.scripps.yates.census.read.model.RatioDescriptor;
 import edu.scripps.yates.census.read.model.StaticQuantMaps;
 import edu.scripps.yates.census.read.model.interfaces.QuantParser;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
@@ -64,8 +65,13 @@ public abstract class AbstractQuantParser implements QuantParser {
 
 	protected final Map<RemoteSSHFileReference, Map<QuantCondition, QuantificationLabel>> labelsByConditionsByFile = new HashMap<RemoteSSHFileReference, Map<QuantCondition, QuantificationLabel>>();
 
-	protected final Map<RemoteSSHFileReference, QuantificationLabel> numeratorLabelByFile = new HashMap<RemoteSSHFileReference, QuantificationLabel>();
-	protected final Map<RemoteSSHFileReference, QuantificationLabel> denominatorLabelByFile = new HashMap<RemoteSSHFileReference, QuantificationLabel>();
+	// protected final Map<RemoteSSHFileReference, QuantificationLabel>
+	// numeratorLabelByFile = new HashMap<RemoteSSHFileReference,
+	// QuantificationLabel>();
+	// protected final Map<RemoteSSHFileReference, QuantificationLabel>
+	// denominatorLabelByFile = new HashMap<RemoteSSHFileReference,
+	// QuantificationLabel>();
+	protected final Map<RemoteSSHFileReference, List<RatioDescriptor>> ratioDescriptorsByFile = new HashMap<RemoteSSHFileReference, List<RatioDescriptor>>();
 	private UniprotRetriever uplr;
 	private String uniprotVersion;
 	protected boolean clearStaticMapsBeforeReading = true;
@@ -104,6 +110,12 @@ public abstract class AbstractQuantParser implements QuantParser {
 		addFile(inputFile, labelsByConditions, labelNumerator, labelDenominator);
 	}
 
+	public AbstractQuantParser(File inputFile, Map<QuantCondition, QuantificationLabel> labelsByConditions,
+			QuantificationLabel labelL, QuantificationLabel labelM, QuantificationLabel labelH)
+			throws FileNotFoundException {
+		addFile(inputFile, labelsByConditions, labelL, labelM, labelH);
+	}
+
 	public AbstractQuantParser(File[] inputFiles, Map<QuantCondition, QuantificationLabel> labelsByConditions,
 			QuantificationLabel labelNumerator, QuantificationLabel labelDenominator) throws FileNotFoundException {
 		this(Arrays.asList(inputFiles), labelsByConditions, labelNumerator, labelDenominator);
@@ -131,12 +143,31 @@ public abstract class AbstractQuantParser implements QuantParser {
 		addFile(remoteServer, map, label1, label2);
 	}
 
+	public AbstractQuantParser(RemoteSSHFileReference remoteServer, QuantificationLabel label1, QuantCondition cond1,
+			QuantificationLabel label2, QuantCondition cond2, QuantificationLabel label3, QuantCondition cond3) {
+		Map<QuantCondition, QuantificationLabel> map = new HashMap<QuantCondition, QuantificationLabel>();
+		map.put(cond1, label1);
+		map.put(cond2, label2);
+		map.put(cond3, label3);
+		addFile(remoteServer, map, label1, label2);
+	}
+
 	public AbstractQuantParser(File inputFile, QuantificationLabel label1, QuantCondition cond1,
 			QuantificationLabel label2, QuantCondition cond2) throws FileNotFoundException {
 		Map<QuantCondition, QuantificationLabel> map = new HashMap<QuantCondition, QuantificationLabel>();
 		map.put(cond1, label1);
 		map.put(cond2, label2);
 		addFile(inputFile, map, label1, label2);
+	}
+
+	public AbstractQuantParser(File inputFile, QuantificationLabel label1, QuantCondition cond1,
+			QuantificationLabel label2, QuantCondition cond2, QuantificationLabel label3, QuantCondition cond3)
+			throws FileNotFoundException {
+		Map<QuantCondition, QuantificationLabel> map = new HashMap<QuantCondition, QuantificationLabel>();
+		map.put(cond1, label1);
+		map.put(cond2, label2);
+		map.put(cond3, label3);
+		addFile(inputFile, map, label1, label2, label3);
 	}
 
 	@Override
@@ -150,15 +181,91 @@ public abstract class AbstractQuantParser implements QuantParser {
 	}
 
 	@Override
+	public void addFile(File xmlFile, Map<QuantCondition, QuantificationLabel> labelsByConditions,
+			QuantificationLabel labelL, QuantificationLabel labelM, QuantificationLabel labelH)
+			throws FileNotFoundException {
+		if (!xmlFile.exists()) {
+			throw new FileNotFoundException(xmlFile.getAbsolutePath() + " is not found in the file system");
+		}
+		final RemoteSSHFileReference remoteFileReference = new RemoteSSHFileReference(xmlFile);
+		addFile(remoteFileReference, labelsByConditions, labelL, labelM, labelH);
+	}
+
+	@Override
 	public void addFile(RemoteSSHFileReference remoteFileReference,
 			Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelNumerator,
 			QuantificationLabel labelDenominator) {
 		labelsByConditionsByFile.put(remoteFileReference, labelsByConditions);
-		numeratorLabelByFile.put(remoteFileReference, labelNumerator);
-		denominatorLabelByFile.put(remoteFileReference, labelDenominator);
+		QuantCondition condition1 = null;
+		QuantCondition condition2 = null;
+		for (QuantCondition condition : labelsByConditions.keySet()) {
+			final QuantificationLabel quantificationLabel = labelsByConditions.get(condition);
+			if (quantificationLabel == labelNumerator) {
+				condition1 = condition;
+			} else if (quantificationLabel == labelDenominator) {
+				condition2 = condition;
+			}
+		}
+
+		RatioDescriptor ratioDescriptor = new RatioDescriptor(labelNumerator, labelDenominator, condition1, condition2);
+		if (ratioDescriptorsByFile.containsKey(remoteFileReference)) {
+			ratioDescriptorsByFile.get(remoteFileReference).add(ratioDescriptor);
+		} else {
+			List<RatioDescriptor> list = new ArrayList<RatioDescriptor>();
+			list.add(ratioDescriptor);
+			ratioDescriptorsByFile.put(remoteFileReference, list);
+		}
+
+		// numeratorLabelByFile.put(remoteFileReference, labelNumerator);
+		// denominatorLabelByFile.put(remoteFileReference, labelDenominator);
 		remoteFileRetrievers.add(remoteFileReference);
 		// clearStaticInfo();
 		checkParameters();
+	}
+
+	@Override
+	public void addFile(RemoteSSHFileReference remoteFileReference,
+			Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelL,
+			QuantificationLabel labelM, QuantificationLabel labelH) {
+		labelsByConditionsByFile.put(remoteFileReference, labelsByConditions);
+		QuantCondition conditionL = null;
+		QuantCondition conditionM = null;
+		QuantCondition conditionH = null;
+		for (QuantCondition condition : labelsByConditions.keySet()) {
+			final QuantificationLabel quantificationLabel = labelsByConditions.get(condition);
+			if (quantificationLabel == labelL) {
+				conditionL = condition;
+			} else if (quantificationLabel == labelM) {
+				conditionM = condition;
+			} else if (quantificationLabel == labelH) {
+				conditionH = condition;
+			}
+		}
+		// L/M
+		RatioDescriptor ratioDescriptorLM = new RatioDescriptor(labelL, labelM, conditionL, conditionM);
+		addRatioDescriptor(remoteFileReference, ratioDescriptorLM);
+		// L/H
+		RatioDescriptor ratioDescriptorLH = new RatioDescriptor(labelL, labelH, conditionL, conditionH);
+		addRatioDescriptor(remoteFileReference, ratioDescriptorLH);
+		// M/H
+		RatioDescriptor ratioDescriptorMH = new RatioDescriptor(labelM, labelH, conditionM, conditionH);
+		addRatioDescriptor(remoteFileReference, ratioDescriptorMH);
+
+		// numeratorLabelByFile.put(remoteFileReference, labelNumerator);
+		// denominatorLabelByFile.put(remoteFileReference, labelDenominator);
+		remoteFileRetrievers.add(remoteFileReference);
+		// clearStaticInfo();
+		checkParameters();
+	}
+
+	private void addRatioDescriptor(RemoteSSHFileReference remoteFileReference, RatioDescriptor ratioDescriptor) {
+		if (ratioDescriptorsByFile.containsKey(remoteFileReference)) {
+			ratioDescriptorsByFile.get(remoteFileReference).add(ratioDescriptor);
+		} else {
+			List<RatioDescriptor> list = new ArrayList<RatioDescriptor>();
+			list.add(ratioDescriptor);
+			ratioDescriptorsByFile.put(remoteFileReference, list);
+		}
 	}
 
 	/**

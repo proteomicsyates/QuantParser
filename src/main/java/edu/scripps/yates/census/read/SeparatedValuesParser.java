@@ -125,8 +125,10 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 				for (QuantCondition cond : labelsByConditions.keySet()) {
 					conditionsByLabels.put(labelsByConditions.get(cond), cond);
 				}
-				QuantificationLabel labelNumerator = numeratorLabelByFile.get(remoteFileRetriever);
-				QuantificationLabel labelDenominator = denominatorLabelByFile.get(remoteFileRetriever);
+
+				QuantificationLabel labelNumerator = ratioDescriptorsByFile.get(remoteFileRetriever).get(0).getLabel1();
+				QuantificationLabel labelDenominator = ratioDescriptorsByFile.get(remoteFileRetriever).get(0)
+						.getLabel2();
 
 				String experimentKey = FilenameUtils.getBaseName(remoteFileRetriever.getOutputFile().getAbsolutePath());
 				log.info(experimentKey);
