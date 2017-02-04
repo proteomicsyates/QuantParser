@@ -25,6 +25,8 @@ public class CensusRatio implements QuantRatio {
 	private String description;
 	private final AggregationLevel aggregationLevel;
 	private CombinationType combinationType;
+	private Condition condition1;
+	private Condition condition2;
 
 	public CensusRatio(QuantCondition quantConditionNumerator, QuantCondition quantConditionDenominator,
 			AggregationLevel aggregationLevel, String description) {
@@ -236,11 +238,17 @@ public class CensusRatio implements QuantRatio {
 
 	@Override
 	public Condition getCondition1() {
+		if (condition1 != null) {
+			return condition1;
+		}
 		return quantConditionNumerator;
 	}
 
 	@Override
 	public Condition getCondition2() {
+		if (condition2 != null) {
+			return condition2;
+		}
 		return quantConditionDenominator;
 	}
 
@@ -296,6 +304,22 @@ public class CensusRatio implements QuantRatio {
 	@Override
 	public QuantCondition getQuantCondition2() {
 		return quantConditionDenominator;
+	}
+
+	/**
+	 * @param condition1
+	 *            the condition1 to set
+	 */
+	public void setCondition1(Condition condition1) {
+		this.condition1 = condition1;
+	}
+
+	/**
+	 * @param condition2
+	 *            the condition2 to set
+	 */
+	public void setCondition2(Condition condition2) {
+		this.condition2 = condition2;
 	}
 
 }
