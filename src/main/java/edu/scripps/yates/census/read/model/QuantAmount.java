@@ -16,6 +16,7 @@ public class QuantAmount implements Amount {
 
 	private Boolean manualSpc = false;
 	private QuantCondition quantCondition;
+	private Condition condition;
 
 	public QuantAmount(double value, AmountType amountType, QuantCondition condition) {
 
@@ -119,6 +120,9 @@ public class QuantAmount implements Amount {
 
 	@Override
 	public Condition getCondition() {
+		if (condition != null) {
+			return condition;
+		}
 		return quantCondition;
 	}
 
@@ -142,6 +146,14 @@ public class QuantAmount implements Amount {
 	public String toString() {
 		return "QuantAmount [value=" + value + ", amountType=" + amountType + ", combinationType=" + combinationType
 				+ ", singleton=" + singleton + ", manualSpc=" + manualSpc + ", quantCondition=" + quantCondition + "]";
+	}
+
+	/**
+	 * @param condition
+	 *            the condition to set
+	 */
+	public void setCondition(Condition condition) {
+		this.condition = condition;
 	}
 
 }
