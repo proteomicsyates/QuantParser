@@ -15,7 +15,7 @@ import java.util.regex.PatternSyntaxException;
 
 import org.apache.log4j.Logger;
 
-import edu.scripps.yates.annotations.uniprot.UniprotRetriever;
+import edu.scripps.yates.annotations.uniprot.UniprotProteinLocalRetriever;
 import edu.scripps.yates.annotations.uniprot.xml.Entry;
 import edu.scripps.yates.census.analysis.QuantCondition;
 import edu.scripps.yates.census.read.model.RatioDescriptor;
@@ -72,7 +72,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 	// denominatorLabelByFile = new HashMap<RemoteSSHFileReference,
 	// QuantificationLabel>();
 	protected final Map<RemoteSSHFileReference, List<RatioDescriptor>> ratioDescriptorsByFile = new HashMap<RemoteSSHFileReference, List<RatioDescriptor>>();
-	private UniprotRetriever uplr;
+	private UniprotProteinLocalRetriever uplr;
 	private String uniprotVersion;
 	protected boolean clearStaticMapsBeforeReading = true;
 
@@ -483,7 +483,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 		}
 	}
 
-	public void enableProteinMergingBySecondaryAccessions(UniprotRetriever uplr, String uniprotVersion) {
+	public void enableProteinMergingBySecondaryAccessions(UniprotProteinLocalRetriever uplr, String uniprotVersion) {
 		this.uplr = uplr;
 		this.uniprotVersion = uniprotVersion;
 	}
