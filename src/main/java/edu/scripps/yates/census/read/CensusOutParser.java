@@ -289,6 +289,7 @@ public class CensusOutParser extends AbstractQuantParser {
 				} catch (Exception e) {
 
 					e.printStackTrace();
+					throw e;
 				} finally {
 					if (br != null) {
 						br.close();
@@ -535,10 +536,10 @@ public class CensusOutParser extends AbstractQuantParser {
 						// convert the ratio from 0 to inf
 						String regressionFactor = null;
 						if (mapValues.containsKey(PROFILE_SCORE) &&
-								// because profile score will be
-								// assigned to area ratio in case of
-								// exist
-						!mapValues.containsKey(AREA_RATIO)) {
+						// because profile score will be
+						// assigned to area ratio in case of
+						// exist
+								!mapValues.containsKey(AREA_RATIO)) {
 							scoreValue = mapValues.get(PROFILE_SCORE);
 							if (!"NA".equals(scoreValue)) {
 								ratioScore = new RatioScore(scoreValue, PROFILE_SCORE,

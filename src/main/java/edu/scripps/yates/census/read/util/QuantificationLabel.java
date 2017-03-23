@@ -78,4 +78,15 @@ public enum QuantificationLabel {
 	public boolean isHeavy() {
 		return isHeavy;
 	}
+
+	public static String getValuesString() {
+		StringBuilder sb = new StringBuilder();
+		for (QuantificationLabel label : values()) {
+			if (!"".equals(sb.toString())) {
+				sb.append(",");
+			}
+			sb.append(label.name());
+		}
+		return sb.toString();
+	}
 }
