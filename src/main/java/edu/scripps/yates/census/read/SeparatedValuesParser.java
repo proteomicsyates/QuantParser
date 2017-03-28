@@ -236,7 +236,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 			Map<QuantificationLabel, QuantCondition> conditionsByLabels,
 			Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelNumerator,
 			QuantificationLabel labelDenominator, String experimentKey, RemoteSSHFileReference remoteFileRetriever)
-			throws IOException {
+					throws IOException {
 
 		// new psm
 
@@ -328,8 +328,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 					throw new PeptideNotFoundInDBIndexException("The peptide " + cleanSeq
 							+ " is not found in Fasta DB.\nReview the default indexing parameters such as the number of allowed misscleavages.");
 				}
-				// log.warn("The peptide " + cleanSeq +
-				// " is not found in Fasta DB.");
+				log.warn("The peptide " + cleanSeq + " is not found in Fasta DB.");
 				// continue;
 			}
 			// create a new Quantified Protein for each
