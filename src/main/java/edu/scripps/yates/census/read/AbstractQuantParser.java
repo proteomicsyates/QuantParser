@@ -75,6 +75,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 	private UniprotProteinLocalRetriever uplr;
 	private String uniprotVersion;
 	protected boolean clearStaticMapsBeforeReading = true;
+	private boolean retrieveFastaIsoforms;
 
 	public AbstractQuantParser() {
 
@@ -112,7 +113,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 
 	public AbstractQuantParser(File inputFile, Map<QuantCondition, QuantificationLabel> labelsByConditions,
 			QuantificationLabel labelL, QuantificationLabel labelM, QuantificationLabel labelH)
-			throws FileNotFoundException {
+					throws FileNotFoundException {
 		addFile(inputFile, labelsByConditions, labelL, labelM, labelH);
 	}
 
@@ -162,7 +163,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 
 	public AbstractQuantParser(File inputFile, QuantificationLabel label1, QuantCondition cond1,
 			QuantificationLabel label2, QuantCondition cond2, QuantificationLabel label3, QuantCondition cond3)
-			throws FileNotFoundException {
+					throws FileNotFoundException {
 		Map<QuantCondition, QuantificationLabel> map = new HashMap<QuantCondition, QuantificationLabel>();
 		map.put(cond1, label1);
 		map.put(cond2, label2);
@@ -183,7 +184,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 	@Override
 	public void addFile(File xmlFile, Map<QuantCondition, QuantificationLabel> labelsByConditions,
 			QuantificationLabel labelL, QuantificationLabel labelM, QuantificationLabel labelH)
-			throws FileNotFoundException {
+					throws FileNotFoundException {
 		if (!xmlFile.exists()) {
 			throw new FileNotFoundException(xmlFile.getAbsolutePath() + " is not found in the file system");
 		}
@@ -289,6 +290,8 @@ public abstract class AbstractQuantParser implements QuantParser {
 	public void setDecoyPattern(String patternString) throws PatternSyntaxException {
 		if (patternString != null) {
 			decoyPattern = Pattern.compile(patternString);
+		} else {
+			decoyPattern = null;
 		}
 	}
 
@@ -516,7 +519,8 @@ public abstract class AbstractQuantParser implements QuantParser {
 
 		int initialSize = getProteinMap().size();
 		for (Set<String> accessionSet : listOfSets) {
-			Map<String, Entry> annotatedProteins = uplr.getAnnotatedProteins(uniprotVersion, accessionSet);
+			Map<String, Entry> annotatedProteins = uplr.getAnnotatedProteins(uniprotVersion, accessionSet,
+					retrieveFastaIsoforms);
 			for (String accession : accessionSet) {
 				QuantifiedProteinInterface quantifiedProtein = StaticQuantMaps.proteinMap.getItem(accession);
 				Entry entry = annotatedProteins.get(accession);
@@ -589,7 +593,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 					keysToDelete.add(key);
 				}
 			}
-			log.info("Removing " + keysToDelete.size() + " PSMs assigned to decoy discarded proteins");
+			log.info("Removing " + keysToDelete.size() + " PSMs not assigned to proteins");
 			for (String key : keysToDelete) {
 				final QuantifiedPSMInterface psm = localPsmMap.get(key);
 				if (!psm.getQuantifiedProteins().isEmpty()) {
@@ -600,7 +604,11 @@ public abstract class AbstractQuantParser implements QuantParser {
 				localPsmMap.remove(key);
 			}
 
-			log.info(keysToDelete.size() + " PSMs discarded as decoy");
+			log.info(keysToDelete.size() + " PSMs discarded");
 		}
+	}
+
+	public void setRetrieveFastaIsoforms(boolean retrieveFastaIsoforms) {
+		this.retrieveFastaIsoforms = retrieveFastaIsoforms;
 	}
 }
