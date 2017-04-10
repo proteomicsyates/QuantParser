@@ -30,6 +30,8 @@ import edu.scripps.yates.utilities.fasta.FastaParser;
 import edu.scripps.yates.utilities.ipi.IPI2UniprotACCMap;
 import edu.scripps.yates.utilities.model.enums.AccessionType;
 import edu.scripps.yates.utilities.model.factories.AccessionEx;
+import edu.scripps.yates.utilities.progresscounter.ProgressCounter;
+import edu.scripps.yates.utilities.progresscounter.ProgressPrintingType;
 import edu.scripps.yates.utilities.proteomicsmodel.Accession;
 import edu.scripps.yates.utilities.remote.RemoteSSHFileReference;
 import edu.scripps.yates.utilities.util.Pair;
@@ -113,7 +115,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 
 	public AbstractQuantParser(File inputFile, Map<QuantCondition, QuantificationLabel> labelsByConditions,
 			QuantificationLabel labelL, QuantificationLabel labelM, QuantificationLabel labelH)
-					throws FileNotFoundException {
+			throws FileNotFoundException {
 		addFile(inputFile, labelsByConditions, labelL, labelM, labelH);
 	}
 
@@ -163,7 +165,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 
 	public AbstractQuantParser(File inputFile, QuantificationLabel label1, QuantCondition cond1,
 			QuantificationLabel label2, QuantCondition cond2, QuantificationLabel label3, QuantCondition cond3)
-					throws FileNotFoundException {
+			throws FileNotFoundException {
 		Map<QuantCondition, QuantificationLabel> map = new HashMap<QuantCondition, QuantificationLabel>();
 		map.put(cond1, label1);
 		map.put(cond2, label2);
@@ -184,7 +186,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 	@Override
 	public void addFile(File xmlFile, Map<QuantCondition, QuantificationLabel> labelsByConditions,
 			QuantificationLabel labelL, QuantificationLabel labelM, QuantificationLabel labelH)
-					throws FileNotFoundException {
+			throws FileNotFoundException {
 		if (!xmlFile.exists()) {
 			throw new FileNotFoundException(xmlFile.getAbsolutePath() + " is not found in the file system");
 		}
@@ -502,7 +504,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 			latestVersion = "version " + uniprotVersion;
 		}
 		// split into chunks of 500 accessions in order to show progress
-		int chunckSize = 500;
+		int chunckSize = 500000;
 		List<Set<String>> listOfSets = new ArrayList<Set<String>>();
 		Set<String> set = new HashSet<String>();
 		for (String accession : accessions) {
@@ -516,12 +518,17 @@ public abstract class AbstractQuantParser implements QuantParser {
 
 		int numObsoletes = 0;
 		log.info("Merging proteins that have secondary accessions according to Uniprot " + latestVersion + "...");
-
-		int initialSize = getProteinMap().size();
+		ProgressCounter counter = new ProgressCounter(accessions.size(), ProgressPrintingType.PERCENTAGE_STEPS, 1);
+		int initialSize = accessions.size();
 		for (Set<String> accessionSet : listOfSets) {
 			Map<String, Entry> annotatedProteins = uplr.getAnnotatedProteins(uniprotVersion, accessionSet,
 					retrieveFastaIsoforms);
 			for (String accession : accessionSet) {
+				counter.increment();
+				String percentage = counter.printIfNecessary();
+				if (!"".equals(percentage)) {
+					log.info(percentage);
+				}
 				QuantifiedProteinInterface quantifiedProtein = StaticQuantMaps.proteinMap.getItem(accession);
 				Entry entry = annotatedProteins.get(accession);
 				if (entry != null && entry.getAccession() != null && !entry.getAccession().isEmpty()) {
