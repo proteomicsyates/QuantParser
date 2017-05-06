@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.DecimalFormat;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -62,6 +63,14 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 		super(remoteSSHServer, labelsByConditions, labelNumerator, labelDenominator);
 	}
 
+	public CensusChroParser(File xmlFile) throws FileNotFoundException {
+		super();
+		Map<QuantCondition, QuantificationLabel> labelsByConditions = new HashMap<QuantCondition, QuantificationLabel>();
+		labelsByConditions.put(new QuantCondition("condition 1"), QuantificationLabel.LIGHT);
+		labelsByConditions.put(new QuantCondition("condition 2"), QuantificationLabel.HEAVY);
+		addFile(xmlFile, labelsByConditions, QuantificationLabel.LIGHT, QuantificationLabel.HEAVY);
+	}
+
 	public CensusChroParser(File xmlFile, Map<QuantCondition, QuantificationLabel> labelsByConditions,
 			QuantificationLabel labelNumerator, QuantificationLabel labelDenominator) throws FileNotFoundException {
 		super(xmlFile, labelsByConditions, labelNumerator, labelDenominator);
@@ -105,19 +114,6 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 		return null;
 	}
 
-	private RelexChro unmarshall(File file) {
-		try {
-			final JAXBContext jaxbContext = JAXBContext.newInstance(RelexChro.class);
-			Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-			RelexChro ret = (RelexChro) unmarshaller.unmarshal(file);
-			return ret;
-		} catch (JAXBException e) {
-			e.printStackTrace();
-			log.warn(e.getMessage());
-		}
-		return null;
-	}
-
 	/**
 	 *
 	 * @param writeFiles
@@ -133,10 +129,10 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 
 			boolean someValidFile = false;
 			for (RemoteSSHFileReference remoteFileRetriever : remoteFileRetrievers) {
-				final File remoteFile = remoteFileRetriever.getRemoteFile();
-				if (remoteFile == null || !remoteFile.exists())
+				final InputStream remoteFile = remoteFileRetriever.getRemoteInputStream();
+				if (remoteFile == null)
 					continue;
-				log.info("Unmarshalling " + remoteFile.getAbsolutePath());
+				log.info("Unmarshalling remote file...");
 				final RelexChro relex = unmarshall(remoteFile);
 				if (relex == null) {
 					log.warn("Error reading remote file " + remoteFileRetriever.getRemoteFileName() + " from "
@@ -211,7 +207,7 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 								} else {
 									quantifiedPSM = new IsobaricQuantifiedPSM(peptide,
 											labelsByConditionsByFile.get(remoteFileRetriever), spectrumToIonsMap,
-											peptideToSpectraMap, ionExclusions);
+											peptideToSpectraMap, ionExclusions, this.quantifiedAAs);
 								}
 								final String spectrumKey2 = KeyUtils.getSpectrumKey(quantifiedPSM, true);
 								final String peptideKey = KeyUtils.getSequenceKey(quantifiedPSM, true);

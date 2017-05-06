@@ -25,6 +25,8 @@ public abstract class AbstractIsobaricQuantParser extends AbstractQuantParser im
 	// ion exclusions
 	protected final List<IonExclusion> ionExclusions = new ArrayList<IonExclusion>();
 
+	protected final Set<Character> quantifiedAAs = new HashSet<Character>();
+
 	public AbstractIsobaricQuantParser() {
 		super();
 	}
@@ -126,4 +128,8 @@ public abstract class AbstractIsobaricQuantParser extends AbstractQuantParser im
 	@Override
 	protected abstract void process();
 
+	@Override
+	public void addQuantifiedAA(char aa) {
+		this.quantifiedAAs.add(aa);
+	}
 }

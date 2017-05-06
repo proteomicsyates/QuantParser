@@ -61,14 +61,15 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	private boolean discarded;
 	private List<StringPosition> ptms;
 	private String key;
+	private final Set<Character> quantifiedSites;
 
 	/**
 	 *
 	 * @param peptide
 	 * @param labelNumerator
-	 *            for writting data file. Otherwise, it can be null
+	 *            for writing data file. Otherwise, it can be null
 	 * @param labelDenominator
-	 *            for writting data file. Otherwise it can be null
+	 *            for writing data file. Otherwise it can be null
 	 * @param spectrumToIonsMap
 	 * @param peptideToSpectraMap
 	 * @param ionKeys
@@ -80,13 +81,13 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	 */
 	public IsobaricQuantifiedPSM(Peptide peptide, Map<QuantCondition, QuantificationLabel> labelsByConditions,
 			HashMap<String, Set<String>> spectrumToIonsMap, HashMap<String, Set<String>> peptideToSpectraMap,
-			Collection<IonExclusion> ionExclusions) throws IOException {
+			Collection<IonExclusion> ionExclusions, Set<Character> quantifiedSites) throws IOException {
 		this.peptide = peptide;
 		this.ionExclusions = ionExclusions;
 		scan = peptide.getScan();
 		sequence = peptide.getSeq();
 		this.labelsByConditions = labelsByConditions;
-
+		this.quantifiedSites = quantifiedSites;
 		conditionsByLabels = new HashMap<QuantificationLabel, QuantCondition>();
 		for (QuantCondition condition : labelsByConditions.keySet()) {
 			final QuantificationLabel quantificationLabel = labelsByConditions.get(condition);
@@ -134,21 +135,44 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 		// check the ions and remove the ones that has the same intensities in
 		// the two labels, which means that cannot be distinguished
 		checkIons(serieYLight, serieYHeavy);
-
-		ratiosSerieY = getRatiosFromSeries(serieYLight, serieYHeavy);
-		ratios.addAll(ratiosSerieY);
-
+		ratiosSerieY = new ArrayList<IsoRatio>();
+		if (this.quantifiedSites != null && !quantifiedSites.isEmpty()) {
+			Map<Integer, Set<IsoRatio>> siteSpecificRatios = getSiteSpecificRatiosSeriesY(quantifiedSites);
+			for (Set<IsoRatio> isoRatios : siteSpecificRatios.values()) {
+				for (IsoRatio isoRatio : isoRatios) {
+					ratiosSerieY.add(isoRatio);
+					addRatio(isoRatio);
+				}
+			}
+		} else {
+			ratiosSerieY = getRatiosFromSeries(serieYLight, serieYHeavy);
+			for (IsoRatio isoRatio : ratiosSerieY) {
+				addRatio(isoRatio);
+			}
+		}
 		// SERIE B
 		final String br = frag.getBr();
 		final String bs = frag.getBs();
 		serieBHeavy = new IonSerie(QuantificationLabel.HEAVY, IonSerieType.B, br, ionExclusions);
 		serieBLight = new IonSerie(QuantificationLabel.LIGHT, IonSerieType.B, bs, ionExclusions);
 		// check the ions and remove the ones that has the same intensities in
-		// the two labels, which means that cannot be distinguised
+		// the two labels, which means that cannot be distinguished
 		checkIons(serieBLight, serieBHeavy);
-		ratiosSerieB = getRatiosFromSeries(serieBLight, serieBHeavy);
-
-		ratios.addAll(ratiosSerieB);
+		ratiosSerieB = new ArrayList<IsoRatio>();
+		if (this.quantifiedSites != null && !quantifiedSites.isEmpty()) {
+			Map<Integer, Set<IsoRatio>> siteSpecificRatios = getSiteSpecificRatiosSeriesB(quantifiedSites);
+			for (Set<IsoRatio> isoRatios : siteSpecificRatios.values()) {
+				for (IsoRatio isoRatio : isoRatios) {
+					ratiosSerieB.add(isoRatio);
+					addRatio(isoRatio);
+				}
+			}
+		} else {
+			ratiosSerieB = getRatiosFromSeries(serieBLight, serieBHeavy);
+			for (IsoRatio isoRatio : ratiosSerieB) {
+				addRatio(isoRatio);
+			}
+		}
 
 		// create ion amounts
 		createIonAmounts();
@@ -234,6 +258,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see
 	 * edu.scripps.yates.census.quant.xml.RelexChro.Protein.Peptide#getChro()
 	 */
@@ -245,6 +270,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see
 	 * edu.scripps.yates.census.quant.xml.RelexChro.Protein.Peptide#getFrag()
 	 */
@@ -256,6 +282,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see
 	 * edu.scripps.yates.census.quant.xml.RelexChro.Protein.Peptide#getUnique()
 	 */
@@ -956,4 +983,133 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	public boolean isQuantified() {
 		return true;
 	}
+
+	public Map<Integer, Set<IsoRatio>> getSiteSpecificRatiosSeriesY(Set<Character> aas) {
+		String sequence = getSequence();
+		Map<Integer, Set<IsoRatio>> ret = new HashMap<Integer, Set<IsoRatio>>();
+		// series Y, the positions are the opposite as the ion numbers
+		List<IsoRatio> ratiosFromSeries = getRatiosFromSeries(serieYLight, serieYHeavy);
+		Map<Integer, IsoRatio> isoRatiosByPosition = new HashMap<Integer, IsoRatio>();
+
+		for (IsoRatio isoRatio : ratiosFromSeries) {
+			isoRatiosByPosition.put(isoRatio.getNumIon(), isoRatio);
+		}
+		for (int position = 1; position <= sequence.length(); position++) {
+			if (isoRatiosByPosition.containsKey(position)) {
+				IsoRatio isoRatio = isoRatiosByPosition.get(position);
+				int sequencePosition = sequence.length() - position + 1;
+				// go from there to the start of the sequence seeing how many aa
+				// are from aas Set
+				List<Integer> tmpPositions = new ArrayList<Integer>();
+				for (int j = sequencePosition; j <= sequence.length(); j++) {
+					if (aas.contains(sequence.charAt(j - 1))) {
+						tmpPositions.add(j);
+					}
+				}
+				// only if num==1 we have a valid ratio
+				if (tmpPositions.size() == 1) {
+					Integer quantifiedPosition = tmpPositions.get(0);
+					Character quantifiedAA = sequence.charAt(quantifiedPosition - 1);
+					isoRatio.setQuantifiedAA(quantifiedAA);
+					isoRatio.setQuantifiedSitePositionInPeptide(quantifiedPosition);
+					if (ret.containsKey(quantifiedPosition)) {
+						ret.get(quantifiedPosition).add(isoRatio);
+					} else {
+						Set<IsoRatio> set = new HashSet<IsoRatio>();
+						set.add(isoRatio);
+						ret.put(quantifiedPosition, set);
+					}
+				}
+			}
+		}
+		return ret;
+	}
+
+	public Map<Integer, Set<IsoRatio>> getSiteSpecificRatiosSeriesB(Set<Character> aas) {
+		String sequence = getSequence();
+		Map<Integer, Set<IsoRatio>> ret = new HashMap<Integer, Set<IsoRatio>>();
+		// series B, the positions are the same as the ion numbers
+		List<IsoRatio> ratiosFromSeries = getRatiosFromSeries(serieBLight, serieBHeavy);
+		Map<Integer, IsoRatio> isoRatiosByPosition = new HashMap<Integer, IsoRatio>();
+
+		for (IsoRatio isoRatio : ratiosFromSeries) {
+			isoRatiosByPosition.put(isoRatio.getNumIon(), isoRatio);
+		}
+		for (int position = 1; position <= sequence.length(); position++) {
+
+			if (isoRatiosByPosition.containsKey(position)) {
+				IsoRatio isoRatio = isoRatiosByPosition.get(position);
+				// go from there to the start of the sequence seeing how many aa
+				// are from aas Set
+				List<Integer> tmpPositions = new ArrayList<Integer>();
+				for (int j = position; j >= 1; j--) {
+					if (aas.contains(sequence.charAt(j - 1))) {
+						tmpPositions.add(j);
+					}
+				}
+				// only if num==1 we have a valid ratio
+				if (tmpPositions.size() == 1) {
+					Integer quantifiedPosition = tmpPositions.get(0);
+					Character quantifiedAA = sequence.charAt(quantifiedPosition - 1);
+					isoRatio.setQuantifiedAA(quantifiedAA);
+					isoRatio.setQuantifiedSitePositionInPeptide(quantifiedPosition);
+					if (ret.containsKey(quantifiedPosition)) {
+						ret.get(quantifiedPosition).add(isoRatio);
+					} else {
+						Set<IsoRatio> set = new HashSet<IsoRatio>();
+						set.add(isoRatio);
+						ret.put(quantifiedPosition, set);
+					}
+				}
+			}
+		}
+		return ret;
+	}
+
+	public Map<Integer, Set<IsoRatio>> getSiteSpecificRatios(Set<Character> aas) {
+		Map<Integer, Set<IsoRatio>> ret = new HashMap<Integer, Set<IsoRatio>>();
+		Map<Integer, Set<IsoRatio>> siteSpecificRatiosSeriesB = getSiteSpecificRatiosSeriesB(aas);
+		for (Integer position : siteSpecificRatiosSeriesB.keySet()) {
+			Set<IsoRatio> isoRatios = siteSpecificRatiosSeriesB.get(position);
+			if (ret.containsKey(position)) {
+				ret.get(position).addAll(isoRatios);
+			} else {
+				Set<IsoRatio> set = new HashSet<IsoRatio>();
+				set.addAll(isoRatios);
+				ret.put(position, set);
+			}
+
+		}
+		Map<Integer, Set<IsoRatio>> siteSpecificRatiosSeriesY = getSiteSpecificRatiosSeriesY(aas);
+		for (Integer position : siteSpecificRatiosSeriesY.keySet()) {
+			Set<IsoRatio> isoRatios = siteSpecificRatiosSeriesY.get(position);
+			if (ret.containsKey(position)) {
+				ret.get(position).addAll(isoRatios);
+			} else {
+				Set<IsoRatio> set = new HashSet<IsoRatio>();
+				set.addAll(isoRatios);
+				ret.put(position, set);
+			}
+
+		}
+
+		return ret;
+	}
+
+	private Map<Integer, IsoRatio> getIsoRatiosSortedByIonNumber(IonSerieType serie) {
+		Map<Integer, IsoRatio> ret = new HashMap<Integer, IsoRatio>();
+
+		for (QuantRatio ratio : getRatios()) {
+			if (ratio instanceof IsoRatio) {
+				IsoRatio isoRatio = (IsoRatio) ratio;
+				if (isoRatio.getIonSerieType() == serie) {
+					ret.put(isoRatio.getNumIon(), isoRatio);
+				}
+			}
+		}
+
+		return ret;
+
+	}
+
 }

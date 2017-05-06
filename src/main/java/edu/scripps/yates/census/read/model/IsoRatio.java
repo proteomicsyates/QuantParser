@@ -22,6 +22,8 @@ public class IsoRatio extends CensusRatio {
 	private final HashMap<QuantCondition, QuantificationLabel> labelsByConditions;
 	private final HashMap<QuantificationLabel, QuantCondition> conditionsByLabels;
 	private RatioScore ratioScore;
+	private Character quantifiedAA;
+	private Integer quantifiedSitePositionInPeptide;
 
 	/**
 	 *
@@ -39,6 +41,7 @@ public class IsoRatio extends CensusRatio {
 			AggregationLevel aggregationLevel) {
 		super(null, null, null, condition1, condition2, quantificationLabel1, quantificationLabel2, aggregationLevel,
 				"Ri");
+
 		if (ion1 == null && ion2 == null)
 			throw new IllegalArgumentException("Ions and Ionr cannot be null at the same time");
 
@@ -237,6 +240,22 @@ public class IsoRatio extends CensusRatio {
 		if (ionsByLabel.containsKey(labelsByConditions.get(conditionDenominator)))
 			return ionsByLabel.get(labelsByConditions.get(conditionDenominator)).getIntensity();
 		return Double.NaN;
+	}
+
+	public Character getQuantifiedAA() {
+		return quantifiedAA;
+	}
+
+	public Integer getQuantifiedSitePositionInPeptide() {
+		return quantifiedSitePositionInPeptide;
+	}
+
+	public void setQuantifiedAA(Character quantifiedAA) {
+		this.quantifiedAA = quantifiedAA;
+	}
+
+	public void setQuantifiedSitePositionInPeptide(Integer quantifiedSitePositionInPeptide) {
+		this.quantifiedSitePositionInPeptide = quantifiedSitePositionInPeptide;
 	}
 
 }
