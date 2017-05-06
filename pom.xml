@@ -50,46 +50,6 @@
 	  <scope>test</scope>
 	</dependency>
   	<dependency>
-  		<groupId>com.compomics</groupId>
-  		<artifactId>dbtoolkit</artifactId>
-  		<version>4.2.4</version>
-  		<scope>test</scope>
-  		<exclusions>
-	        <exclusion>
-	          <artifactId>batik-all</artifactId>
-	          <groupId>batik</groupId>
-	        </exclusion>
-	        <exclusion>
-	          <artifactId>pdf-transcoder</artifactId>
-	          <groupId>batik</groupId>
-	        </exclusion>
-	        <exclusion>
-	          <artifactId>iText</artifactId>
-	          <groupId>itext</groupId>
-	        </exclusion>
-	        <exclusion>
-	          <artifactId>jcommon</artifactId>
-	          <groupId>jfree</groupId>
-	        </exclusion>
-	        <exclusion>
-	          <artifactId>lmjunit</artifactId>
-	          <groupId>lennart</groupId>
-	        </exclusion>
-	        <exclusion>
-	          <artifactId>cpdetector</artifactId>
-	          <groupId>lennart</groupId>
-	        </exclusion>
-	        <exclusion>
-	          <artifactId>statlib</artifactId>
-	          <groupId>lennart</groupId>
-	        </exclusion>
-	        <exclusion>
-	          <artifactId>xxindex</artifactId>
-	          <groupId>lennart</groupId>
-	        </exclusion>
-	      </exclusions>
-  	</dependency>
-  	<dependency>
   		<groupId>edu.scripps.yates</groupId>
   		<artifactId>utilities</artifactId>
   		<version>1.2-SNAPSHOT</version>
