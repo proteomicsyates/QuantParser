@@ -2,7 +2,6 @@ package edu.scripps.yates.census.read.model.interfaces;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,9 +38,9 @@ public interface QuantParser {
 
 	Map<String, QuantifiedProteinInterface> getProteinMap();
 
-	HashMap<String, Set<String>> getPeptideToSpectraMap();
+	Map<String, Set<String>> getPeptideToSpectraMap();
 
-	HashMap<String, Set<String>> getProteinToPeptidesMap();
+	Map<String, Set<String>> getProteinToPeptidesMap();
 
 	List<RemoteSSHFileReference> getRemoteFileRetrievers();
 

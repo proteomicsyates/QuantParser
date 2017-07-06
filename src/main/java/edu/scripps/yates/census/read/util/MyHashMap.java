@@ -1,10 +1,10 @@
 package edu.scripps.yates.census.read.util;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Set;
 
 import edu.scripps.yates.census.read.CensusOutParser;
+import gnu.trove.set.hash.THashSet;
 
 public class MyHashMap<K, V> extends HashMap<K, V> {
 
@@ -14,6 +14,7 @@ public class MyHashMap<K, V> extends HashMap<K, V> {
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see java.util.HashMap#get(java.lang.Object)
 	 */
 	@Override
@@ -34,7 +35,7 @@ public class MyHashMap<K, V> extends HashMap<K, V> {
 	}
 
 	private Set<Object> getSynonyms(Object key) {
-		Set<Object> ret = new HashSet<Object>();
+		Set<Object> ret = new THashSet<Object>();
 		if (key != null) {
 			if (key instanceof String) {
 				String stringKey = (String) key;
@@ -54,6 +55,7 @@ public class MyHashMap<K, V> extends HashMap<K, V> {
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see java.util.HashMap#containsKey(java.lang.Object)
 	 */
 	@Override

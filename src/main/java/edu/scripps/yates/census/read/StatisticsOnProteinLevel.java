@@ -3,8 +3,6 @@ package edu.scripps.yates.census.read;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -22,15 +20,17 @@ import edu.scripps.yates.utilities.grouping.PanalyzerStats;
 import edu.scripps.yates.utilities.grouping.ProteinGroup;
 import edu.scripps.yates.utilities.taxonomy.UniprotOrganism;
 import edu.scripps.yates.utilities.taxonomy.UniprotSpeciesCodeMap;
+import gnu.trove.map.hash.THashMap;
+import gnu.trove.set.hash.THashSet;
 
 public class StatisticsOnProteinLevel {
 	private static final Logger log = Logger.getLogger(StatisticsOnProteinLevel.class);
 	private final CensusChroParser census;
-	private final Map<String, QuantifiedProteinInterface> proteinsInBothSpecies = new HashMap<String, QuantifiedProteinInterface>();
-	private final Map<String, Map<String, QuantifiedProteinInterface>> proteinsInOneSpecie = new HashMap<String, Map<String, QuantifiedProteinInterface>>();
-	private final Set<String> allTaxonomies = new HashSet<String>();
-	private final Map<String, QuantifiedProteinInterface> proteinsContainingRatios = new HashMap<String, QuantifiedProteinInterface>();
-	private final Map<String, QuantifiedProteinInterface> proteinsNotContainingRatios = new HashMap<String, QuantifiedProteinInterface>();
+	private final Map<String, QuantifiedProteinInterface> proteinsInBothSpecies = new THashMap<String, QuantifiedProteinInterface>();
+	private final Map<String, Map<String, QuantifiedProteinInterface>> proteinsInOneSpecie = new THashMap<String, Map<String, QuantifiedProteinInterface>>();
+	private final Set<String> allTaxonomies = new THashSet<String>();
+	private final Map<String, QuantifiedProteinInterface> proteinsContainingRatios = new THashMap<String, QuantifiedProteinInterface>();
+	private final Map<String, QuantifiedProteinInterface> proteinsNotContainingRatios = new THashMap<String, QuantifiedProteinInterface>();
 	private final DecimalFormat df = new DecimalFormat("#.#");
 	// private DBIndexInterface dbIndex;
 	// private final File dbIndexParamFile;
@@ -45,7 +45,7 @@ public class StatisticsOnProteinLevel {
 	private void process() {
 		log.info("Getting statistics from data...");
 
-		// Set<String> peptideKeys = new HashSet<String>();
+		// Set<String> peptideKeys = new THashSet<String>();
 		// for (QuantifiedProtein quantifiedProtein : census.getProteinMap()
 		// .values()) {
 		// final List<Peptide> peptides = quantifiedProtein.getPeptide();
@@ -85,7 +85,7 @@ public class StatisticsOnProteinLevel {
 				if (proteinsInOneSpecie.containsKey(taxonomy)) {
 					addProteinsFromPSM(quantifiedPSM, proteinsInOneSpecie.get(taxonomy));
 				} else {
-					Map<String, QuantifiedProteinInterface> map = new HashMap<String, QuantifiedProteinInterface>();
+					Map<String, QuantifiedProteinInterface> map = new THashMap<String, QuantifiedProteinInterface>();
 					addProteinsFromPSM(quantifiedPSM, map);
 					proteinsInOneSpecie.put(taxonomy, map);
 				}
@@ -99,7 +99,7 @@ public class StatisticsOnProteinLevel {
 		count = 0;
 		final Iterator<String> iterator = proteinsNotContainingRatios.keySet().iterator();
 		int total = proteinsNotContainingRatios.size();
-		Set<String> keysForDeletion = new HashSet<String>();
+		Set<String> keysForDeletion = new THashSet<String>();
 		while (iterator.hasNext()) {
 			if (count++ % 100 == 0) {
 				log.info(df.format(Double.valueOf(count) * 100 / total) + " % of proteins with no ratios...");
@@ -130,7 +130,7 @@ public class StatisticsOnProteinLevel {
 	private Set<String> getTaxonomies(QuantifiedPSMInterface quantifiedPSM) {
 
 		final Set<String> taxonomies = quantifiedPSM.getTaxonomies();
-		Set<String> ret = new HashSet<String>();
+		Set<String> ret = new THashSet<String>();
 		for (String taxonomy : taxonomies) {
 			final UniprotOrganism uniprotOrganism = UniprotSpeciesCodeMap.getInstance().get(taxonomy);
 			if (uniprotOrganism != null) {

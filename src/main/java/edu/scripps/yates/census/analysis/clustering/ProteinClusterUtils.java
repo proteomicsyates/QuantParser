@@ -6,8 +6,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,14 +25,16 @@ import edu.scripps.yates.dbindex.io.DBIndexSearchParams;
 import edu.scripps.yates.dbindex.io.DBIndexSearchParamsImpl;
 import edu.scripps.yates.utilities.alignment.nwalign.NWAlign;
 import edu.scripps.yates.utilities.alignment.nwalign.NWResult;
+import gnu.trove.map.hash.THashMap;
+import gnu.trove.set.hash.THashSet;
 
 public class ProteinClusterUtils {
 	private final static Logger log = Logger.getLogger(ProteinClusterUtils.class);
 
 	public static Map<String, Set<NWResult>> alignPeptides(Collection<QuantifiedPeptideInterface> peptideCollection,
 			int minAlignmentScore, double minPercentajeOfsmilirarity, int minConsecutiveLength) {
-		Set<NWResult> gAS = new HashSet<NWResult>();
-		Map<String, Set<NWResult>> gAM = new HashMap<String, Set<NWResult>>();
+		Set<NWResult> gAS = new THashSet<NWResult>();
+		Map<String, Set<NWResult>> gAM = new THashMap<String, Set<NWResult>>();
 
 		List<QuantifiedPeptideInterface> peptideList = new ArrayList<QuantifiedPeptideInterface>();
 		peptideList.addAll(peptideCollection);
@@ -73,7 +73,7 @@ public class ProteinClusterUtils {
 		// if gAM does not have the sequence, make a new set of results, add the
 		// results to this set, and then put the sequence and the set in gAM
 		else {
-			Set<NWResult> set = new HashSet<NWResult>();
+			Set<NWResult> set = new THashSet<NWResult>();
 			set.add(result);
 			gAM.put(seq, set);
 		}
@@ -212,9 +212,9 @@ public class ProteinClusterUtils {
 				minPercentajeOfsmilirarity, minConsecutiveLength);
 		log.info(gAM.size() + " peptides aligned");
 		// cluster set
-		Set<ProteinCluster> clusterSet = new HashSet<ProteinCluster>();
+		Set<ProteinCluster> clusterSet = new THashSet<ProteinCluster>();
 		// map clusters by peptide sequence
-		Map<QuantifiedPeptideInterface, ProteinCluster> clustersByPeptides = new HashMap<QuantifiedPeptideInterface, ProteinCluster>();
+		Map<QuantifiedPeptideInterface, ProteinCluster> clustersByPeptides = new THashMap<QuantifiedPeptideInterface, ProteinCluster>();
 
 		// iterate over peptides
 		int numPeptides = 0;
@@ -304,7 +304,7 @@ public class ProteinClusterUtils {
 		}
 		log.info(clusterSet.size() + " protein clusters created");
 
-		Set<String> set = new HashSet<String>();
+		Set<String> set = new THashSet<String>();
 		List<ProteinCluster> list = new ArrayList<ProteinCluster>();
 		list.addAll(clusterSet);
 		Collections.sort(list, new Comparator<ProteinCluster>() {

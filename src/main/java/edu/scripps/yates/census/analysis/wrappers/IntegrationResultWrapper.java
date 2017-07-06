@@ -8,8 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -17,6 +15,8 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 
 import edu.scripps.yates.census.analysis.FileMappingResults;
+import gnu.trove.map.hash.THashMap;
+import gnu.trove.set.hash.THashSet;
 
 public class IntegrationResultWrapper {
 	private static final Logger log = Logger.getLogger(IntegrationResultWrapper.class);
@@ -159,7 +159,7 @@ public class IntegrationResultWrapper {
 	 * @param file
 	 */
 	private Map<String, SanxotQuantResult> getSanXotQuantResultFromFile(File file) {
-		Map<String, SanxotQuantResult> ret = new HashMap<String, SanxotQuantResult>();
+		Map<String, SanxotQuantResult> ret = new THashMap<String, SanxotQuantResult>();
 		InputStream fis;
 		BufferedReader br = null;
 		String line;
@@ -197,7 +197,7 @@ public class IntegrationResultWrapper {
 	}
 
 	public static Map<String, SanxotQuantResult> getSanXotQuantResultFromDataFile(File file) {
-		Map<String, SanxotQuantResult> ret = new HashMap<String, SanxotQuantResult>();
+		Map<String, SanxotQuantResult> ret = new THashMap<String, SanxotQuantResult>();
 		InputStream fis;
 		BufferedReader br = null;
 		String line;
@@ -241,7 +241,7 @@ public class IntegrationResultWrapper {
 	}
 
 	public static Map<String, Set<String>> getRelationShipsFromRelatFile(File file) {
-		Map<String, Set<String>> ret = new HashMap<String, Set<String>>();
+		Map<String, Set<String>> ret = new THashMap<String, Set<String>>();
 		InputStream fis;
 		BufferedReader br = null;
 		String line;
@@ -262,7 +262,7 @@ public class IntegrationResultWrapper {
 							if (ret.containsKey(upperLevel)) {
 								ret.get(upperLevel).add(lowerLevel);
 							} else {
-								Set<String> set = new HashSet<String>();
+								Set<String> set = new THashSet<String>();
 								set.add(lowerLevel);
 								ret.put(upperLevel, set);
 							}
@@ -291,7 +291,7 @@ public class IntegrationResultWrapper {
 	}
 
 	private Map<String, SanxotQuantResult> getRatiosAndWeightsFromFile(File file) {
-		Map<String, SanxotQuantResult> ret = new HashMap<String, SanxotQuantResult>();
+		Map<String, SanxotQuantResult> ret = new THashMap<String, SanxotQuantResult>();
 		InputStream fis;
 		BufferedReader br = null;
 		String line;

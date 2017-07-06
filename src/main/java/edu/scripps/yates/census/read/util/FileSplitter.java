@@ -8,10 +8,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.io.FilenameUtils;
+
+import gnu.trove.map.hash.THashMap;
 
 public class FileSplitter {
 	/**
@@ -26,12 +27,12 @@ public class FileSplitter {
 	public static Map<String, File> splitFiles(File inputFile, Collection<String> dataSetNames) throws IOException {
 
 		// if (dataSetNames.size() == 1) {
-		// Map<String, File> ret = new HashMap<String, File>();
+		// Map<String, File> ret = new THashMap<String, File>();
 		// ret.put(dataSetNames.iterator().next(), inputFile);
 		// return ret;
 		// }
-		Map<String, BufferedWriter> mapOfFiles = new HashMap<String, BufferedWriter>();
-		Map<String, File> listOfFiles = new HashMap<String, File>();
+		Map<String, BufferedWriter> mapOfFiles = new THashMap<String, BufferedWriter>();
+		Map<String, File> listOfFiles = new THashMap<String, File>();
 		// create an output file per each dataSetName
 		for (String dataSetName : dataSetNames) {
 			File file = new File(inputFile.getParentFile().getAbsoluteFile() + File.separator

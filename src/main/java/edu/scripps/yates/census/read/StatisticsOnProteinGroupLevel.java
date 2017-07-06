@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -30,16 +28,18 @@ import edu.scripps.yates.utilities.grouping.ProteinGroup;
 import edu.scripps.yates.utilities.maths.Maths;
 import edu.scripps.yates.utilities.taxonomy.UniprotOrganism;
 import edu.scripps.yates.utilities.taxonomy.UniprotSpeciesCodeMap;
+import gnu.trove.map.hash.THashMap;
+import gnu.trove.set.hash.THashSet;
 
 public class StatisticsOnProteinGroupLevel {
 	private static final Logger log = Logger.getLogger(StatisticsOnProteinGroupLevel.class);
 	private final static String SEPARATOR = "\t\t";
 	private final CensusChroParser census;
-	private final Map<String, ProteinGroup> groupsInBothSpecies = new HashMap<String, ProteinGroup>();
-	private final Map<String, Map<String, ProteinGroup>> groupsInOneSpecie = new HashMap<String, Map<String, ProteinGroup>>();
-	private final Set<String> allTaxonomies = new HashSet<String>();
-	private final Map<String, ProteinGroup> groupsContainingRatios = new HashMap<String, ProteinGroup>();
-	private final Map<String, ProteinGroup> groupsNotContainingRatios = new HashMap<String, ProteinGroup>();
+	private final Map<String, ProteinGroup> groupsInBothSpecies = new THashMap<String, ProteinGroup>();
+	private final Map<String, Map<String, ProteinGroup>> groupsInOneSpecie = new THashMap<String, Map<String, ProteinGroup>>();
+	private final Set<String> allTaxonomies = new THashSet<String>();
+	private final Map<String, ProteinGroup> groupsContainingRatios = new THashMap<String, ProteinGroup>();
+	private final Map<String, ProteinGroup> groupsNotContainingRatios = new THashMap<String, ProteinGroup>();
 	private final DecimalFormat df = new DecimalFormat("#.#");
 	private static final String YES = "1";
 	private static final String NO = "0";
@@ -96,7 +96,7 @@ public class StatisticsOnProteinGroupLevel {
 				if (groupsInOneSpecie.containsKey(taxonomy)) {
 					addGroupsFromPSM(quantifiedPSM, groupsInOneSpecie.get(taxonomy));
 				} else {
-					Map<String, ProteinGroup> map = new HashMap<String, ProteinGroup>();
+					Map<String, ProteinGroup> map = new THashMap<String, ProteinGroup>();
 					addGroupsFromPSM(quantifiedPSM, map);
 					groupsInOneSpecie.put(taxonomy, map);
 				}
@@ -110,7 +110,7 @@ public class StatisticsOnProteinGroupLevel {
 		count = 0;
 		final Iterator<String> iterator = groupsNotContainingRatios.keySet().iterator();
 		int total = groupsNotContainingRatios.size();
-		Set<String> keysForDeletion = new HashSet<String>();
+		Set<String> keysForDeletion = new THashSet<String>();
 		while (iterator.hasNext()) {
 			if (count++ % 100 == 0) {
 				log.info(df.format(Double.valueOf(count) * 100 / total) + " % of Protein groups with no ratios...");
@@ -168,7 +168,7 @@ public class StatisticsOnProteinGroupLevel {
 				if (groupsInOneSpecie.containsKey(taxonomy)) {
 					addGroup(proteinGroup, groupsInOneSpecie.get(taxonomy));
 				} else {
-					Map<String, ProteinGroup> map = new HashMap<String, ProteinGroup>();
+					Map<String, ProteinGroup> map = new THashMap<String, ProteinGroup>();
 					addGroup(proteinGroup, map);
 					groupsInOneSpecie.put(taxonomy, map);
 				}
@@ -182,7 +182,7 @@ public class StatisticsOnProteinGroupLevel {
 		count = 0;
 		final Iterator<String> iterator = groupsNotContainingRatios.keySet().iterator();
 		int total = groupsNotContainingRatios.size();
-		Set<String> keysForDeletion = new HashSet<String>();
+		Set<String> keysForDeletion = new THashSet<String>();
 		while (iterator.hasNext()) {
 			if (count++ % 100 == 0) {
 				log.info(df.format(Double.valueOf(count) * 100 / total) + " % of Protein groups with no ratios...");
@@ -215,7 +215,7 @@ public class StatisticsOnProteinGroupLevel {
 	}
 
 	private Set<String> getTaxonomiesFromGroup(ProteinGroup proteinGroup) {
-		Set<String> ret = new HashSet<String>();
+		Set<String> ret = new THashSet<String>();
 		for (GroupableProtein protein : proteinGroup) {
 			if (protein instanceof IsobaricQuantifiedProtein) {
 				final Set<String> taxonomies = ((IsobaricQuantifiedProtein) protein).getTaxonomies();
@@ -237,7 +237,7 @@ public class StatisticsOnProteinGroupLevel {
 	private Set<String> getTaxonomies(QuantifiedPSMInterface quantifiedPSM) {
 
 		final Set<String> taxonomies = quantifiedPSM.getTaxonomies();
-		Set<String> ret = new HashSet<String>();
+		Set<String> ret = new THashSet<String>();
 		for (String taxonomy : taxonomies) {
 			final UniprotOrganism uniprotOrganism = UniprotSpeciesCodeMap.getInstance().get(taxonomy);
 			if (uniprotOrganism != null) {
@@ -526,8 +526,8 @@ public class StatisticsOnProteinGroupLevel {
 		String currentPeptideSequence = null;
 		int peptideNumRatios = 0;
 		int psmNumber = 0;
-		Map<QuantificationLabel, Integer> peptideIonsLabeled = new HashMap<QuantificationLabel, Integer>();
-		Map<String, Boolean> peptideIdentifiedBySpecie = new HashMap<String, Boolean>();
+		Map<QuantificationLabel, Integer> peptideIonsLabeled = new THashMap<QuantificationLabel, Integer>();
+		Map<String, Boolean> peptideIdentifiedBySpecie = new THashMap<String, Boolean>();
 		List<Double> peptideRatios = new ArrayList<Double>();
 		for (GroupablePSM groupablePSM : psMs) {
 			QuantifiedPSMInterface quantifiedPSM = (QuantifiedPSMInterface) groupablePSM;

@@ -1,10 +1,11 @@
 package edu.scripps.yates.census.read.model.interfaces;
 
-import java.util.HashMap;
 import java.util.Map;
 
+import gnu.trove.map.hash.THashMap;
+
 public class StaticItemStorage<T extends HasKey> {
-	private final Map<String, T> map = new HashMap<String, T>();
+	private final Map<String, T> map = new THashMap<String, T>();
 
 	public boolean contains(T hasKeyObj) {
 		return map.containsKey(hasKeyObj.getKey());

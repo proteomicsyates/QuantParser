@@ -1,7 +1,6 @@
 package edu.scripps.yates.census.read.model;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -10,10 +9,11 @@ import edu.scripps.yates.census.read.model.interfaces.HasRatios;
 import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.utilities.maths.Maths;
+import gnu.trove.set.hash.THashSet;
 
 public abstract class AbstractContainsQuantifiedPSMs implements HasRatios {
 
-	protected final Set<QuantRatio> ratios = new HashSet<QuantRatio>();
+	protected final Set<QuantRatio> ratios = new THashSet<QuantRatio>();
 
 	public abstract Set<QuantifiedPSMInterface> getQuantifiedPSMs();
 
@@ -28,7 +28,7 @@ public abstract class AbstractContainsQuantifiedPSMs implements HasRatios {
 	}
 
 	public Set<QuantRatio> getRatios(String replicateName) {
-		Set<QuantRatio> replicateRatios = new HashSet<QuantRatio>();
+		Set<QuantRatio> replicateRatios = new THashSet<QuantRatio>();
 
 		for (QuantifiedPSMInterface psm : getQuantifiedPSMs()) {
 			if (psm.getFileNames().contains(replicateName)) {

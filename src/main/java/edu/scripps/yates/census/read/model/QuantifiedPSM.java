@@ -2,8 +2,6 @@ package edu.scripps.yates.census.read.model;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,16 +26,18 @@ import edu.scripps.yates.utilities.maths.Maths;
 import edu.scripps.yates.utilities.model.enums.AggregationLevel;
 import edu.scripps.yates.utilities.proteomicsmodel.Amount;
 import edu.scripps.yates.utilities.util.StringPosition;
+import gnu.trove.map.hash.THashMap;
+import gnu.trove.set.hash.THashSet;
 
 public class QuantifiedPSM implements GroupablePSM, PeptideSequenceInterface, HasRatios, QuantifiedPSMInterface {
 	private static final Logger log = Logger.getLogger(QuantifiedPSM.class);
-	private final Set<QuantifiedProteinInterface> quantifiedProteins = new HashSet<QuantifiedProteinInterface>();
-	private final Set<edu.scripps.yates.census.read.util.QuantificationLabel> labels = new HashSet<QuantificationLabel>();
-	private final Set<String> taxonomies = new HashSet<String>();
+	private final Set<QuantifiedProteinInterface> quantifiedProteins = new THashSet<QuantifiedProteinInterface>();
+	private final Set<edu.scripps.yates.census.read.util.QuantificationLabel> labels = new THashSet<QuantificationLabel>();
+	private final Set<String> taxonomies = new THashSet<String>();
 
 	private PeptideRelation relation;
-	private final Set<QuantRatio> ratios = new HashSet<QuantRatio>();
-	private final Set<String> rawFileNames = new HashSet<String>();
+	private final Set<QuantRatio> ratios = new THashSet<QuantRatio>();
+	private final Set<String> rawFileNames = new THashSet<String>();
 	private final String scan;
 	private final String sequence;
 	private final Map<QuantificationLabel, QuantCondition> conditionsByLabels;
@@ -46,20 +46,20 @@ public class QuantifiedPSM implements GroupablePSM, PeptideSequenceInterface, Ha
 	private final Integer charge;
 	private Float deltaCN;
 	private Float xcorr;
-	private final Set<Amount> amounts = new HashSet<Amount>();
-	private final Set<String> fileNames = new HashSet<String>();
+	private final Set<Amount> amounts = new THashSet<Amount>();
+	private final Set<String> fileNames = new THashSet<String>();
 	private boolean discarded;
 	private boolean singleton;
 	private List<StringPosition> ptms;
 	private String key;
 
 	public QuantifiedPSM(String sequence, Map<QuantCondition, QuantificationLabel> labelsByConditions,
-			HashMap<String, Set<String>> peptideToSpectraMap, int scanNumber, int chargeState, String rawFileName,
+			Map<String, Set<String>> peptideToSpectraMap, int scanNumber, int chargeState, String rawFileName,
 			boolean singleton) throws IOException {
 		fullSequence = FastaParser.getSequenceInBetween(sequence);
 		this.sequence = FastaParser.cleanSequence(sequence);
 		scan = String.valueOf(scanNumber);
-		conditionsByLabels = new HashMap<QuantificationLabel, QuantCondition>();
+		conditionsByLabels = new THashMap<QuantificationLabel, QuantCondition>();
 		if (labelsByConditions != null) {
 			for (QuantCondition condition : labelsByConditions.keySet()) {
 				final QuantificationLabel quantificationLabel = labelsByConditions.get(condition);
@@ -93,13 +93,13 @@ public class QuantifiedPSM implements GroupablePSM, PeptideSequenceInterface, Ha
 		this.key = key;
 	}
 
-	private void addToMap(String key, HashMap<String, Set<String>> map, String value) {
+	private void addToMap(String key, Map<String, Set<String>> map, String value) {
 		if (map == null)
 			return;
 		if (map.containsKey(key)) {
 			map.get(key).add(value);
 		} else {
-			Set<String> set = new HashSet<String>();
+			Set<String> set = new THashSet<String>();
 			set.add(value);
 			map.put(key, set);
 		}
@@ -116,6 +116,7 @@ public class QuantifiedPSM implements GroupablePSM, PeptideSequenceInterface, Ha
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see
 	 * edu.scripps.yates.census.quant.xml.RelexChro.Protein.Peptide#getScan()
 	 */

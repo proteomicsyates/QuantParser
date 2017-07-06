@@ -6,8 +6,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.DecimalFormat;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,6 +35,8 @@ import edu.scripps.yates.dbindex.IndexedProtein;
 import edu.scripps.yates.dbindex.util.PeptideNotFoundInDBIndexException;
 import edu.scripps.yates.utilities.fasta.FastaParser;
 import edu.scripps.yates.utilities.remote.RemoteSSHFileReference;
+import gnu.trove.map.hash.THashMap;
+import gnu.trove.set.hash.THashSet;
 
 public class CensusChroParser extends AbstractIsobaricQuantParser {
 	private static final Logger log = Logger.getLogger(CensusChroParser.class);
@@ -65,7 +65,7 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 
 	public CensusChroParser(File xmlFile) throws FileNotFoundException {
 		super();
-		Map<QuantCondition, QuantificationLabel> labelsByConditions = new HashMap<QuantCondition, QuantificationLabel>();
+		Map<QuantCondition, QuantificationLabel> labelsByConditions = new THashMap<QuantCondition, QuantificationLabel>();
 		labelsByConditions.put(new QuantCondition("condition 1"), QuantificationLabel.LIGHT);
 		labelsByConditions.put(new QuantCondition("condition 2"), QuantificationLabel.HEAVY);
 		addFile(xmlFile, labelsByConditions, QuantificationLabel.LIGHT, QuantificationLabel.HEAVY);
@@ -155,7 +155,7 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 				log.info("Iterating proteins and getting their peptides for searching them on the Fasta database");
 				int numDecoy = 0;
 				// get all the Quantified PSMs first
-				Set<QuantifiedPSMInterface> psms = new HashSet<QuantifiedPSMInterface>();
+				Set<QuantifiedPSMInterface> psms = new THashSet<QuantifiedPSMInterface>();
 				int numTotalPeptides = 0;
 				int totalProteins = proteins.size();
 				int counter = 0;

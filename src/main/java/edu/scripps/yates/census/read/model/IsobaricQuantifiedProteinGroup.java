@@ -3,8 +3,6 @@ package edu.scripps.yates.census.read.model;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -17,12 +15,14 @@ import edu.scripps.yates.utilities.fasta.FastaParser;
 import edu.scripps.yates.utilities.grouping.ProteinGroup;
 import edu.scripps.yates.utilities.maths.Maths;
 import edu.scripps.yates.utilities.model.enums.AggregationLevel;
+import gnu.trove.map.hash.THashMap;
+import gnu.trove.set.hash.THashSet;
 
 public class IsobaricQuantifiedProteinGroup extends QuantifiedProteinGroup implements HasIsoRatios {
 	private static final String SEPARATOR = " ## ";
-	private final Set<IsobaricQuantifiedProtein> proteins = new HashSet<IsobaricQuantifiedProtein>();
+	private final Set<IsobaricQuantifiedProtein> proteins = new THashSet<IsobaricQuantifiedProtein>();
 	private Set<IsoRatio> ratios;
-	private final Map<String, IonCountRatio> countRatiosByConditionKey = new HashMap<String, IonCountRatio>();
+	private final Map<String, IonCountRatio> countRatiosByConditionKey = new THashMap<String, IonCountRatio>();
 	private Map<QuantCondition, Set<Ion>> ionsByConditions;
 
 	public IsobaricQuantifiedProteinGroup(ProteinGroup proteinGroup) {
@@ -35,7 +35,7 @@ public class IsobaricQuantifiedProteinGroup extends QuantifiedProteinGroup imple
 	}
 
 	public Set<IsobaricQuantifiedPSM> getIsobaricQuantifiedPSMs() {
-		Set<IsobaricQuantifiedPSM> ret = new HashSet<IsobaricQuantifiedPSM>();
+		Set<IsobaricQuantifiedPSM> ret = new THashSet<IsobaricQuantifiedPSM>();
 		for (IsobaricQuantifiedProtein quantifiedProtein : getProteins()) {
 			final Set<QuantifiedPSMInterface> quantifiedPSMs = quantifiedProtein.getQuantifiedPSMs();
 			for (QuantifiedPSMInterface quantifiedPSMInterface : quantifiedPSMs) {
@@ -117,7 +117,7 @@ public class IsobaricQuantifiedProteinGroup extends QuantifiedProteinGroup imple
 
 	@Override
 	public Set<String> getFileNames() {
-		Set<String> ret = new HashSet<String>();
+		Set<String> ret = new THashSet<String>();
 		for (IsobaricQuantifiedProtein quantprotein : proteins) {
 			ret.addAll(quantprotein.getFileNames());
 		}
@@ -127,7 +127,7 @@ public class IsobaricQuantifiedProteinGroup extends QuantifiedProteinGroup imple
 	@Override
 	public Set<IsoRatio> getIsoRatios() {
 		if (ratios == null || ratios.isEmpty()) {
-			ratios = new HashSet<IsoRatio>();
+			ratios = new THashSet<IsoRatio>();
 			for (IsobaricQuantifiedPSM psm : getIsobaricQuantifiedPSMs()) {
 				ratios.addAll(psm.getIsoRatios());
 			}
@@ -170,7 +170,7 @@ public class IsobaricQuantifiedProteinGroup extends QuantifiedProteinGroup imple
 
 	@Override
 	public Map<QuantificationLabel, Set<Ion>> getIons(IonSerie ionSerie) {
-		Map<QuantificationLabel, Set<Ion>> ret = new HashMap<QuantificationLabel, Set<Ion>>();
+		Map<QuantificationLabel, Set<Ion>> ret = new THashMap<QuantificationLabel, Set<Ion>>();
 		for (IsobaricQuantifiedPSM psm : getIsobaricQuantifiedPSMs()) {
 			final Map<QuantificationLabel, Set<Ion>> ions = psm.getIons(ionSerie);
 			mergeMaps(ret, ions);
@@ -181,7 +181,7 @@ public class IsobaricQuantifiedProteinGroup extends QuantifiedProteinGroup imple
 
 	@Override
 	public Set<Ion> getSingletonIonsByLabel(QuantificationLabel label) {
-		Set<Ion> ret = new HashSet<Ion>();
+		Set<Ion> ret = new THashSet<Ion>();
 		for (IsobaricQuantifiedPSM psm : getIsobaricQuantifiedPSMs()) {
 			ret.addAll(psm.getSingletonIonsByLabel(label));
 		}
@@ -190,7 +190,7 @@ public class IsobaricQuantifiedProteinGroup extends QuantifiedProteinGroup imple
 
 	@Override
 	public Set<Ion> getIonsByLabel(QuantificationLabel label) {
-		Set<Ion> ret = new HashSet<Ion>();
+		Set<Ion> ret = new THashSet<Ion>();
 		for (IsobaricQuantifiedPSM psm : getIsobaricQuantifiedPSMs()) {
 			ret.addAll(psm.getIonsByLabel(label));
 		}
@@ -199,7 +199,7 @@ public class IsobaricQuantifiedProteinGroup extends QuantifiedProteinGroup imple
 
 	@Override
 	public Map<QuantificationLabel, Set<Ion>> getSingletonIons(IonSerie ionSerie) {
-		Map<QuantificationLabel, Set<Ion>> ret = new HashMap<QuantificationLabel, Set<Ion>>();
+		Map<QuantificationLabel, Set<Ion>> ret = new THashMap<QuantificationLabel, Set<Ion>>();
 		for (IsobaricQuantifiedPSM psm : getIsobaricQuantifiedPSMs()) {
 			final Map<QuantificationLabel, Set<Ion>> singletonIons = psm.getSingletonIons(ionSerie);
 			mergeMaps(ret, singletonIons);
@@ -214,7 +214,7 @@ public class IsobaricQuantifiedProteinGroup extends QuantifiedProteinGroup imple
 			if (receiverMap.containsKey(label)) {
 				receiverMap.get(label).addAll(donorMap.get(label));
 			} else {
-				Set<Ion> set = new HashSet<Ion>();
+				Set<Ion> set = new THashSet<Ion>();
 				set.addAll(donorMap.get(label));
 				receiverMap.put(label, set);
 			}
@@ -224,14 +224,14 @@ public class IsobaricQuantifiedProteinGroup extends QuantifiedProteinGroup imple
 
 	@Override
 	public Map<QuantCondition, Set<Ion>> getSingletonIonsByCondition() {
-		Map<QuantCondition, Set<Ion>> ret = new HashMap<QuantCondition, Set<Ion>>();
+		Map<QuantCondition, Set<Ion>> ret = new THashMap<QuantCondition, Set<Ion>>();
 		for (IsobaricQuantifiedPSM psm : getIsobaricQuantifiedPSMs()) {
 			final Map<QuantCondition, Set<Ion>> singletonIons = psm.getSingletonIonsByCondition();
 			for (QuantCondition condition : singletonIons.keySet()) {
 				if (ret.containsKey(condition)) {
 					ret.get(condition).addAll(singletonIons.get(condition));
 				} else {
-					Set<Ion> set = new HashSet<Ion>();
+					Set<Ion> set = new THashSet<Ion>();
 					set.addAll(singletonIons.get(condition));
 					ret.put(condition, set);
 				}
@@ -242,7 +242,7 @@ public class IsobaricQuantifiedProteinGroup extends QuantifiedProteinGroup imple
 
 	@Override
 	public Set<IsoRatio> getNonInfinityIsoRatios() {
-		Set<IsoRatio> ret = new HashSet<IsoRatio>();
+		Set<IsoRatio> ret = new THashSet<IsoRatio>();
 		for (IsobaricQuantifiedPSM psm : getIsobaricQuantifiedPSMs()) {
 			ret.addAll(psm.getNonInfinityIsoRatios());
 		}
@@ -262,14 +262,14 @@ public class IsobaricQuantifiedProteinGroup extends QuantifiedProteinGroup imple
 
 	@Override
 	public Map<QuantificationLabel, Set<Ion>> getSingletonIonsByLabel() {
-		Map<QuantificationLabel, Set<Ion>> ret = new HashMap<QuantificationLabel, Set<Ion>>();
+		Map<QuantificationLabel, Set<Ion>> ret = new THashMap<QuantificationLabel, Set<Ion>>();
 		for (IsobaricQuantifiedPSM psm : getIsobaricQuantifiedPSMs()) {
 			final Map<QuantificationLabel, Set<Ion>> singletonIons = psm.getSingletonIonsByLabel();
 			for (QuantificationLabel label : singletonIons.keySet()) {
 				if (ret.containsKey(label)) {
 					ret.get(label).addAll(singletonIons.get(label));
 				} else {
-					Set<Ion> set = new HashSet<Ion>();
+					Set<Ion> set = new THashSet<Ion>();
 					set.addAll(singletonIons.get(label));
 					ret.put(label, set);
 				}
@@ -280,14 +280,14 @@ public class IsobaricQuantifiedProteinGroup extends QuantifiedProteinGroup imple
 
 	@Override
 	public Map<QuantificationLabel, Set<Ion>> getIonsByLabel() {
-		Map<QuantificationLabel, Set<Ion>> ret = new HashMap<QuantificationLabel, Set<Ion>>();
+		Map<QuantificationLabel, Set<Ion>> ret = new THashMap<QuantificationLabel, Set<Ion>>();
 		for (IsobaricQuantifiedPSM psm : getIsobaricQuantifiedPSMs()) {
 			final Map<QuantificationLabel, Set<Ion>> ions = psm.getIonsByLabel();
 			for (QuantificationLabel label : ions.keySet()) {
 				if (ret.containsKey(label)) {
 					ret.get(label).addAll(ions.get(label));
 				} else {
-					Set<Ion> set = new HashSet<Ion>();
+					Set<Ion> set = new THashSet<Ion>();
 					set.addAll(ions.get(label));
 					ret.put(label, set);
 				}
@@ -371,7 +371,7 @@ public class IsobaricQuantifiedProteinGroup extends QuantifiedProteinGroup imple
 	@Override
 	public Map<QuantCondition, Set<Ion>> getIonsByCondition() {
 		if (ionsByConditions == null) {
-			ionsByConditions = new HashMap<QuantCondition, Set<Ion>>();
+			ionsByConditions = new THashMap<QuantCondition, Set<Ion>>();
 			for (IsobaricQuantifiedPSM quantPSM : getIsobaricQuantifiedPSMs()) {
 				final Map<QuantCondition, Set<Ion>> ions = quantPSM.getIonsByCondition();
 				for (QuantCondition condition : ions.keySet()) {
@@ -389,7 +389,7 @@ public class IsobaricQuantifiedProteinGroup extends QuantifiedProteinGroup imple
 
 	@Override
 	public Map<QuantCondition, Set<Ion>> getIonsByCondition(String replicateName) {
-		Map<QuantCondition, Set<Ion>> ionsByConditions2 = new HashMap<QuantCondition, Set<Ion>>();
+		Map<QuantCondition, Set<Ion>> ionsByConditions2 = new THashMap<QuantCondition, Set<Ion>>();
 		for (IsobaricQuantifiedPSM quantPSM : getIsobaricQuantifiedPSMs()) {
 			if (quantPSM.getFileNames().contains(replicateName)) {
 				final Map<QuantCondition, Set<Ion>> ions = quantPSM.getIonsByCondition();
@@ -404,5 +404,30 @@ public class IsobaricQuantifiedProteinGroup extends QuantifiedProteinGroup imple
 			}
 		}
 		return ionsByConditions2;
+	}
+
+	@Override
+	public Map<QuantCondition, Set<Ion>> getIonsByConditionForSites(String replicateName, char[] quantifiedAAs) {
+		Map<QuantCondition, Set<Ion>> ret = new THashMap<QuantCondition, Set<Ion>>();
+
+		Set<QuantifiedPSMInterface> quantifiedPSMs = getQuantifiedPSMs();
+		for (QuantifiedPSMInterface quantifiedPSM : quantifiedPSMs) {
+			if (quantifiedPSM instanceof IsobaricQuantifiedPSM) {
+				IsobaricQuantifiedPSM isoPSM = (IsobaricQuantifiedPSM) quantifiedPSM;
+				Map<QuantCondition, Set<Ion>> ionsByConditionForSites = isoPSM.getIonsByConditionForSites(replicateName,
+						quantifiedAAs);
+				for (QuantCondition cond : ionsByConditionForSites.keySet()) {
+					if (ret.containsKey(cond)) {
+						ret.get(cond).addAll(ionsByConditionForSites.get(cond));
+					} else {
+						Set<Ion> ions = new THashSet<Ion>();
+						ions.addAll(ionsByConditionForSites.get(cond));
+						ret.put(cond, ions);
+					}
+				}
+			}
+		}
+
+		return ret;
 	}
 }

@@ -1,21 +1,21 @@
 package edu.scripps.yates.census.read.model;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
 
 import edu.scripps.yates.census.read.util.IonExclusion;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
+import gnu.trove.map.hash.TIntObjectHashMap;
+import gnu.trove.set.hash.THashSet;
 
 public class IonSerie {
 	private static final String NO_PEAK = "NP";
 	private static final String MULTI_PEAK = "MP";
 	private static final String MSC = "MSC";
 	private int maxNumberIon = 0;
-	private final HashMap<Integer, Ion> ionMap = new HashMap<Integer, Ion>();
+	private final TIntObjectHashMap<Ion> ionMap = new TIntObjectHashMap<Ion>();
 
 	public enum IonSerieType {
 		Y, B
@@ -54,7 +54,7 @@ public class IonSerie {
 			} else {
 				Long intensity = parseIntensity(split[i + 1]);
 				if (intensity != null) {
-					Ion ion = new Ion(ionNumber, mass, intensity, label);
+					Ion ion = new Ion(ionNumber, mass, intensity, label, this.ionSerieType);
 					ionMap.put(ionNumber, ion);
 					maxNumberIon = ionNumber;
 				} else {
@@ -109,7 +109,7 @@ public class IonSerie {
 		return ionMap.get(ionNumber);
 	}
 
-	public HashMap<Integer, Ion> getIonMap() {
+	public TIntObjectHashMap<Ion> getIonMap() {
 		return ionMap;
 	}
 
@@ -154,7 +154,7 @@ public class IonSerie {
 	 * @return the isLabelled
 	 */
 	public boolean isSingletonLabeled() {
-		for (Ion ion : ionMap.values()) {
+		for (Ion ion : ionMap.valueCollection()) {
 			if (ion.getRatio() == null)
 				return true;
 		}
@@ -178,8 +178,8 @@ public class IonSerie {
 	 */
 	public Set<Ion> getNonNullIons() {
 
-		Set<Ion> ret = new HashSet<Ion>();
-		for (Ion ion : ionMap.values()) {
+		Set<Ion> ret = new THashSet<Ion>();
+		for (Ion ion : ionMap.valueCollection()) {
 			ret.add(ion);
 		}
 
@@ -193,8 +193,8 @@ public class IonSerie {
 	 * @return
 	 */
 	public Set<Ion> getSingletonIons() {
-		Set<Ion> list = new HashSet<Ion>();
-		for (Ion ion : ionMap.values()) {
+		Set<Ion> list = new THashSet<Ion>();
+		for (Ion ion : ionMap.valueCollection()) {
 			if (ion.getRatio() == null)
 				list.add(ion);
 			else if (ion.isSingleton()) {

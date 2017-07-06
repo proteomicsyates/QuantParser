@@ -1,5 +1,6 @@
 package edu.scripps.yates.census.read.model;
 
+import edu.scripps.yates.census.read.model.IonSerie.IonSerieType;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
 
 public class Ion {
@@ -9,13 +10,15 @@ public class Ion {
 	private IsoRatio ratio;
 	private final QuantificationLabel label;
 	private boolean singleton = false;
+	private final IonSerieType ionSerieType;
 
-	public Ion(int ionNumber, double mass, double intensity, QuantificationLabel label) {
+	public Ion(int ionNumber, double mass, double intensity, QuantificationLabel label, IonSerieType ionSerieType) {
 		super();
 		this.mass = mass;
 		this.intensity = intensity;
 		this.ionNumber = ionNumber;
 		this.label = label;
+		this.ionSerieType = ionSerieType;
 	}
 
 	/**
@@ -54,11 +57,13 @@ public class Ion {
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
 	public String toString() {
-		return "Ion " + label + " " + ionNumber + "[M=" + mass + ", I=" + intensity + ", ratio=" + ratio + "]";
+		return ionSerieType + " Ion " + label + " " + ionNumber + "[M=" + mass + ", I=" + intensity + ", ratio=" + ratio
+				+ "]";
 	}
 
 	/**
@@ -74,6 +79,10 @@ public class Ion {
 	 */
 	public void setSingleton(boolean singleton) {
 		this.singleton = singleton;
+	}
+
+	public IonSerieType getIonSerieType() {
+		return ionSerieType;
 	}
 
 }

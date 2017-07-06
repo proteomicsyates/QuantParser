@@ -9,8 +9,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,6 +30,8 @@ import edu.scripps.yates.utilities.grouping.GroupableProtein;
 import edu.scripps.yates.utilities.grouping.PAnalyzer;
 import edu.scripps.yates.utilities.grouping.ProteinGroup;
 import edu.scripps.yates.utilities.maths.Maths;
+import gnu.trove.map.hash.THashMap;
+import gnu.trove.set.hash.THashSet;
 
 public class RawQuantValuesExporter {
 	private static final String TAB = "\t";
@@ -147,7 +147,7 @@ public class RawQuantValuesExporter {
 		final Map<String, QuantifiedProteinInterface> proteinMap = parser.getProteinMap();
 		PAnalyzer panalyzer = new PAnalyzer(false);
 		final Collection<QuantifiedProteinInterface> quantProteins = proteinMap.values();
-		Set<GroupableProtein> groupableProteins = new HashSet<GroupableProtein>();
+		Set<GroupableProtein> groupableProteins = new THashSet<GroupableProtein>();
 		for (GroupableProtein quantProtein : quantProteins) {
 			groupableProteins.add(quantProtein);
 		}
@@ -211,7 +211,7 @@ public class RawQuantValuesExporter {
 		String peptide = FastaParser.cleanSequence(quantifiedPSM.getSequence());
 		final Set<IndexedProtein> proteinSet = dbIndex.getProteins(peptide);
 		List<IndexedProtein> proteins = new ArrayList<IndexedProtein>();
-		Set<String> accessions = new HashSet<String>();
+		Set<String> accessions = new THashSet<String>();
 		for (IndexedProtein indexedProtein : proteinSet) {
 			if (accessions.contains(indexedProtein.getAccession()))
 				continue;
@@ -378,7 +378,7 @@ public class RawQuantValuesExporter {
 		String peptide = FastaParser.cleanSequence(quantifiedPeptide.getSequence());
 		final Set<IndexedProtein> proteinSet = dbIndex.getProteins(peptide);
 		List<IndexedProtein> proteins = new ArrayList<IndexedProtein>();
-		Set<String> accessions = new HashSet<String>();
+		Set<String> accessions = new THashSet<String>();
 		for (IndexedProtein indexedProtein : proteinSet) {
 			if (accessions.contains(indexedProtein.getAccession()))
 				continue;
@@ -696,7 +696,7 @@ public class RawQuantValuesExporter {
 	}
 
 	private Map<String, QuantValue> readFinalPeptideQuantValuesFromFile() throws IOException {
-		Map<String, QuantValue> finalPeptideQuantValues = new HashMap<String, QuantValue>();
+		Map<String, QuantValue> finalPeptideQuantValues = new THashMap<String, QuantValue>();
 		if (quixotFileResults != null && quixotFileResults.exists()) {
 			BufferedReader br = null;
 			try {

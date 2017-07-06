@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +35,8 @@ import edu.scripps.yates.utilities.model.enums.CombinationType;
 import edu.scripps.yates.utilities.proteomicsmodel.Amount;
 import edu.scripps.yates.utilities.strings.StringUtils;
 import edu.scripps.yates.utilities.util.StringPosition;
+import gnu.trove.map.hash.THashMap;
+import gnu.trove.set.hash.THashSet;
 
 public class QuantUtils {
 	private static final Logger log = Logger.getLogger(QuantUtils.class);
@@ -81,7 +81,7 @@ public class QuantUtils {
 	 */
 	public static Map<String, IsobaricQuantifiedPeptide> getIsobaricQuantifiedPeptides(
 			Collection<IsobaricQuantifiedPSM> quantifiedPSMs) {
-		Map<String, IsobaricQuantifiedPeptide> peptideMap = new HashMap<String, IsobaricQuantifiedPeptide>();
+		Map<String, IsobaricQuantifiedPeptide> peptideMap = new THashMap<String, IsobaricQuantifiedPeptide>();
 
 		for (IsobaricQuantifiedPSM quantifiedPSM : quantifiedPSMs) {
 			final QuantifiedPeptideInterface quantifiedPeptide = quantifiedPSM.getQuantifiedPeptide();
@@ -96,7 +96,7 @@ public class QuantUtils {
 	}
 
 	public static Set<QuantRatio> getNonInfinityRatios(Set<QuantRatio> ratios) {
-		Set<QuantRatio> set = new HashSet<QuantRatio>();
+		Set<QuantRatio> set = new THashSet<QuantRatio>();
 		for (QuantRatio ratio : ratios) {
 			final double log2Ratio = ratio.getLog2Ratio(ratio.getQuantCondition1(), ratio.getQuantCondition2());
 			if (Double.compare(log2Ratio, Double.MAX_VALUE) == 0 || Double.compare(log2Ratio, -Double.MAX_VALUE) == 0) {
@@ -170,7 +170,7 @@ public class QuantUtils {
 	 */
 	public static Set<QuantRatio> getConsensusRatios(Collection<QuantifiedPeptideInterface> peptides,
 			QuantCondition cond1, QuantCondition cond2, String replicateName) {
-		Set<QuantRatio> ret = new HashSet<QuantRatio>();
+		Set<QuantRatio> ret = new THashSet<QuantRatio>();
 		for (QuantifiedPeptideInterface peptide : peptides) {
 			if (replicateName != null) {
 				final QuantRatio consensusRatio = peptide.getConsensusRatio(cond1, cond2, replicateName);
@@ -395,6 +395,49 @@ public class QuantUtils {
 	 * Gets a consensus {@link IonCountRatio} from a set of
 	 * {@link IsobaricQuantifiedPeptide} where the ions from each
 	 * {@link QuantCondition} are pulled together and normalized by the number
+	 * of {@link QuantifiedPSMInterface} per
+	 * {@link QuantifiedPeptideInterface}.<br>
+	 * The ions are used are only the ones that can distinguish the particular
+	 * aminoacids that are quantified (aas)
+	 *
+	 * @param isobaricQuantifiedPeptides
+	 * @param cond1
+	 * @param cond2
+	 * @param replicateName
+	 * @param quantifiedAAs
+	 * @return
+	 */
+	public static IonCountRatio getNormalizedIonCountRatioForPeptidesForQuantifiedSites(
+			Set<IsobaricQuantifiedPeptide> isobaricQuantifiedPeptides, QuantCondition cond1, QuantCondition cond2,
+			String replicateName, char[] quantifiedAAs) {
+
+		IonCountRatio ratio = new IonCountRatio(AggregationLevel.PEPTIDE);
+		for (IsobaricQuantifiedPeptide isoPeptide : isobaricQuantifiedPeptides) {
+
+			final int numPSMs = isoPeptide.getQuantifiedPSMs().size();
+			// get number of ions in one condition, and normalize by the
+			// number of PSMs
+			int peakCount1 = 0;
+			if (isoPeptide.getIonsByConditionForSites(replicateName, quantifiedAAs).containsKey(cond1)) {
+				peakCount1 = isoPeptide.getIonsByConditionForSites(replicateName, quantifiedAAs).get(cond1).size();
+			}
+			double normalizedPeakCount1 = peakCount1 * 1.0 / numPSMs;
+			int peakCount2 = 0;
+			if (isoPeptide.getIonsByConditionForSites(replicateName, quantifiedAAs).containsKey(cond2)) {
+				peakCount2 = isoPeptide.getIonsByConditionForSites(replicateName, quantifiedAAs).get(cond2).size();
+			}
+			double normalizedPeakCount2 = peakCount2 * 1.0 / numPSMs;
+			ratio.addIonCount(cond1, normalizedPeakCount1);
+			ratio.addIonCount(cond2, normalizedPeakCount2);
+
+		}
+		return ratio;
+	}
+
+	/**
+	 * Gets a consensus {@link IonCountRatio} from a set of
+	 * {@link IsobaricQuantifiedPeptide} where the ions from each
+	 * {@link QuantCondition} are pulled together and normalized by the number
 	 * of {@link QuantifiedPSMInterface} per {@link QuantifiedPeptideInterface}
 	 *
 	 * @param isobaricQuantifiedPeptides
@@ -475,4 +518,5 @@ public class QuantUtils {
 		}
 		return uplr;
 	}
+
 }

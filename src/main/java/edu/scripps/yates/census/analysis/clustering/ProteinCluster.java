@@ -3,7 +3,6 @@ package edu.scripps.yates.census.analysis.clustering;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -11,12 +10,13 @@ import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
 import edu.scripps.yates.utilities.alignment.nwalign.NWAlign;
 import edu.scripps.yates.utilities.alignment.nwalign.NWResult;
+import gnu.trove.set.hash.THashSet;
 
 public class ProteinCluster {
 
 	// Two sets for proteins and peptides
-	private Set<QuantifiedProteinInterface> proteinSet = new HashSet<QuantifiedProteinInterface>();
-	private final Set<QuantifiedPeptideInterface> peptideSet = new HashSet<QuantifiedPeptideInterface>();
+	private Set<QuantifiedProteinInterface> proteinSet = new THashSet<QuantifiedProteinInterface>();
+	private final Set<QuantifiedPeptideInterface> peptideSet = new THashSet<QuantifiedPeptideInterface>();
 	private String forcedProteinClusterKey;
 
 	// Adds proteins to the protein sets
@@ -90,7 +90,7 @@ public class ProteinCluster {
 				return o1.getAccession().compareTo(o2.getAccession());
 			}
 		});
-		Set<String> proteinAccs = new HashSet<String>();
+		Set<String> proteinAccs = new THashSet<String>();
 		for (QuantifiedProteinInterface quantifiedProtein : proteinList) {
 			if (!proteinAccs.contains(quantifiedProtein.getAccession())) {
 				sb.append(quantifiedProtein.getAccession() + ":");
@@ -113,6 +113,7 @@ public class ProteinCluster {
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Object#toString()
 	 */
 	@Override

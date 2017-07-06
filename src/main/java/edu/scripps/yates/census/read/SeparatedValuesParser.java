@@ -6,7 +6,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,6 +31,7 @@ import edu.scripps.yates.dbindex.util.PeptideNotFoundInDBIndexException;
 import edu.scripps.yates.utilities.fasta.FastaParser;
 import edu.scripps.yates.utilities.model.enums.AggregationLevel;
 import edu.scripps.yates.utilities.remote.RemoteSSHFileReference;
+import gnu.trove.map.hash.THashMap;
 
 public class SeparatedValuesParser extends AbstractQuantParser {
 	private final static Logger log = Logger.getLogger(SeparatedValuesParser.class);
@@ -121,7 +121,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 			for (RemoteSSHFileReference remoteFileRetriever : remoteFileRetrievers) {
 				final Map<QuantCondition, QuantificationLabel> labelsByConditions = labelsByConditionsByFile
 						.get(remoteFileRetriever);
-				final Map<QuantificationLabel, QuantCondition> conditionsByLabels = new HashMap<QuantificationLabel, QuantCondition>();
+				final Map<QuantificationLabel, QuantCondition> conditionsByLabels = new THashMap<QuantificationLabel, QuantCondition>();
 				for (QuantCondition cond : labelsByConditions.keySet()) {
 					conditionsByLabels.put(labelsByConditions.get(cond), cond);
 				}
@@ -236,7 +236,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 			Map<QuantificationLabel, QuantCondition> conditionsByLabels,
 			Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelNumerator,
 			QuantificationLabel labelDenominator, String experimentKey, RemoteSSHFileReference remoteFileRetriever)
-					throws IOException {
+			throws IOException {
 
 		// new psm
 

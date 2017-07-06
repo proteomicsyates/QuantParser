@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,6 +26,8 @@ import edu.scripps.yates.utilities.exec.ProcessExecutor;
 import edu.scripps.yates.utilities.exec.ProcessExecutorHandler;
 import edu.scripps.yates.utilities.files.FileUtils;
 import edu.scripps.yates.utilities.util.Pair;
+import gnu.trove.map.hash.THashMap;
+import gnu.trove.set.hash.THashSet;
 
 public class SanXotInterfaze extends SwingWorker<Object, Void> {
 	private static final Logger log = Logger.getLogger(SanXotInterfaze.class);
@@ -88,6 +88,7 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see javax.swing.SwingWorker#done()
 	 */
 	@Override
@@ -147,7 +148,7 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 				// split dataFile in many files as replicates
 				Map<String, File> dataFiles = FileSplitter.splitFiles(fileMappingResults.getDataFile(), dataSetNames);
 
-				Map<String, File> calibratedDataFiles = new HashMap<String, File>();
+				Map<String, File> calibratedDataFiles = new THashMap<String, File>();
 				for (String datasetName : dataSetNames) {
 					// relatFile = relatFiles.get(datasetName);
 					dataFile = dataFiles.get(datasetName);
@@ -168,7 +169,7 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 					}
 				}
 
-				Map<String, File> lastDataFiles = new HashMap<String, File>();
+				Map<String, File> lastDataFiles = new THashMap<String, File>();
 				// loop
 				boolean dataMergingNeeded = false;
 				for (String replicateName : dataSetNames) {
@@ -320,7 +321,7 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 					return;
 				}
 				// merge all higher data files
-				Set<File> higherLevelDataResults = new HashSet<File>();
+				Set<File> higherLevelDataResults = new THashSet<File>();
 				for (IntegrationResultWrapper integrationResult : result.getExperimentIntegrationResults().values()) {
 					higherLevelDataResults.add(integrationResult.getHigherLevelDataFile());
 				}
@@ -502,11 +503,11 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 				.getSanXotQuantResultFromDataFile(dataFile);
 		final Map<String, Set<String>> relationShipsFromRelatFile = IntegrationResultWrapper
 				.getRelationShipsFromRelatFile(relatFile);
-		Set<String> lowerLevelFromRelat = new HashSet<String>();
+		Set<String> lowerLevelFromRelat = new THashSet<String>();
 		for (String upperLevel : relationShipsFromRelatFile.keySet()) {
 			lowerLevelFromRelat.addAll(relationShipsFromRelatFile.get(upperLevel));
 		}
-		// Set<String> upperLevelsMapped = new HashSet<String>();
+		// Set<String> upperLevelsMapped = new THashSet<String>();
 		for (String dataFileKey : sanXotQuantResultFromFile.keySet()) {
 			if (!lowerLevelFromRelat.contains(dataFileKey)) {
 				log.info(dataFileKey + " is  not found as lower level item in the relationship file "

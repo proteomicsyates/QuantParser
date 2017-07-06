@@ -4,7 +4,6 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -16,6 +15,7 @@ import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
 import edu.scripps.yates.utilities.maths.Maths;
+import gnu.trove.map.hash.THashMap;
 
 public class StatisticsOnPSMLevel {
 	private static final Logger log = Logger.getLogger(StatisticsOnPSMLevel.class);
@@ -63,8 +63,8 @@ public class StatisticsOnPSMLevel {
 		String currentPeptideSequence = null;
 		int peptideNumRatios = 0;
 		int psmNumber = 0;
-		Map<QuantificationLabel, Integer> peptideIonsLabeled = new HashMap<QuantificationLabel, Integer>();
-		Map<String, Boolean> peptideIdentifiedBySpecie = new HashMap<String, Boolean>();
+		Map<QuantificationLabel, Integer> peptideIonsLabeled = new THashMap<QuantificationLabel, Integer>();
+		Map<String, Boolean> peptideIdentifiedBySpecie = new THashMap<String, Boolean>();
 		List<Double> peptideRatios = new ArrayList<Double>();
 		for (QuantifiedPSMInterface quantifiedPSM : sortedPSMs) {
 			final String seq = quantifiedPSM.getFullSequence();

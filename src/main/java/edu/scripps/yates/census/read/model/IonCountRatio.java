@@ -3,7 +3,6 @@ package edu.scripps.yates.census.read.model;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -15,10 +14,11 @@ import edu.scripps.yates.utilities.model.enums.AggregationLevel;
 import edu.scripps.yates.utilities.model.enums.CombinationType;
 import edu.scripps.yates.utilities.proteomicsmodel.Condition;
 import edu.scripps.yates.utilities.proteomicsmodel.Score;
+import gnu.trove.map.hash.THashMap;
 
 public class IonCountRatio implements QuantRatio {
 	public static final IonCountRatio NAN_RATIO = new IonCountRatio(null);
-	private final Map<QuantCondition, Double> ionCountMap = new HashMap<QuantCondition, Double>();
+	private final Map<QuantCondition, Double> ionCountMap = new THashMap<QuantCondition, Double>();
 	private Score score;
 	private CombinationType combinationType;
 	private final AggregationLevel aggregationLevel;

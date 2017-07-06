@@ -1,19 +1,19 @@
 package edu.scripps.yates.census.analysis;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import edu.scripps.yates.census.analysis.QuantAnalysis.ANALYSIS_LEVEL_OUTCOME;
 import edu.scripps.yates.utilities.maths.Maths;
 import edu.scripps.yates.utilities.util.Pair;
+import gnu.trove.map.hash.TIntObjectHashMap;
 
 public class FileMappingResults {
 	private static final String SANXOT_RUN_FOLDER_NAME = "sanxot";
 	private final File workingFolder;
 	private final ANALYSIS_LEVEL_OUTCOME analysisOutcome;
-	private final Map<Integer, String> fileNamesByLevels = new HashMap<Integer, String>();
+	private final TIntObjectHashMap<String> fileNamesByLevels = new TIntObjectHashMap<String>();
 	// for all outcomes
 	public static final String DATA_FILE = "dataFile.tsv";
 	public static final String ION_TO_SPECTRUM_1 = "1-ion-spectrum.tsv";
@@ -242,7 +242,7 @@ public class FileMappingResults {
 	}
 
 	public int getMaxLevel() {
-		return Maths.max(fileNamesByLevels.keySet().toArray(new Integer[0]));
+		return Maths.max(fileNamesByLevels.keys());
 	}
 
 	/**

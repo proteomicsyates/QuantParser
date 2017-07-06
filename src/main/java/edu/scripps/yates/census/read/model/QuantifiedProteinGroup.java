@@ -3,7 +3,6 @@ package edu.scripps.yates.census.read.model;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -15,10 +14,11 @@ import edu.scripps.yates.utilities.fasta.FastaParser;
 import edu.scripps.yates.utilities.grouping.GroupableProtein;
 import edu.scripps.yates.utilities.grouping.ProteinGroup;
 import edu.scripps.yates.utilities.model.enums.AggregationLevel;
+import gnu.trove.set.hash.THashSet;
 
 public class QuantifiedProteinGroup extends AbstractContainsQuantifiedPSMs {
 	private static final String SEPARATOR = " ## ";
-	private final Set<IsobaricQuantifiedProtein> proteins = new HashSet<IsobaricQuantifiedProtein>();
+	private final Set<IsobaricQuantifiedProtein> proteins = new THashSet<IsobaricQuantifiedProtein>();
 
 	public QuantifiedProteinGroup(ProteinGroup proteinGroup) {
 		for (GroupableProtein groupableProtein : proteinGroup) {
@@ -35,7 +35,7 @@ public class QuantifiedProteinGroup extends AbstractContainsQuantifiedPSMs {
 
 	@Override
 	public Set<QuantifiedPSMInterface> getQuantifiedPSMs() {
-		Set<QuantifiedPSMInterface> ret = new HashSet<QuantifiedPSMInterface>();
+		Set<QuantifiedPSMInterface> ret = new THashSet<QuantifiedPSMInterface>();
 		for (IsobaricQuantifiedProtein quantifiedProtein : getProteins()) {
 			ret.addAll(quantifiedProtein.getQuantifiedPSMs());
 		}
@@ -107,7 +107,7 @@ public class QuantifiedProteinGroup extends AbstractContainsQuantifiedPSMs {
 	}
 
 	public Set<String> getFileNames() {
-		Set<String> ret = new HashSet<String>();
+		Set<String> ret = new THashSet<String>();
 		for (IsobaricQuantifiedProtein quantprotein : proteins) {
 			ret.addAll(quantprotein.getFileNames());
 		}

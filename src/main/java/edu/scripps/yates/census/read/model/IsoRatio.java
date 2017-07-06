@@ -1,7 +1,6 @@
 package edu.scripps.yates.census.read.model;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -10,17 +9,18 @@ import edu.scripps.yates.census.read.model.IonSerie.IonSerieType;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
 import edu.scripps.yates.utilities.maths.Maths;
 import edu.scripps.yates.utilities.model.enums.AggregationLevel;
+import gnu.trove.map.hash.THashMap;
 
 public class IsoRatio extends CensusRatio {
 
 	private final int numIon;
 	private final IonSerieType ionSerieType;
-	private final Map<QuantificationLabel, Ion> ionsByLabel = new HashMap<QuantificationLabel, Ion>();
+	private final Map<QuantificationLabel, Ion> ionsByLabel = new THashMap<QuantificationLabel, Ion>();
 	private final QuantificationLabel quantificationLabel1;
 	private final QuantificationLabel quantificationLabel2;
-	private final Map<QuantificationLabel, Double> massesByLabel = new HashMap<QuantificationLabel, Double>();
-	private final HashMap<QuantCondition, QuantificationLabel> labelsByConditions;
-	private final HashMap<QuantificationLabel, QuantCondition> conditionsByLabels;
+	private final Map<QuantificationLabel, Double> massesByLabel = new THashMap<QuantificationLabel, Double>();
+	private final Map<QuantCondition, QuantificationLabel> labelsByConditions;
+	private final Map<QuantificationLabel, QuantCondition> conditionsByLabels;
 	private RatioScore ratioScore;
 	private Character quantifiedAA;
 	private Integer quantifiedSitePositionInPeptide;
@@ -66,10 +66,10 @@ public class IsoRatio extends CensusRatio {
 		this.numIon = numIon;
 		this.ionSerieType = ionSerieType;
 
-		labelsByConditions = new HashMap<QuantCondition, QuantificationLabel>();
+		labelsByConditions = new THashMap<QuantCondition, QuantificationLabel>();
 		labelsByConditions.put(condition1, quantificationLabel1);
 		labelsByConditions.put(condition2, quantificationLabel2);
-		conditionsByLabels = new HashMap<QuantificationLabel, QuantCondition>();
+		conditionsByLabels = new THashMap<QuantificationLabel, QuantCondition>();
 		conditionsByLabels.put(quantificationLabel1, condition1);
 		conditionsByLabels.put(quantificationLabel2, condition2);
 	}

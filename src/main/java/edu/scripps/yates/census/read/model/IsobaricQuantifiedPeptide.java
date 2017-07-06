@@ -1,8 +1,6 @@
 package edu.scripps.yates.census.read.model;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -15,10 +13,12 @@ import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface
 import edu.scripps.yates.census.read.util.QuantUtils;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
 import edu.scripps.yates.utilities.maths.Maths;
+import gnu.trove.map.hash.THashMap;
+import gnu.trove.set.hash.THashSet;
 
 public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements QuantifiedPeptideInterface, HasIsoRatios {
 
-	private final Map<String, IonCountRatio> countRatiosByConditionKey = new HashMap<String, IonCountRatio>();
+	private final Map<String, IonCountRatio> countRatiosByConditionKey = new THashMap<String, IonCountRatio>();
 	private Map<QuantCondition, Set<Ion>> ionsByConditions;
 
 	/**
@@ -34,7 +34,7 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements Quan
 	}
 
 	public Set<IsobaricQuantifiedPSM> getIsobaricQuantifiedPSMs() {
-		Set<IsobaricQuantifiedPSM> isoPsms = new HashSet<IsobaricQuantifiedPSM>();
+		Set<IsobaricQuantifiedPSM> isoPsms = new THashSet<IsobaricQuantifiedPSM>();
 		for (QuantifiedPSMInterface quantifiedPSM : psms) {
 			if (quantifiedPSM instanceof IsobaricQuantifiedPSM) {
 				isoPsms.add((IsobaricQuantifiedPSM) quantifiedPSM);
@@ -45,7 +45,7 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements Quan
 
 	@Override
 	public Set<IsoRatio> getIsoRatios() {
-		Set<IsoRatio> ret = new HashSet<IsoRatio>();
+		Set<IsoRatio> ret = new THashSet<IsoRatio>();
 
 		final Set<IsobaricQuantifiedPSM> quantifiedPSMs = getIsobaricQuantifiedPSMs();
 		for (IsobaricQuantifiedPSM quantifiedPSM : quantifiedPSMs) {
@@ -90,7 +90,7 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements Quan
 
 	@Override
 	public Map<QuantificationLabel, Set<Ion>> getIons(IonSerie ionSerie) {
-		Map<QuantificationLabel, Set<Ion>> ret = new HashMap<QuantificationLabel, Set<Ion>>();
+		Map<QuantificationLabel, Set<Ion>> ret = new THashMap<QuantificationLabel, Set<Ion>>();
 		for (IsobaricQuantifiedPSM psm : getIsobaricQuantifiedPSMs()) {
 			final Map<QuantificationLabel, Set<Ion>> ions = psm.getIons(ionSerie);
 			mergeMaps(ret, ions);
@@ -101,7 +101,7 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements Quan
 
 	@Override
 	public Set<Ion> getSingletonIonsByLabel(QuantificationLabel label) {
-		Set<Ion> ret = new HashSet<Ion>();
+		Set<Ion> ret = new THashSet<Ion>();
 		for (IsobaricQuantifiedPSM psm : getIsobaricQuantifiedPSMs()) {
 			ret.addAll(psm.getSingletonIonsByLabel(label));
 		}
@@ -110,7 +110,7 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements Quan
 
 	@Override
 	public Set<Ion> getIonsByLabel(QuantificationLabel label) {
-		Set<Ion> ret = new HashSet<Ion>();
+		Set<Ion> ret = new THashSet<Ion>();
 		for (IsobaricQuantifiedPSM psm : getIsobaricQuantifiedPSMs()) {
 			ret.addAll(psm.getIonsByLabel(label));
 		}
@@ -119,7 +119,7 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements Quan
 
 	@Override
 	public Map<QuantificationLabel, Set<Ion>> getSingletonIons(IonSerie ionSerie) {
-		Map<QuantificationLabel, Set<Ion>> ret = new HashMap<QuantificationLabel, Set<Ion>>();
+		Map<QuantificationLabel, Set<Ion>> ret = new THashMap<QuantificationLabel, Set<Ion>>();
 		for (IsobaricQuantifiedPSM psm : getIsobaricQuantifiedPSMs()) {
 			final Map<QuantificationLabel, Set<Ion>> singletonIons = psm.getSingletonIons(ionSerie);
 			mergeMaps(ret, singletonIons);
@@ -134,7 +134,7 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements Quan
 			if (receiverMap.containsKey(label)) {
 				receiverMap.get(label).addAll(donorMap.get(label));
 			} else {
-				Set<Ion> set = new HashSet<Ion>();
+				Set<Ion> set = new THashSet<Ion>();
 				set.addAll(donorMap.get(label));
 				receiverMap.put(label, set);
 			}
@@ -144,14 +144,14 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements Quan
 
 	@Override
 	public Map<QuantCondition, Set<Ion>> getSingletonIonsByCondition() {
-		Map<QuantCondition, Set<Ion>> ret = new HashMap<QuantCondition, Set<Ion>>();
+		Map<QuantCondition, Set<Ion>> ret = new THashMap<QuantCondition, Set<Ion>>();
 		for (IsobaricQuantifiedPSM psm : getIsobaricQuantifiedPSMs()) {
 			final Map<QuantCondition, Set<Ion>> singletonIons = psm.getSingletonIonsByCondition();
 			for (QuantCondition condition : singletonIons.keySet()) {
 				if (ret.containsKey(condition)) {
 					ret.get(condition).addAll(singletonIons.get(condition));
 				} else {
-					Set<Ion> set = new HashSet<Ion>();
+					Set<Ion> set = new THashSet<Ion>();
 					set.addAll(singletonIons.get(condition));
 					ret.put(condition, set);
 				}
@@ -162,7 +162,7 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements Quan
 
 	@Override
 	public Set<IsoRatio> getNonInfinityIsoRatios() {
-		Set<IsoRatio> ret = new HashSet<IsoRatio>();
+		Set<IsoRatio> ret = new THashSet<IsoRatio>();
 		for (IsobaricQuantifiedPSM psm : getIsobaricQuantifiedPSMs()) {
 			ret.addAll(psm.getNonInfinityIsoRatios());
 		}
@@ -182,14 +182,14 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements Quan
 
 	@Override
 	public Map<QuantificationLabel, Set<Ion>> getSingletonIonsByLabel() {
-		Map<QuantificationLabel, Set<Ion>> ret = new HashMap<QuantificationLabel, Set<Ion>>();
+		Map<QuantificationLabel, Set<Ion>> ret = new THashMap<QuantificationLabel, Set<Ion>>();
 		for (IsobaricQuantifiedPSM psm : getIsobaricQuantifiedPSMs()) {
 			final Map<QuantificationLabel, Set<Ion>> singletonIons = psm.getSingletonIonsByLabel();
 			for (QuantificationLabel label : singletonIons.keySet()) {
 				if (ret.containsKey(label)) {
 					ret.get(label).addAll(singletonIons.get(label));
 				} else {
-					Set<Ion> set = new HashSet<Ion>();
+					Set<Ion> set = new THashSet<Ion>();
 					set.addAll(singletonIons.get(label));
 					ret.put(label, set);
 				}
@@ -200,14 +200,14 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements Quan
 
 	@Override
 	public Map<QuantificationLabel, Set<Ion>> getIonsByLabel() {
-		Map<QuantificationLabel, Set<Ion>> ret = new HashMap<QuantificationLabel, Set<Ion>>();
+		Map<QuantificationLabel, Set<Ion>> ret = new THashMap<QuantificationLabel, Set<Ion>>();
 		for (IsobaricQuantifiedPSM psm : getIsobaricQuantifiedPSMs()) {
 			final Map<QuantificationLabel, Set<Ion>> ions = psm.getIonsByLabel();
 			for (QuantificationLabel label : ions.keySet()) {
 				if (ret.containsKey(label)) {
 					ret.get(label).addAll(ions.get(label));
 				} else {
-					Set<Ion> set = new HashSet<Ion>();
+					Set<Ion> set = new THashSet<Ion>();
 					set.addAll(ions.get(label));
 					ret.put(label, set);
 				}
@@ -267,7 +267,7 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements Quan
 	@Override
 	public Map<QuantCondition, Set<Ion>> getIonsByCondition() {
 		if (ionsByConditions == null) {
-			ionsByConditions = new HashMap<QuantCondition, Set<Ion>>();
+			ionsByConditions = new THashMap<QuantCondition, Set<Ion>>();
 			for (IsobaricQuantifiedPSM quantPSM : getIsobaricQuantifiedPSMs()) {
 				final Map<QuantCondition, Set<Ion>> ions = quantPSM.getIonsByCondition();
 				for (QuantCondition condition : ions.keySet()) {
@@ -287,7 +287,7 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements Quan
 	public Map<QuantCondition, Set<Ion>> getIonsByCondition(String replicateName) {
 		if (replicateName == null) {
 			if (ionsByConditions == null) {
-				ionsByConditions = new HashMap<QuantCondition, Set<Ion>>();
+				ionsByConditions = new THashMap<QuantCondition, Set<Ion>>();
 				for (IsobaricQuantifiedPSM quantPSM : getIsobaricQuantifiedPSMs()) {
 
 					final Map<QuantCondition, Set<Ion>> ions = quantPSM.getIonsByCondition();
@@ -304,7 +304,7 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements Quan
 			}
 			return ionsByConditions;
 		} else {
-			Map<QuantCondition, Set<Ion>> ionsByConditions = new HashMap<QuantCondition, Set<Ion>>();
+			Map<QuantCondition, Set<Ion>> ionsByConditions = new THashMap<QuantCondition, Set<Ion>>();
 			for (IsobaricQuantifiedPSM quantPSM : getIsobaricQuantifiedPSMs()) {
 				if (replicateName == null || quantPSM.getFileNames().contains(replicateName)) {
 					final Map<QuantCondition, Set<Ion>> ions = quantPSM.getIonsByCondition();
@@ -321,6 +321,31 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements Quan
 			return ionsByConditions;
 		}
 
+	}
+
+	@Override
+	public Map<QuantCondition, Set<Ion>> getIonsByConditionForSites(String replicateName, char[] quantifiedAAs) {
+		Map<QuantCondition, Set<Ion>> ret = new THashMap<QuantCondition, Set<Ion>>();
+
+		Set<QuantifiedPSMInterface> quantifiedPSMs = getQuantifiedPSMs();
+		for (QuantifiedPSMInterface quantifiedPSM : quantifiedPSMs) {
+			if (quantifiedPSM instanceof IsobaricQuantifiedPSM) {
+				IsobaricQuantifiedPSM isoPSM = (IsobaricQuantifiedPSM) quantifiedPSM;
+				Map<QuantCondition, Set<Ion>> ionsByConditionForSites = isoPSM.getIonsByConditionForSites(replicateName,
+						quantifiedAAs);
+				for (QuantCondition cond : ionsByConditionForSites.keySet()) {
+					if (ret.containsKey(cond)) {
+						ret.get(cond).addAll(ionsByConditionForSites.get(cond));
+					} else {
+						Set<Ion> ions = new THashSet<Ion>();
+						ions.addAll(ionsByConditionForSites.get(cond));
+						ret.put(cond, ions);
+					}
+				}
+			}
+		}
+
+		return ret;
 	}
 
 	/**
@@ -342,4 +367,5 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements Quan
 			QuantCondition quantConditionDenominator, String replicateName) {
 		return getIonCountRatio(quantConditionNumerator, quantConditionDenominator, replicateName);
 	}
+
 }

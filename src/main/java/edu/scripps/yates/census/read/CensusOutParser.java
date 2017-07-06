@@ -10,8 +10,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,6 +41,8 @@ import edu.scripps.yates.utilities.model.enums.AggregationLevel;
 import edu.scripps.yates.utilities.model.enums.AmountType;
 import edu.scripps.yates.utilities.proteomicsmodel.Amount;
 import edu.scripps.yates.utilities.remote.RemoteSSHFileReference;
+import gnu.trove.map.hash.THashMap;
+import gnu.trove.set.hash.THashSet;
 
 public class CensusOutParser extends AbstractQuantParser {
 	private static final Logger log = Logger.getLogger(CensusOutParser.class);
@@ -176,7 +176,7 @@ public class CensusOutParser extends AbstractQuantParser {
 			for (RemoteSSHFileReference remoteFileRetriever : remoteFileRetrievers) {
 				final Map<QuantCondition, QuantificationLabel> labelsByConditions = labelsByConditionsByFile
 						.get(remoteFileRetriever);
-				final Map<QuantificationLabel, QuantCondition> conditionsByLabels = new HashMap<QuantificationLabel, QuantCondition>();
+				final Map<QuantificationLabel, QuantCondition> conditionsByLabels = new THashMap<QuantificationLabel, QuantCondition>();
 				for (QuantCondition cond : labelsByConditions.keySet()) {
 					conditionsByLabels.put(labelsByConditions.get(cond), cond);
 				}
@@ -205,7 +205,7 @@ public class CensusOutParser extends AbstractQuantParser {
 					List<String> pLineHeaderList = new ArrayList<String>();
 					List<String> sLineHeaderList = new ArrayList<String>();
 					List<String> singletonSLineHeaderList = new ArrayList<String>();
-					Set<QuantifiedProteinInterface> proteinGroup = new HashSet<QuantifiedProteinInterface>();
+					Set<QuantifiedProteinInterface> proteinGroup = new THashSet<QuantifiedProteinInterface>();
 					boolean itWasPeptides = false;
 					while ((line = br.readLine()) != null) {
 						if (line.startsWith(H)) {
@@ -312,13 +312,13 @@ public class CensusOutParser extends AbstractQuantParser {
 					// create a map in which the key is the peptideSequence +
 					// rawFile (removing the H) + chargeState
 					// and the values are Sets of psms
-					Map<String, Set<QuantifiedPSMInterface>> map = new HashMap<String, Set<QuantifiedPSMInterface>>();
+					Map<String, Set<QuantifiedPSMInterface>> map = new THashMap<String, Set<QuantifiedPSMInterface>>();
 					for (QuantifiedPSMInterface psm : localPsmMap.values()) {
 						String key = getSpectrumPerChromatographicPeakAndPerSaltStepKey(psm);
 						if (map.containsKey(key)) {
 							map.get(key).add(psm);
 						} else {
-							Set<QuantifiedPSMInterface> set = new HashSet<QuantifiedPSMInterface>();
+							Set<QuantifiedPSMInterface> set = new THashSet<QuantifiedPSMInterface>();
 							set.add(psm);
 							map.put(key, set);
 						}
@@ -330,7 +330,7 @@ public class CensusOutParser extends AbstractQuantParser {
 						final Set<QuantifiedPSMInterface> psmSet = map.get(key);
 						if (psmSet.size() > 1) {
 							QuantifiedPSMInterface bestPSM = getBestPSM(psmSet);
-							Set<QuantifiedPSMInterface> toIgnore = new HashSet<QuantifiedPSMInterface>();
+							Set<QuantifiedPSMInterface> toIgnore = new THashSet<QuantifiedPSMInterface>();
 							for (QuantifiedPSMInterface psm : psmSet) {
 								if (!psm.equals(bestPSM)) {
 									toIgnore.add(psm);

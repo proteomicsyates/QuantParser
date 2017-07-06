@@ -3,7 +3,6 @@ package edu.scripps.yates.census.read.model;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -22,16 +21,17 @@ import edu.scripps.yates.utilities.grouping.ProteinGroup;
 import edu.scripps.yates.utilities.model.enums.AggregationLevel;
 import edu.scripps.yates.utilities.proteomicsmodel.Amount;
 import edu.scripps.yates.utilities.util.Pair;
+import gnu.trove.set.hash.THashSet;
 
 public class QuantifiedProtein extends AbstractContainsQuantifiedPSMs implements QuantifiedProteinInterface {
 	private static final Logger log = Logger.getLogger(QuantifiedProtein.class);
 
-	private final Set<QuantifiedPSMInterface> quantifiedPSMs = new HashSet<QuantifiedPSMInterface>();
+	private final Set<QuantifiedPSMInterface> quantifiedPSMs = new THashSet<QuantifiedPSMInterface>();
 	private ProteinEvidence evidence;
 	private String accession;
 	private ProteinGroup proteinGroup;
 	private String accessionType;
-	private final Set<Amount> amounts = new HashSet<Amount>();
+	private final Set<Amount> amounts = new THashSet<Amount>();
 
 	protected String description;
 
@@ -73,7 +73,7 @@ public class QuantifiedProtein extends AbstractContainsQuantifiedPSMs implements
 	 */
 	@Override
 	public Set<QuantifiedPeptideInterface> getQuantifiedPeptides() {
-		Set<QuantifiedPeptideInterface> ret = new HashSet<QuantifiedPeptideInterface>();
+		Set<QuantifiedPeptideInterface> ret = new THashSet<QuantifiedPeptideInterface>();
 		for (QuantifiedPSMInterface psm : quantifiedPSMs) {
 			if (psm.getQuantifiedPeptide() != null) {
 				ret.add(psm.getQuantifiedPeptide());
@@ -140,7 +140,7 @@ public class QuantifiedProtein extends AbstractContainsQuantifiedPSMs implements
 			final String accession = getAccession();
 			taxonomy = FastaParser.getOrganismNameFromFastaHeader(fastaHeader, accession);
 		}
-		Set<String> set = new HashSet<String>();
+		Set<String> set = new THashSet<String>();
 		if (taxonomy != null)
 			set.add(taxonomy);
 		return set;
@@ -164,7 +164,7 @@ public class QuantifiedProtein extends AbstractContainsQuantifiedPSMs implements
 
 	@Override
 	public Set<String> getRawFileNames() {
-		Set<String> ret = new HashSet<String>();
+		Set<String> ret = new THashSet<String>();
 		final Set<QuantifiedPSMInterface> quantifiedPSMs2 = getQuantifiedPSMs();
 		for (QuantifiedPSMInterface quantifiedPSMInterface : quantifiedPSMs2) {
 			ret.addAll(quantifiedPSMInterface.getRawFileNames());
@@ -267,7 +267,7 @@ public class QuantifiedProtein extends AbstractContainsQuantifiedPSMs implements
 
 	@Override
 	public Set<String> getFileNames() {
-		Set<String> ret = new HashSet<String>();
+		Set<String> ret = new THashSet<String>();
 		for (QuantifiedPSMInterface quantPSM : getQuantifiedPSMs()) {
 			ret.addAll(quantPSM.getRawFileNames());
 		}
@@ -304,7 +304,7 @@ public class QuantifiedProtein extends AbstractContainsQuantifiedPSMs implements
 
 	@Override
 	public Set<QuantifiedPeptideInterface> getNonDiscardedQuantifiedPeptides() {
-		Set<QuantifiedPeptideInterface> ret = new HashSet<QuantifiedPeptideInterface>();
+		Set<QuantifiedPeptideInterface> ret = new THashSet<QuantifiedPeptideInterface>();
 		for (QuantifiedPeptideInterface peptide : getQuantifiedPeptides()) {
 			if (!peptide.isDiscarded()) {
 				ret.add(peptide);

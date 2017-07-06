@@ -2,20 +2,20 @@ package edu.scripps.yates.census.analysis.wrappers;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
 
 import edu.scripps.yates.census.analysis.FileMappingResults;
+import gnu.trove.map.hash.THashMap;
 
 public class SanXotAnalysisResult {
 	private final static Logger log = Logger.getLogger(SanXotAnalysisResult.class);
 	private KalibrateResultWrapper kalibrationResult;
 	private final List<IntegrationResultWrapper> integrationResults = new ArrayList<IntegrationResultWrapper>();
-	private final HashMap<String, IntegrationResultWrapper> experimentIntegrationResults = new HashMap<String, IntegrationResultWrapper>();
-	private final HashMap<String, Map<String, IntegrationResultWrapper>> replicateByExperimentIntegrationResults = new HashMap<String, Map<String, IntegrationResultWrapper>>();
+	private final Map<String, IntegrationResultWrapper> experimentIntegrationResults = new THashMap<String, IntegrationResultWrapper>();
+	private final Map<String, Map<String, IntegrationResultWrapper>> replicateByExperimentIntegrationResults = new THashMap<String, Map<String, IntegrationResultWrapper>>();
 
 	private final FileMappingResults fileMappingResult;
 
@@ -51,6 +51,7 @@ public class SanXotAnalysisResult {
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
@@ -104,7 +105,7 @@ public class SanXotAnalysisResult {
 		if (replicateByExperimentIntegrationResults.containsKey(experimentName)) {
 			replicateIntegrationResults = replicateByExperimentIntegrationResults.get(experimentName);
 		} else {
-			replicateIntegrationResults = new HashMap<String, IntegrationResultWrapper>();
+			replicateIntegrationResults = new THashMap<String, IntegrationResultWrapper>();
 			replicateByExperimentIntegrationResults.put(experimentName, replicateIntegrationResults);
 		}
 		replicateIntegrationResults.put(replicateName, integrationResult);
@@ -115,7 +116,7 @@ public class SanXotAnalysisResult {
 		return experimentIntegrationResults.get(experimentName);
 	}
 
-	public HashMap<String, IntegrationResultWrapper> getExperimentIntegrationResults() {
+	public Map<String, IntegrationResultWrapper> getExperimentIntegrationResults() {
 		return experimentIntegrationResults;
 	}
 

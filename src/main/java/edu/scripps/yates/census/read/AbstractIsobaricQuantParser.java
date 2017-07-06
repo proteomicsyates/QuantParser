@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -16,16 +14,18 @@ import edu.scripps.yates.census.read.model.interfaces.IsobaricQuantParser;
 import edu.scripps.yates.census.read.util.IonExclusion;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
 import edu.scripps.yates.utilities.remote.RemoteSSHFileReference;
+import gnu.trove.map.hash.THashMap;
+import gnu.trove.set.hash.THashSet;
 
 public abstract class AbstractIsobaricQuantParser extends AbstractQuantParser implements IsobaricQuantParser {
 	// key=spectrumKeys, values=ionKeys
-	protected final HashMap<String, Set<String>> spectrumToIonsMap = new HashMap<String, Set<String>>();
-	protected final Set<String> ionKeys = new HashSet<String>();
+	protected final Map<String, Set<String>> spectrumToIonsMap = new THashMap<String, Set<String>>();
+	protected final Set<String> ionKeys = new THashSet<String>();
 
 	// ion exclusions
 	protected final List<IonExclusion> ionExclusions = new ArrayList<IonExclusion>();
 
-	protected final Set<Character> quantifiedAAs = new HashSet<Character>();
+	protected final Set<Character> quantifiedAAs = new THashSet<Character>();
 
 	public AbstractIsobaricQuantParser() {
 		super();
@@ -86,7 +86,7 @@ public abstract class AbstractIsobaricQuantParser extends AbstractQuantParser im
 	 * @return the spectrumMap
 	 */
 	@Override
-	public HashMap<String, Set<String>> getSpectrumToIonsMap() {
+	public Map<String, Set<String>> getSpectrumToIonsMap() {
 		if (!processed)
 			process();
 		return spectrumToIonsMap;

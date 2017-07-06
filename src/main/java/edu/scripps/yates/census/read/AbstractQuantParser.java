@@ -5,8 +5,6 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,6 +33,8 @@ import edu.scripps.yates.utilities.progresscounter.ProgressPrintingType;
 import edu.scripps.yates.utilities.proteomicsmodel.Accession;
 import edu.scripps.yates.utilities.remote.RemoteSSHFileReference;
 import edu.scripps.yates.utilities.util.Pair;
+import gnu.trove.map.hash.THashMap;
+import gnu.trove.set.hash.THashSet;
 
 public abstract class AbstractQuantParser implements QuantParser {
 	private static final Logger log = Logger.getLogger(AbstractQuantParser.class);
@@ -43,37 +43,37 @@ public abstract class AbstractQuantParser implements QuantParser {
 	protected final List<RemoteSSHFileReference> remoteFileRetrievers = new ArrayList<RemoteSSHFileReference>();
 
 	protected Pattern decoyPattern;
-	public static Set<String> peptidesMissingInDB = new HashSet<String>();
+	public static Set<String> peptidesMissingInDB = new THashSet<String>();
 	protected boolean ignoreNotFoundPeptidesInDB;
 
 	// MAPS
 	// key=experimentkey, values=proteinKeys
-	protected final HashMap<String, Set<String>> experimentToProteinsMap = new HashMap<String, Set<String>>();
+	protected final Map<String, Set<String>> experimentToProteinsMap = new THashMap<String, Set<String>>();
 	// key=proteinkey, values=peptidekeys
-	protected final HashMap<String, Set<String>> proteinToPeptidesMap = new HashMap<String, Set<String>>();
+	protected final Map<String, Set<String>> proteinToPeptidesMap = new THashMap<String, Set<String>>();
 	// key=peptideKey, values=spectrumKeys
-	protected final HashMap<String, Set<String>> peptideToSpectraMap = new HashMap<String, Set<String>>();
+	protected final Map<String, Set<String>> peptideToSpectraMap = new THashMap<String, Set<String>>();
 
 	// the key is the protein key
-	protected final Map<String, QuantifiedProteinInterface> localProteinMap = new HashMap<String, QuantifiedProteinInterface>();
+	protected final Map<String, QuantifiedProteinInterface> localProteinMap = new THashMap<String, QuantifiedProteinInterface>();
 	// the key is the spectrum key
-	protected final Map<String, QuantifiedPSMInterface> localPsmMap = new HashMap<String, QuantifiedPSMInterface>();
+	protected final Map<String, QuantifiedPSMInterface> localPsmMap = new THashMap<String, QuantifiedPSMInterface>();
 	// the key is the peptide key (the peptide sequence, distinguising between
 	// modified or not, depending on 'distinguishModifiedPeptides' variable
-	protected final Map<String, QuantifiedPeptideInterface> localPeptideMap = new HashMap<String, QuantifiedPeptideInterface>();
+	protected final Map<String, QuantifiedPeptideInterface> localPeptideMap = new THashMap<String, QuantifiedPeptideInterface>();
 
-	protected final Set<String> taxonomies = new HashSet<String>();
+	protected final Set<String> taxonomies = new THashSet<String>();
 	protected boolean processed = false;
 
-	protected final Map<RemoteSSHFileReference, Map<QuantCondition, QuantificationLabel>> labelsByConditionsByFile = new HashMap<RemoteSSHFileReference, Map<QuantCondition, QuantificationLabel>>();
+	protected final Map<RemoteSSHFileReference, Map<QuantCondition, QuantificationLabel>> labelsByConditionsByFile = new THashMap<RemoteSSHFileReference, Map<QuantCondition, QuantificationLabel>>();
 
 	// protected final Map<RemoteSSHFileReference, QuantificationLabel>
-	// numeratorLabelByFile = new HashMap<RemoteSSHFileReference,
+	// numeratorLabelByFile = new THashMap<RemoteSSHFileReference,
 	// QuantificationLabel>();
 	// protected final Map<RemoteSSHFileReference, QuantificationLabel>
-	// denominatorLabelByFile = new HashMap<RemoteSSHFileReference,
+	// denominatorLabelByFile = new THashMap<RemoteSSHFileReference,
 	// QuantificationLabel>();
-	protected final Map<RemoteSSHFileReference, List<RatioDescriptor>> ratioDescriptorsByFile = new HashMap<RemoteSSHFileReference, List<RatioDescriptor>>();
+	protected final Map<RemoteSSHFileReference, List<RatioDescriptor>> ratioDescriptorsByFile = new THashMap<RemoteSSHFileReference, List<RatioDescriptor>>();
 	private UniprotProteinLocalRetriever uplr;
 	private String uniprotVersion;
 	protected boolean clearStaticMapsBeforeReading = true;
@@ -140,7 +140,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 
 	public AbstractQuantParser(RemoteSSHFileReference remoteServer, QuantificationLabel label1, QuantCondition cond1,
 			QuantificationLabel label2, QuantCondition cond2) {
-		Map<QuantCondition, QuantificationLabel> map = new HashMap<QuantCondition, QuantificationLabel>();
+		Map<QuantCondition, QuantificationLabel> map = new THashMap<QuantCondition, QuantificationLabel>();
 		map.put(cond1, label1);
 		map.put(cond2, label2);
 		addFile(remoteServer, map, label1, label2);
@@ -148,7 +148,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 
 	public AbstractQuantParser(RemoteSSHFileReference remoteServer, QuantificationLabel label1, QuantCondition cond1,
 			QuantificationLabel label2, QuantCondition cond2, QuantificationLabel label3, QuantCondition cond3) {
-		Map<QuantCondition, QuantificationLabel> map = new HashMap<QuantCondition, QuantificationLabel>();
+		Map<QuantCondition, QuantificationLabel> map = new THashMap<QuantCondition, QuantificationLabel>();
 		map.put(cond1, label1);
 		map.put(cond2, label2);
 		map.put(cond3, label3);
@@ -157,7 +157,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 
 	public AbstractQuantParser(File inputFile, QuantificationLabel label1, QuantCondition cond1,
 			QuantificationLabel label2, QuantCondition cond2) throws FileNotFoundException {
-		Map<QuantCondition, QuantificationLabel> map = new HashMap<QuantCondition, QuantificationLabel>();
+		Map<QuantCondition, QuantificationLabel> map = new THashMap<QuantCondition, QuantificationLabel>();
 		map.put(cond1, label1);
 		map.put(cond2, label2);
 		addFile(inputFile, map, label1, label2);
@@ -166,7 +166,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 	public AbstractQuantParser(File inputFile, QuantificationLabel label1, QuantCondition cond1,
 			QuantificationLabel label2, QuantCondition cond2, QuantificationLabel label3, QuantCondition cond3)
 			throws FileNotFoundException {
-		Map<QuantCondition, QuantificationLabel> map = new HashMap<QuantCondition, QuantificationLabel>();
+		Map<QuantCondition, QuantificationLabel> map = new THashMap<QuantCondition, QuantificationLabel>();
 		map.put(cond1, label1);
 		map.put(cond2, label2);
 		map.put(cond3, label3);
@@ -309,7 +309,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 	 * @return the proteinMap @
 	 */
 	@Override
-	public HashMap<String, Set<String>> getProteinToPeptidesMap() {
+	public Map<String, Set<String>> getProteinToPeptidesMap() {
 		if (!processed) {
 			startProcess();
 		}
@@ -320,7 +320,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 	 * @return the peptideMap @
 	 */
 	@Override
-	public HashMap<String, Set<String>> getPeptideToSpectraMap() {
+	public Map<String, Set<String>> getPeptideToSpectraMap() {
 		if (!processed) {
 			startProcess();
 		}
@@ -393,11 +393,11 @@ public abstract class AbstractQuantParser implements QuantParser {
 
 	protected abstract void process();
 
-	public static void addToMap(String key, HashMap<String, Set<String>> map, String value) {
+	public static void addToMap(String key, Map<String, Set<String>> map, String value) {
 		if (map.containsKey(key)) {
 			map.get(key).add(value);
 		} else {
-			Set<String> set = new HashSet<String>();
+			Set<String> set = new THashSet<String>();
 			set.add(value);
 			map.put(key, set);
 		}
@@ -432,7 +432,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 	 */
 	@Override
 	public Set<String> getUniprotAccSet() {
-		Set<String> ret = new HashSet<String>();
+		Set<String> ret = new THashSet<String>();
 		final Set<String> keySet = getProteinMap().keySet();
 		for (String acc : keySet) {
 			if (FastaParser.getUniProtACC(acc) != null) {
@@ -451,7 +451,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 	private void mapIPI2Uniprot() {
 		if (!localProteinMap.isEmpty()) {
 			int originalNumberOfEntries = localProteinMap.size();
-			Map<String, QuantifiedProteinInterface> newMap = new HashMap<String, QuantifiedProteinInterface>();
+			Map<String, QuantifiedProteinInterface> newMap = new THashMap<String, QuantifiedProteinInterface>();
 			for (String accession : localProteinMap.keySet()) {
 
 				final Pair<String, String> acc = FastaParser.getACC(accession);
@@ -497,7 +497,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 		if (uplr == null) {
 			return;
 		}
-		Set<String> accessions = new HashSet<String>();
+		Set<String> accessions = new THashSet<String>();
 		accessions.addAll(getProteinMap().keySet());
 		String latestVersion = "latestVersion";
 		if (uniprotVersion != null) {
@@ -506,12 +506,12 @@ public abstract class AbstractQuantParser implements QuantParser {
 		// split into chunks of 500 accessions in order to show progress
 		int chunckSize = 500000;
 		List<Set<String>> listOfSets = new ArrayList<Set<String>>();
-		Set<String> set = new HashSet<String>();
+		Set<String> set = new THashSet<String>();
 		for (String accession : accessions) {
 			set.add(accession);
 			if (set.size() == chunckSize) {
 				listOfSets.add(set);
-				set = new HashSet<String>();
+				set = new THashSet<String>();
 			}
 		}
 		listOfSets.add(set);
@@ -594,7 +594,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 			// so we need to discard them
 			// We iterate over the psms, and we will remove the ones with no
 			// proteins
-			Set<String> keysToDelete = new HashSet<String>();
+			Set<String> keysToDelete = new THashSet<String>();
 			for (String key : localPsmMap.keySet()) {
 				if (localPsmMap.get(key).getQuantifiedProteins().isEmpty()) {
 					keysToDelete.add(key);

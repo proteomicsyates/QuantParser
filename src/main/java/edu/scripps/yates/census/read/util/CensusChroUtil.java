@@ -1,6 +1,5 @@
 package edu.scripps.yates.census.read.util;
 
-import java.util.HashSet;
 import java.util.Set;
 
 import edu.scripps.yates.census.read.model.IsoRatio;
@@ -9,6 +8,7 @@ import edu.scripps.yates.census.read.model.QuantifiedProtein;
 import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
 import edu.scripps.yates.utilities.grouping.GroupableProtein;
 import edu.scripps.yates.utilities.grouping.ProteinGroup;
+import gnu.trove.set.hash.THashSet;
 
 public class CensusChroUtil {
 
@@ -244,7 +244,7 @@ public class CensusChroUtil {
 	 * @return
 	 */
 	public static Set<QuantRatio> getRatiosFromProteinGroup(ProteinGroup proteinGroup) {
-		Set<QuantRatio> ret = new HashSet<QuantRatio>();
+		Set<QuantRatio> ret = new THashSet<QuantRatio>();
 		for (GroupableProtein protein : proteinGroup) {
 			if (protein instanceof IsobaricQuantifiedProtein) {
 				IsobaricQuantifiedProtein quantProtein = (IsobaricQuantifiedProtein) protein;
