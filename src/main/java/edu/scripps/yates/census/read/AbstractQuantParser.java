@@ -518,7 +518,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 
 		int numObsoletes = 0;
 		log.info("Merging proteins that have secondary accessions according to Uniprot " + latestVersion + "...");
-		ProgressCounter counter = new ProgressCounter(accessions.size(), ProgressPrintingType.PERCENTAGE_STEPS, 1);
+		ProgressCounter counter = new ProgressCounter(accessions.size(), ProgressPrintingType.PERCENTAGE_STEPS, 0);
 		int initialSize = accessions.size();
 		for (Set<String> accessionSet : listOfSets) {
 			Map<String, Entry> annotatedProteins = uplr.getAnnotatedProteins(uniprotVersion, accessionSet,
@@ -534,7 +534,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 				if (entry != null && entry.getAccession() != null && !entry.getAccession().isEmpty()) {
 					String primaryAccession = entry.getAccession().get(0);
 					if (!accession.equals(primaryAccession) && !accession.contains(primaryAccession)) {
-						log.info("Replacing Uniprot accession " + quantifiedProtein.getAccession() + " by "
+						log.info("Replacing accession " + quantifiedProtein.getAccession() + " by primary accession "
 								+ primaryAccession);
 						quantifiedProtein.setAccession(primaryAccession);
 						if (StaticQuantMaps.proteinMap.containsKey(primaryAccession)) {

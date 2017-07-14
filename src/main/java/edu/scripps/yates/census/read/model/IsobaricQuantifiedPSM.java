@@ -108,11 +108,6 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 		// return KeyUtils.getSpectrumKey(peptide, chargeStateSensible);
 	}
 
-	@Override
-	public void setKey(String key) {
-		this.key = key;
-	}
-
 	/**
 	 * @return the rawfileName
 	 */
@@ -1159,12 +1154,70 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 		return ret;
 	}
 
+	@Override
+	public Map<QuantCondition, Set<Ion>> getIonsByConditionForSites(String replicateName, char[] quantifiedAAs,
+			int positionInPeptide) {
+		Map<QuantCondition, Set<Ion>> ret = new THashMap<QuantCondition, Set<Ion>>();
+		Map<QuantCondition, Set<Ion>> ionsByCondition2 = getIonsByCondition(replicateName);
+		List<Integer> quantifiedPositions = StringUtils.getPositions(getSequence(), quantifiedAAs);
+		if (ionsByCondition2 != null) {
+			for (QuantCondition condition : ionsByCondition2.keySet()) {
+				Set<Ion> ions = ionsByCondition2.get(condition);
+				for (Ion ion : ions) {
+					int ionNumber = ion.getIonNumber();
+					List<Integer> quantPositions = null;
+					int quantifiedPosition = -1;
+					switch (ion.getIonSerieType()) {
+					case B:
+						quantPositions = quantifiedPositions;
+						quantifiedPosition = positionInPeptide;
+						break;
+					case Y:
+						// we reverse positions. So for a peptide with lenth 9,
+						// having a quantified AA at 3 means that now we are
+						// going to have a quantified AA of
+						quantPositions = reversePositions(quantifiedPositions, getSequence().length());
+						quantifiedPosition = reversePosition(positionInPeptide, getSequence().length());
+						break;
+					default:
+						break;
+					}
+					// we need that the ion number is >= to the
+					// position of the aas is quantified and that there is
+					// only one quantified aa with ion number >= to this ion
+					if (ionNumber >= quantifiedPosition) {
+						// if we are here means that the ion has information
+						// about the position of interest
+						// let's see if if it only has information about one
+						// site
+						if (getNumberOfNumbersEqualOrLessThanValue(quantPositions, ionNumber) == 1) {
+							if (ret.containsKey(condition)) {
+								ret.get(condition).add(ion);
+							} else {
+								Set<Ion> set = new THashSet<Ion>();
+								set.add(ion);
+								ret.put(condition, set);
+							}
+						}
+					}
+
+				}
+			}
+		}
+
+		return ret;
+	}
+
 	private List<Integer> reversePositions(List<Integer> quantifiedPositions, int length) {
 		List<Integer> ret = new ArrayList<Integer>();
 		for (Integer quantifiedPosition : quantifiedPositions) {
 			ret.add(length - quantifiedPosition + 1);
 		}
 		return ret;
+	}
+
+	private int reversePosition(int quantifiedPosition, int length) {
+		return length - quantifiedPosition + 1;
 	}
 
 	private int getNumberOfNumbersEqualOrLessThanValue(List<Integer> numberlist, int number) {

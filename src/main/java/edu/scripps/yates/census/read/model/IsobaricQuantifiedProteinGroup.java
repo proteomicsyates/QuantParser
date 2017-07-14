@@ -430,4 +430,30 @@ public class IsobaricQuantifiedProteinGroup extends QuantifiedProteinGroup imple
 
 		return ret;
 	}
+
+	@Override
+	public Map<QuantCondition, Set<Ion>> getIonsByConditionForSites(String replicateName, char[] quantifiedAAs,
+			int positionInPeptide) {
+		Map<QuantCondition, Set<Ion>> ret = new THashMap<QuantCondition, Set<Ion>>();
+
+		Set<QuantifiedPSMInterface> quantifiedPSMs = getQuantifiedPSMs();
+		for (QuantifiedPSMInterface quantifiedPSM : quantifiedPSMs) {
+			if (quantifiedPSM instanceof IsobaricQuantifiedPSM) {
+				IsobaricQuantifiedPSM isoPSM = (IsobaricQuantifiedPSM) quantifiedPSM;
+				Map<QuantCondition, Set<Ion>> ionsByConditionForSites = isoPSM.getIonsByConditionForSites(replicateName,
+						quantifiedAAs, positionInPeptide);
+				for (QuantCondition cond : ionsByConditionForSites.keySet()) {
+					if (ret.containsKey(cond)) {
+						ret.get(cond).addAll(ionsByConditionForSites.get(cond));
+					} else {
+						Set<Ion> ions = new THashSet<Ion>();
+						ions.addAll(ionsByConditionForSites.get(cond));
+						ret.put(cond, ions);
+					}
+				}
+			}
+		}
+
+		return ret;
+	}
 }

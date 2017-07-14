@@ -2,6 +2,7 @@ package edu.scripps.yates.census.read.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -19,8 +20,10 @@ import edu.scripps.yates.census.read.util.QuantUtils;
 import edu.scripps.yates.utilities.fasta.FastaParser;
 import edu.scripps.yates.utilities.model.enums.AggregationLevel;
 import edu.scripps.yates.utilities.proteomicsmodel.Amount;
+import edu.scripps.yates.utilities.sequence.PositionInPeptide;
 import edu.scripps.yates.utilities.sequence.PositionInProtein;
 import edu.scripps.yates.utilities.sequence.ProteinSequenceUtils;
+import edu.scripps.yates.utilities.strings.StringUtils;
 import edu.scripps.yates.utilities.util.StringPosition;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
@@ -54,11 +57,6 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 	@Override
 	public String getKey() {
 		return sequenceKey;
-	}
-
-	@Override
-	public void setKey(String key) {
-		sequenceKey = key;
 	}
 
 	/**
@@ -289,17 +287,46 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 	}
 
 	@Override
-	public List<PositionInProtein> getKeysForQuantifiedAAs(char[] quantifiedAAs, UniprotProteinLocalRetriever uplr) {
+	public Map<PositionInPeptide, List<PositionInProtein>> getProteinKeysByPeptideKeysForQuantifiedAAs(
+			char[] quantifiedAAs, UniprotProteinLocalRetriever uplr) {
 
-		List<PositionInProtein> ret = new ArrayList<PositionInProtein>();
-		Map<Character, List<PositionInProtein>> positionsInProteinForSites = getPositionInProteinForSites(quantifiedAAs,
-				uplr);
-		for (List<PositionInProtein> positionsInProtein : positionsInProteinForSites.values()) {
-			for (PositionInProtein positionInProtein : positionsInProtein) {
-				ret.add(positionInProtein);
+		Map<PositionInPeptide, List<PositionInProtein>> ret = new THashMap<PositionInPeptide, List<PositionInProtein>>();
+		Set<String> aas = new HashSet<String>();
+		for (char c : quantifiedAAs) {
+			String aa = String.valueOf(c).toUpperCase();
+			if (!aas.contains(aa)) {
+				aas.add(aa);
+				List<Integer> positionsInPeptideSequence = StringUtils.allPositionsOf(getSequence(), aa);
+				for (int positionInPeptide : positionsInPeptideSequence) {
+					PositionInPeptide positionInPeptideObj = new PositionInPeptide(positionInPeptide, getSequence());
+					List<PositionInProtein> positionsInProtein = new ArrayList<PositionInProtein>();
+
+					Set<QuantifiedProteinInterface> proteins = getQuantifiedProteins();
+					for (QuantifiedProteinInterface quantifiedProtein : proteins) {
+						String acc = quantifiedProtein.getAccession();
+						Map<String, Entry> annotatedProtein = uplr.getAnnotatedProtein(null, acc);
+						Entry entry = annotatedProtein.get(acc);
+						if (entry != null) {
+							String proteinSequence = UniprotEntryUtil.getProteinSequence(entry);
+							if (proteinSequence != null) {
+								List<Integer> positionsInProteinSequence = StringUtils.allPositionsOf(proteinSequence,
+										getSequence());
+								for (int positionInProteinSequence : positionsInProteinSequence) {
+									int positionOfSiteInProtein = positionInProteinSequence + positionInPeptide - 1;
+									PositionInProtein positionInProtein = new PositionInProtein(positionOfSiteInProtein,
+											acc);
+									positionsInProtein.add(positionInProtein);
+								}
+							}
+						}
+
+					}
+					if (!positionsInProtein.isEmpty()) {
+						ret.put(positionInPeptideObj, positionsInProtein);
+					}
+				}
 			}
 		}
-
 		return ret;
 	}
 

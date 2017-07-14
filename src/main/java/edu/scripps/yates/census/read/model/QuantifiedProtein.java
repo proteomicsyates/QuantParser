@@ -41,6 +41,11 @@ public class QuantifiedProtein extends AbstractContainsQuantifiedPSMs implements
 
 	private String key;
 
+	public QuantifiedProtein(String proteinACC, String key) {
+		this(proteinACC);
+		this.key = key;
+	}
+
 	public QuantifiedProtein(String proteinACC) {
 		final Pair<String, String> accPair = FastaParser.getACC(proteinACC);
 		accession = accPair.getFirstelement();
@@ -53,11 +58,6 @@ public class QuantifiedProtein extends AbstractContainsQuantifiedPSMs implements
 			return key;
 		}
 		return getAccession();
-	}
-
-	@Override
-	public void setKey(String key) {
-		this.key = key;
 	}
 
 	/**

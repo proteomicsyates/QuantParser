@@ -6,6 +6,7 @@ import java.util.Set;
 
 import edu.scripps.yates.annotations.uniprot.UniprotProteinLocalRetriever;
 import edu.scripps.yates.utilities.proteomicsmodel.HasAmounts;
+import edu.scripps.yates.utilities.sequence.PositionInPeptide;
 import edu.scripps.yates.utilities.sequence.PositionInProtein;
 
 /**
@@ -28,16 +29,18 @@ public interface QuantifiedPeptideInterface extends PeptideSequenceInterface, Ha
 	public boolean addQuantifiedPSM(QuantifiedPSMInterface psm, boolean recursive);
 
 	/**
-	 * Get a list of {@link PositionInProtein}.<br>
+	 * Get a list of {@link PositionInProtein} for each quantified site in the
+	 * peptide sequence (represented as a {@link PositionInPeptide}).<br>
 	 * Examples:<br>
-	 * {"PROTEIN1_K234, PROTEIN2_K123"}
+	 * "PEPTIDE#4 {PROTEIN1#234, PROTEIN2#123}
 	 * 
 	 * @param quantifiedAAs
 	 * @param uplr
 	 *            used in order to get the protein sequence
 	 * @return
 	 */
-	public List<PositionInProtein> getKeysForQuantifiedAAs(char[] quantifiedAAs, UniprotProteinLocalRetriever uplr);
+	public Map<PositionInPeptide, List<PositionInProtein>> getProteinKeysByPeptideKeysForQuantifiedAAs(
+			char[] quantifiedAAs, UniprotProteinLocalRetriever uplr);
 
 	public Map<Character, List<PositionInProtein>> getPositionInProteinForSites(char[] quantifiedAAs,
 			UniprotProteinLocalRetriever uplr);

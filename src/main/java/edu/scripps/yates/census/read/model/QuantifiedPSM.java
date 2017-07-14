@@ -88,11 +88,6 @@ public class QuantifiedPSM implements GroupablePSM, PeptideSequenceInterface, Ha
 		return key;
 	}
 
-	@Override
-	public void setKey(String key) {
-		this.key = key;
-	}
-
 	private void addToMap(String key, Map<String, Set<String>> map, String value) {
 		if (map == null)
 			return;

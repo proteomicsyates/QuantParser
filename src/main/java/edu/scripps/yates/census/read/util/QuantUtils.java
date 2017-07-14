@@ -33,7 +33,9 @@ import edu.scripps.yates.utilities.model.enums.AggregationLevel;
 import edu.scripps.yates.utilities.model.enums.AmountType;
 import edu.scripps.yates.utilities.model.enums.CombinationType;
 import edu.scripps.yates.utilities.proteomicsmodel.Amount;
+import edu.scripps.yates.utilities.sequence.PositionInPeptide;
 import edu.scripps.yates.utilities.strings.StringUtils;
+import edu.scripps.yates.utilities.util.Pair;
 import edu.scripps.yates.utilities.util.StringPosition;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
@@ -366,8 +368,8 @@ public class QuantUtils {
 	 * @return
 	 */
 	public static IonCountRatio getNormalizedIonCountRatioForPeptides(
-			Set<IsobaricQuantifiedPeptide> isobaricQuantifiedPeptides, QuantCondition cond1, QuantCondition cond2,
-			String replicateName) {
+			Collection<IsobaricQuantifiedPeptide> isobaricQuantifiedPeptides, QuantCondition cond1,
+			QuantCondition cond2, String replicateName) {
 
 		IonCountRatio ratio = new IonCountRatio(AggregationLevel.PEPTIDE);
 		for (IsobaricQuantifiedPeptide isoPeptide : isobaricQuantifiedPeptides) {
@@ -375,13 +377,14 @@ public class QuantUtils {
 			// get number of ions in one condition, and normalize by the
 			// number of PSMs
 			int peakCount1 = 0;
-			if (isoPeptide.getIonsByCondition(replicateName).containsKey(cond1)) {
-				peakCount1 = isoPeptide.getIonsByCondition(replicateName).get(cond1).size();
+			final Map<QuantCondition, Set<Ion>> ionsByCondition = isoPeptide.getIonsByCondition(replicateName);
+			if (ionsByCondition.containsKey(cond1)) {
+				peakCount1 = ionsByCondition.get(cond1).size();
 			}
 			double normalizedPeakCount1 = peakCount1 * 1.0 / numPSMs;
 			int peakCount2 = 0;
-			if (isoPeptide.getIonsByCondition(replicateName).containsKey(cond2)) {
-				peakCount2 = isoPeptide.getIonsByCondition(replicateName).get(cond2).size();
+			if (ionsByCondition.containsKey(cond2)) {
+				peakCount2 = ionsByCondition.get(cond2).size();
 			}
 			double normalizedPeakCount2 = peakCount2 * 1.0 / numPSMs;
 			ratio.addIonCount(cond1, normalizedPeakCount1);
@@ -401,6 +404,7 @@ public class QuantUtils {
 	 * aminoacids that are quantified (aas)
 	 *
 	 * @param isobaricQuantifiedPeptides
+	 * @param positionsInProteins
 	 * @param cond1
 	 * @param cond2
 	 * @param replicateName
@@ -408,23 +412,26 @@ public class QuantUtils {
 	 * @return
 	 */
 	public static IonCountRatio getNormalizedIonCountRatioForPeptidesForQuantifiedSites(
-			Set<IsobaricQuantifiedPeptide> isobaricQuantifiedPeptides, QuantCondition cond1, QuantCondition cond2,
-			String replicateName, char[] quantifiedAAs) {
+			Set<Pair<IsobaricQuantifiedPeptide, PositionInPeptide>> peptidesAndPositionInPeptides, QuantCondition cond1,
+			QuantCondition cond2, String replicateName, char[] quantifiedAAs) {
 
 		IonCountRatio ratio = new IonCountRatio(AggregationLevel.PEPTIDE);
-		for (IsobaricQuantifiedPeptide isoPeptide : isobaricQuantifiedPeptides) {
-
+		for (Pair<IsobaricQuantifiedPeptide, PositionInPeptide> peptideAndPositionInPeptide : peptidesAndPositionInPeptides) {
+			IsobaricQuantifiedPeptide isoPeptide = peptideAndPositionInPeptide.getFirstelement();
+			final int positionInPeptide = peptideAndPositionInPeptide.getSecondElement().getPosition();
 			final int numPSMs = isoPeptide.getQuantifiedPSMs().size();
 			// get number of ions in one condition, and normalize by the
 			// number of PSMs
 			int peakCount1 = 0;
-			if (isoPeptide.getIonsByConditionForSites(replicateName, quantifiedAAs).containsKey(cond1)) {
-				peakCount1 = isoPeptide.getIonsByConditionForSites(replicateName, quantifiedAAs).get(cond1).size();
+			final Map<QuantCondition, Set<Ion>> ionsByConditionForSites = isoPeptide
+					.getIonsByConditionForSites(replicateName, quantifiedAAs, positionInPeptide);
+			if (ionsByConditionForSites.containsKey(cond1)) {
+				peakCount1 = ionsByConditionForSites.get(cond1).size();
 			}
 			double normalizedPeakCount1 = peakCount1 * 1.0 / numPSMs;
 			int peakCount2 = 0;
-			if (isoPeptide.getIonsByConditionForSites(replicateName, quantifiedAAs).containsKey(cond2)) {
-				peakCount2 = isoPeptide.getIonsByConditionForSites(replicateName, quantifiedAAs).get(cond2).size();
+			if (ionsByConditionForSites.containsKey(cond2)) {
+				peakCount2 = ionsByConditionForSites.get(cond2).size();
 			}
 			double normalizedPeakCount2 = peakCount2 * 1.0 / numPSMs;
 			ratio.addIonCount(cond1, normalizedPeakCount1);

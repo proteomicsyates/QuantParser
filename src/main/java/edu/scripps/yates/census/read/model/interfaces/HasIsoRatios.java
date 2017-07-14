@@ -32,6 +32,9 @@ public interface HasIsoRatios extends HasRatios {
 
 	public Map<QuantCondition, Set<Ion>> getIonsByConditionForSites(String replicateName, char[] quantifiedAAs);
 
+	public Map<QuantCondition, Set<Ion>> getIonsByConditionForSites(String replicateName, char[] quantifiedAAs,
+			int positionInPeptide);
+
 	public Map<QuantificationLabel, Set<Ion>> getIons(IonSerie ionSerie);
 
 	public boolean containsAnySingletonIon(QuantificationLabel label);

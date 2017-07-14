@@ -64,11 +64,6 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractContainsQuantifie
 	}
 
 	@Override
-	public void setKey(String key) {
-		this.key = key;
-	}
-
-	@Override
 	public String getDescription() {
 		if (description == null) {
 			if (indexedProtein != null) {
