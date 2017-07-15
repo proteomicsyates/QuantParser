@@ -412,8 +412,8 @@ public class QuantUtils {
 	 * @return
 	 */
 	public static IonCountRatio getNormalizedIonCountRatioForPeptidesForQuantifiedSites(
-			Set<Pair<IsobaricQuantifiedPeptide, PositionInPeptide>> peptidesAndPositionInPeptides, QuantCondition cond1,
-			QuantCondition cond2, String replicateName, char[] quantifiedAAs) {
+			Collection<Pair<IsobaricQuantifiedPeptide, PositionInPeptide>> peptidesAndPositionInPeptides,
+			QuantCondition cond1, QuantCondition cond2, String replicateName, char[] quantifiedAAs) {
 
 		IonCountRatio ratio = new IonCountRatio(AggregationLevel.PEPTIDE);
 		for (Pair<IsobaricQuantifiedPeptide, PositionInPeptide> peptideAndPositionInPeptide : peptidesAndPositionInPeptides) {
