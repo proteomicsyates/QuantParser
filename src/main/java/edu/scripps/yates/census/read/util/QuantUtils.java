@@ -97,7 +97,7 @@ public class QuantUtils {
 		return peptideMap;
 	}
 
-	public static Set<QuantRatio> getNonInfinityRatios(Set<QuantRatio> ratios) {
+	public static Set<QuantRatio> getNonInfinityRatios(Collection<QuantRatio> ratios) {
 		Set<QuantRatio> set = new THashSet<QuantRatio>();
 		for (QuantRatio ratio : ratios) {
 			final double log2Ratio = ratio.getLog2Ratio(ratio.getQuantCondition1(), ratio.getQuantCondition2());
@@ -206,26 +206,29 @@ public class QuantUtils {
 		return null;
 	}
 
-	/**
-	 * For a {@link QuantifiedPSM}, depending on if it is singleton or not, we
-	 * get a different ratio.<br>
-	 * For singletons, we get the AREA_RATIO and for non singletons, we get the
-	 * RATIO
-	 *
-	 * @param quantifiedPSM
-	 * @return
-	 */
-	public static QuantRatio getRatioValidForAnalysis(QuantifiedPSM quantifiedPSM) {
+	public static QuantRatio getRatioValidForAnalysis(QuantifiedPSMInterface quantifiedPSM) {
 
 		// RATIO for non singletons and AREA_RATIO for singletons
-		if (quantifiedPSM.isSingleton()) {
-			return getRatioByName(quantifiedPSM, CensusOutParser.AREA_RATIO);
+		if (quantifiedPSM instanceof QuantifiedPSM) {
+			if (quantifiedPSM.isSingleton()) {
+				return getRatioByName(quantifiedPSM, CensusOutParser.AREA_RATIO);
+			} else {
+				return getRatioByName(quantifiedPSM, CensusOutParser.RATIO);
+			}
 		} else {
-			return getRatioByName(quantifiedPSM, CensusOutParser.RATIO);
+			QuantRatio ret = getRatioByName(quantifiedPSM, CensusOutParser.RATIO);
+			if (ret == null) {
+				ret = getRatioByName(quantifiedPSM, CensusOutParser.AREA_RATIO);
+			}
+			if (ret == null) {
+				ret = getRatioByName(quantifiedPSM, CensusOutParser.NORM_RATIO);
+			}
+			return ret;
 		}
+
 	}
 
-	private static QuantRatio getRatioByName(QuantifiedPSM quantifiedPSM, String ratioDescription) {
+	private static QuantRatio getRatioByName(QuantifiedPSMInterface quantifiedPSM, String ratioDescription) {
 		if (quantifiedPSM != null && quantifiedPSM.getRatios() != null) {
 			for (QuantRatio ratio : quantifiedPSM.getRatios()) {
 				if (ratio.getDescription().equals(ratioDescription)) {

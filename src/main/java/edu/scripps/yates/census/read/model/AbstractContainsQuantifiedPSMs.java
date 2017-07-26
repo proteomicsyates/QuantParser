@@ -8,6 +8,7 @@ import edu.scripps.yates.census.analysis.QuantCondition;
 import edu.scripps.yates.census.read.model.interfaces.HasRatios;
 import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
+import edu.scripps.yates.census.read.util.QuantUtils;
 import edu.scripps.yates.utilities.maths.Maths;
 import gnu.trove.set.hash.THashSet;
 
@@ -42,11 +43,10 @@ public abstract class AbstractContainsQuantifiedPSMs implements HasRatios {
 	@Override
 	public double getMeanRatios(QuantCondition quantConditionNumerator, QuantCondition quantConditionDenominator) {
 		List<Double> ratioValues = new ArrayList<Double>();
-
-		for (QuantRatio ratio : getRatios()) {
+		for (QuantifiedPSMInterface psm : getQuantifiedPSMs()) {
+			QuantRatio ratio = QuantUtils.getRatioValidForAnalysis(psm);
 			ratioValues.add(ratio.getLog2Ratio(quantConditionNumerator, quantConditionDenominator));
 		}
-
 		return Maths.mean(ratioValues.toArray(new Double[0]));
 	}
 
@@ -54,7 +54,8 @@ public abstract class AbstractContainsQuantifiedPSMs implements HasRatios {
 	public double getSTDRatios(QuantCondition quantConditionNumerator, QuantCondition quantConditionDenominator) {
 		List<Double> ratioValues = new ArrayList<Double>();
 
-		for (QuantRatio ratio : getRatios()) {
+		for (QuantifiedPSMInterface psm : getQuantifiedPSMs()) {
+			QuantRatio ratio = QuantUtils.getRatioValidForAnalysis(psm);
 			ratioValues.add(ratio.getLog2Ratio(quantConditionNumerator, quantConditionDenominator));
 		}
 

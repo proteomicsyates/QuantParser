@@ -13,7 +13,8 @@ import edu.scripps.yates.utilities.proteomicsmodel.Condition;
 import edu.scripps.yates.utilities.proteomicsmodel.Score;
 
 public class CensusRatio implements QuantRatio {
-	public static final CensusRatio NAN_RATIO = new CensusRatio(null, null, null, null);
+	// public static final CensusRatio NAN_RATIO = new CensusRatio(null, null,
+	// null, null);
 	private static final Logger log = Logger.getLogger(CensusRatio.class);
 	private final QuantCondition quantConditionNumerator;
 	private final QuantCondition quantConditionDenominator;
@@ -27,6 +28,11 @@ public class CensusRatio implements QuantRatio {
 	private CombinationType combinationType;
 	private Condition condition1;
 	private Condition condition2;
+
+	public static CensusRatio getNaNRatio(QuantCondition quantConditionNumerator,
+			QuantCondition quantConditionDenominator, AggregationLevel aggregationLevel, String description) {
+		return new CensusRatio(quantConditionNumerator, quantConditionDenominator, aggregationLevel, description);
+	}
 
 	public CensusRatio(QuantCondition quantConditionNumerator, QuantCondition quantConditionDenominator,
 			AggregationLevel aggregationLevel, String description) {
@@ -70,6 +76,9 @@ public class CensusRatio implements QuantRatio {
 		this.quantConditionDenominator = quantConditionDenominator;
 		this.labelNumerator = labelNumerator;
 		this.labelDenominator = labelDenominator;
+		if (description == null) {
+			log.info("asdf");
+		}
 		this.description = description;
 		if ((ratioValue != null && ratioValue.isNaN()) || ratioValue == null) {
 			nonLogValue = Double.NaN;
@@ -272,6 +281,7 @@ public class CensusRatio implements QuantRatio {
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
@@ -284,6 +294,7 @@ public class CensusRatio implements QuantRatio {
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Object#toString()
 	 */
 	@Override

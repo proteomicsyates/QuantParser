@@ -75,7 +75,7 @@ public class CensusOutParser extends AbstractQuantParser {
 	private static final String MEDIAN_AREA_RATIO = "MEDIAN_AREA_RATIO";
 	// SLine columns
 	public static final String RATIO = "RATIO";
-	private static final String NORM_RATIO = "NORM_RATIO";
+	public static final String NORM_RATIO = "NORM_RATIO";
 	private static final String PVALUE = "PVALUE";
 	private static final String PROBABILITY_SCORE = "PROBABILITY_SCORE";
 	private static final String PROFILE_SCORE = "PROFILE_SCORE";
@@ -519,12 +519,18 @@ public class CensusOutParser extends AbstractQuantParser {
 			if (ratioDescriptors.size() == 1) {
 				QuantificationLabel labelNumerator = ratioDescriptors.get(0).getLabel1();
 				QuantificationLabel labelDenominator = ratioDescriptors.get(0).getLabel2();
+				String ratioSuffix = ratioDescriptors.get(0).getRatioSuffix();
 				// PSM regular ratio
 				// add PSM ratios from census out
 				if (mapValues.containsKey(RATIO)) {
+					ratioSuffix = "";
+				} else if (mapValues.containsKey(RATIO + ratioSuffix)) {
+
+				}
+				if (mapValues.containsKey(RATIO + ratioSuffix)) {
 					try {
 
-						final double ratioValue = Double.valueOf(mapValues.get(RATIO));
+						final double ratioValue = Double.valueOf(mapValues.get(RATIO + ratioSuffix));
 						CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
 								labelDenominator, AggregationLevel.PSM, RATIO);
 						RatioScore ratioScore = null;
@@ -535,11 +541,16 @@ public class CensusOutParser extends AbstractQuantParser {
 						// then
 						// convert the ratio from 0 to inf
 						String regressionFactor = null;
-						if (mapValues.containsKey(PROFILE_SCORE) &&
+						if (mapValues.containsKey(PROFILE_SCORE) && // PROFILE
+																	// SCORE IS
+																	// NOT
+																	// SPECIFIC
+																	// OF A PAIR
+																	// OF LABELS
 						// because profile score will be
 						// assigned to area ratio in case of
 						// exist
-								!mapValues.containsKey(AREA_RATIO)) {
+								!mapValues.containsKey(AREA_RATIO + ratioSuffix)) {
 							scoreValue = mapValues.get(PROFILE_SCORE);
 							if (!"NA".equals(scoreValue)) {
 								ratioScore = new RatioScore(scoreValue, PROFILE_SCORE,
@@ -548,16 +559,16 @@ public class CensusOutParser extends AbstractQuantParser {
 								ratio.setRatioScore(ratioScore);
 							}
 							// score regression p-value N15
-						} else if (mapValues.containsKey(PVALUE)) {
-							scoreValue = mapValues.get(PVALUE);
+						} else if (mapValues.containsKey(PVALUE + ratioSuffix)) {
+							scoreValue = mapValues.get(PVALUE + ratioSuffix);
 							if (!"NA".equals(scoreValue)) {
 								ratioScore = new RatioScore(scoreValue, PVALUE, "PSM-level p-value",
 										"probability score based on LR");
 								ratio.setRatioScore(ratioScore);
 							}
 							// score regression p-value SILAC
-						} else if (mapValues.containsKey(PROBABILITY_SCORE)) {
-							scoreValue = mapValues.get(PROBABILITY_SCORE);
+						} else if (mapValues.containsKey(PROBABILITY_SCORE + ratioSuffix)) {
+							scoreValue = mapValues.get(PROBABILITY_SCORE + ratioSuffix);
 							if (!"NA".equals(scoreValue)) {
 								ratioScore = new RatioScore(scoreValue, PROBABILITY_SCORE, "PSM-level p-value",
 										"probability score based on LR");
@@ -567,8 +578,8 @@ public class CensusOutParser extends AbstractQuantParser {
 						// get the regression_factor anyway, but add it only in
 						// case
 						// there is not any other score
-						if (mapValues.containsKey(REGRESSION_FACTOR)) {
-							regressionFactor = mapValues.get(REGRESSION_FACTOR);
+						if (mapValues.containsKey(REGRESSION_FACTOR + ratioSuffix)) {
+							regressionFactor = mapValues.get(REGRESSION_FACTOR + ratioSuffix);
 							if (!"NA".equals(regressionFactor)) {
 								// just in case there was not any other
 								// ratioScore:
@@ -595,8 +606,8 @@ public class CensusOutParser extends AbstractQuantParser {
 									// to +INF.
 									// note that all numbers are not log
 									// numbers.
-									if (mapValues.containsKey(AREA_RATIO)) {
-										String areaRatioValue = mapValues.get(AREA_RATIO);
+									if (mapValues.containsKey(AREA_RATIO + ratioSuffix)) {
+										String areaRatioValue = mapValues.get(AREA_RATIO + ratioSuffix);
 										if (areaRatioValue.equals("INF") || Double.valueOf(areaRatioValue) > 1) {
 											ratio = new CensusRatio(Double.POSITIVE_INFINITY, false, conditionsByLabels,
 													labelNumerator, labelDenominator, AggregationLevel.PSM, RATIO);
@@ -619,10 +630,10 @@ public class CensusOutParser extends AbstractQuantParser {
 
 				// PSM area ratio
 				// add PSM ratios from census out
-				if (mapValues.containsKey(AREA_RATIO)) {
+				if (mapValues.containsKey(AREA_RATIO + ratioSuffix)) {
 					try {
 						double ratioValue;
-						String ratioValueString = mapValues.get(AREA_RATIO);
+						String ratioValueString = mapValues.get(AREA_RATIO + ratioSuffix);
 						if (ratioValueString.contains("INF")) {
 							if (ratioValueString.equals("INF")) {
 								ratioValue = Double.POSITIVE_INFINITY;
@@ -630,12 +641,13 @@ public class CensusOutParser extends AbstractQuantParser {
 								ratioValue = Double.NEGATIVE_INFINITY;
 							}
 						} else {
-							ratioValue = Double.valueOf(mapValues.get(AREA_RATIO));
+							ratioValue = Double.valueOf(mapValues.get(AREA_RATIO + ratioSuffix));
 						}
 
 						CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
 								labelDenominator, AggregationLevel.PSM, AREA_RATIO);
 						// profile score
+						// PROFILE SCORE IS NOT SPECIFIC FOR A PAIR OF LABELS
 						if (mapValues.containsKey(PROFILE_SCORE)) {
 							String scoreValue = mapValues.get(PROFILE_SCORE);
 							if (!"NA".equals(scoreValue)) {
@@ -694,7 +706,7 @@ public class CensusOutParser extends AbstractQuantParser {
 					if (mapValues.containsKey(NORM_RATIO + ratioSuffix)) {
 						final double ratioValue = Double.valueOf(mapValues.get(NORM_RATIO + ratioSuffix));
 						CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
-								labelDenominator, AggregationLevel.PSM, NORM_RATIO + ratioSuffix);
+								labelDenominator, AggregationLevel.PSM, NORM_RATIO);
 						quantifiedPSM.addRatio(ratio);
 					}
 					if (mapValues.containsKey(AREA_RATIO + ratioSuffix)) {
@@ -711,7 +723,7 @@ public class CensusOutParser extends AbstractQuantParser {
 								ratioValue = Double.valueOf(mapValues.get(AREA_RATIO + ratioSuffix));
 							}
 							CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
-									labelDenominator, AggregationLevel.PSM, AREA_RATIO + ratioSuffix);
+									labelDenominator, AggregationLevel.PSM, AREA_RATIO);
 							// add ratio to PSM
 							quantifiedPSM.addRatio(ratio);
 						} catch (NumberFormatException e) {
@@ -984,6 +996,7 @@ public class CensusOutParser extends AbstractQuantParser {
 		if (ratioDescriptors.size() == 1) {
 			QuantificationLabel labelNumerator = ratioDescriptors.get(0).getLabel1();
 			QuantificationLabel labelDenominator = ratioDescriptors.get(0).getLabel2();
+			String ratioSuffix = ratioDescriptors.get(0).getRatioSuffix();
 			// add protein ratio
 			// first look if the composite ratio is calculated
 			if (mapValues.containsKey(COMPOSITE_RATIO)) {
@@ -992,6 +1005,24 @@ public class CensusOutParser extends AbstractQuantParser {
 					String stdValue = null;
 					if (mapValues.containsKey(COMPOSITE_RATIO_STANDARD_DEVIATION)) {
 						stdValue = mapValues.get(COMPOSITE_RATIO_STANDARD_DEVIATION);
+						if ("".equals(stdValue)) {
+							stdValue = "0.0";
+						}
+					}
+					QuantRatio ratio = new CensusRatio(ratioValue, stdValue, false, conditionsByLabels, labelNumerator,
+							labelDenominator, AggregationLevel.PROTEIN, COMPOSITE_RATIO);
+					quantifiedProtein.addRatio(ratio);
+				} catch (NumberFormatException e) {
+					// skip this
+				}
+				// if there is not composite ratio, use the
+				// regular ratio
+			} else if (mapValues.containsKey(COMPOSITE_RATIO + ratioSuffix)) {
+				try {
+					final double ratioValue = Double.valueOf(mapValues.get(COMPOSITE_RATIO + ratioSuffix));
+					String stdValue = null;
+					if (mapValues.containsKey(COMPOSITE_RATIO_STANDARD_DEVIATION + ratioSuffix)) {
+						stdValue = mapValues.get(COMPOSITE_RATIO_STANDARD_DEVIATION + ratioSuffix);
 						if ("".equals(stdValue)) {
 							stdValue = "0.0";
 						}
@@ -1016,7 +1047,7 @@ public class CensusOutParser extends AbstractQuantParser {
 							}
 						}
 						QuantRatio ratio = new CensusRatio(ratioValue, stdValue, false, conditionsByLabels,
-								labelNumerator, labelDenominator, AggregationLevel.PROTEIN, "AVG_RATIO");
+								labelNumerator, labelDenominator, AggregationLevel.PROTEIN, AVERAGE_RATIO);
 						quantifiedProtein.addRatio(ratio);
 					}
 				} catch (NumberFormatException e) {
@@ -1025,6 +1056,35 @@ public class CensusOutParser extends AbstractQuantParser {
 				try {
 					if (mapValues.containsKey(AREA_RATIO)) {
 						final double ratioValue = Double.valueOf(mapValues.get(AREA_RATIO));
+						QuantRatio ratio = new CensusRatio(ratioValue, null, false, conditionsByLabels, labelNumerator,
+								labelDenominator, AggregationLevel.PROTEIN, AREA_RATIO);
+						quantifiedProtein.addRatio(ratio);
+					}
+				} catch (NumberFormatException e) {
+					// skip this
+				}
+			} else if (mapValues.containsKey(AVERAGE_RATIO + ratioSuffix)
+					|| mapValues.containsKey(AREA_RATIO + ratioSuffix)) {
+				try {
+					if (mapValues.containsKey(AVERAGE_RATIO + ratioSuffix)) {
+						final double ratioValue = Double.valueOf(mapValues.get(AVERAGE_RATIO + ratioSuffix));
+						String stdValue = null;
+						if (mapValues.containsKey(STANDARD_DEVIATION)) {
+							stdValue = mapValues.get(STANDARD_DEVIATION);
+							if ("".equals(stdValue)) {
+								stdValue = "0.0";
+							}
+						}
+						QuantRatio ratio = new CensusRatio(ratioValue, stdValue, false, conditionsByLabels,
+								labelNumerator, labelDenominator, AggregationLevel.PROTEIN, AVERAGE_RATIO);
+						quantifiedProtein.addRatio(ratio);
+					}
+				} catch (NumberFormatException e) {
+					// skip this
+				}
+				try {
+					if (mapValues.containsKey(AREA_RATIO + ratioSuffix)) {
+						final double ratioValue = Double.valueOf(mapValues.get(AREA_RATIO + ratioSuffix));
 						QuantRatio ratio = new CensusRatio(ratioValue, null, false, conditionsByLabels, labelNumerator,
 								labelDenominator, AggregationLevel.PROTEIN, AREA_RATIO);
 						quantifiedProtein.addRatio(ratio);
@@ -1047,15 +1107,14 @@ public class CensusOutParser extends AbstractQuantParser {
 						try {
 							final double ratioValue = Double.valueOf(mapValues.get(NORM_COMPOSITE_RATIO + ratioSuffix));
 							String stdValue = null;
-							if (mapValues.containsKey(NORM_COMPOSITE_RATIO_STDEV)) {
-								stdValue = mapValues.get(NORM_COMPOSITE_RATIO_STDEV);
+							if (mapValues.containsKey(NORM_COMPOSITE_RATIO_STDEV + ratioSuffix)) {
+								stdValue = mapValues.get(NORM_COMPOSITE_RATIO_STDEV + ratioSuffix);
 								if ("".equals(stdValue)) {
 									stdValue = "0.0";
 								}
 							}
 							QuantRatio ratio = new CensusRatio(ratioValue, stdValue, false, conditionsByLabels,
-									labelNumerator, labelDenominator, AggregationLevel.PROTEIN,
-									NORM_COMPOSITE_RATIO + ratioSuffix);
+									labelNumerator, labelDenominator, AggregationLevel.PROTEIN, NORM_COMPOSITE_RATIO);
 							quantifiedProtein.addRatio(ratio);
 						} catch (NumberFormatException e) {
 							// skip this
@@ -1067,15 +1126,14 @@ public class CensusOutParser extends AbstractQuantParser {
 						try {
 							final double ratioValue = Double.valueOf(mapValues.get(COMPOSITE_RATIO + ratioSuffix));
 							String stdValue = null;
-							if (mapValues.containsKey(COMPOSITE_RATIO_STDEV)) {
-								stdValue = mapValues.get(COMPOSITE_RATIO_STDEV);
+							if (mapValues.containsKey(COMPOSITE_RATIO_STDEV + ratioSuffix)) {
+								stdValue = mapValues.get(COMPOSITE_RATIO_STDEV + ratioSuffix);
 								if ("".equals(stdValue)) {
 									stdValue = "0.0";
 								}
 							}
 							QuantRatio ratio = new CensusRatio(ratioValue, stdValue, false, conditionsByLabels,
-									labelNumerator, labelDenominator, AggregationLevel.PROTEIN,
-									COMPOSITE_RATIO + ratioSuffix);
+									labelNumerator, labelDenominator, AggregationLevel.PROTEIN, COMPOSITE_RATIO);
 							quantifiedProtein.addRatio(ratio);
 						} catch (NumberFormatException e) {
 							// skip this
@@ -1096,8 +1154,7 @@ public class CensusOutParser extends AbstractQuantParser {
 								}
 							}
 							QuantRatio ratio = new CensusRatio(ratioValue, stdValue, false, conditionsByLabels,
-									labelNumerator, labelDenominator, AggregationLevel.PROTEIN,
-									NORM_STDEV + ratioSuffix);
+									labelNumerator, labelDenominator, AggregationLevel.PROTEIN, NORM_STDEV);
 							quantifiedProtein.addRatio(ratio);
 						}
 					} catch (NumberFormatException e) {
@@ -1107,8 +1164,7 @@ public class CensusOutParser extends AbstractQuantParser {
 						if (mapValues.containsKey(MEDIAN_AREA_RATIO + ratioSuffix)) {
 							final double ratioValue = Double.valueOf(mapValues.get(MEDIAN_AREA_RATIO + ratioSuffix));
 							QuantRatio ratio = new CensusRatio(ratioValue, null, false, conditionsByLabels,
-									labelNumerator, labelDenominator, AggregationLevel.PROTEIN,
-									MEDIAN_AREA_RATIO + ratioSuffix);
+									labelNumerator, labelDenominator, AggregationLevel.PROTEIN, MEDIAN_AREA_RATIO);
 							quantifiedProtein.addRatio(ratio);
 						}
 					} catch (NumberFormatException e) {

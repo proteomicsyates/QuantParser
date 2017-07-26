@@ -210,15 +210,26 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 	@Override
 	public QuantRatio getConsensusRatio(QuantCondition quantConditionNumerator,
 			QuantCondition quantConditionDenominator) {
-
-		return QuantUtils.getAverageRatio(QuantUtils.getNonInfinityRatios(getRatios()), AggregationLevel.PEPTIDE);
+		List<QuantRatio> ratios = new ArrayList<QuantRatio>();
+		for (QuantifiedPSMInterface psm : getQuantifiedPSMs()) {
+			QuantRatio ratio = QuantUtils.getRatioValidForAnalysis(psm);
+			ratios.add(ratio);
+		}
+		return QuantUtils.getAverageRatio(QuantUtils.getNonInfinityRatios(ratios), AggregationLevel.PEPTIDE);
 	}
 
 	@Override
 	public QuantRatio getConsensusRatio(QuantCondition quantConditionNumerator,
 			QuantCondition quantConditionDenominator, String replicateName) {
-		return QuantUtils.getAverageRatio(QuantUtils.getNonInfinityRatios(getRatios(replicateName)),
-				AggregationLevel.PEPTIDE);
+		List<QuantRatio> ratios = new ArrayList<QuantRatio>();
+		for (QuantifiedPSMInterface psm : getQuantifiedPSMs()) {
+			if (psm.getFileNames().contains(replicateName)) {
+				QuantRatio ratio = QuantUtils.getRatioValidForAnalysis(psm);
+				ratios.add(ratio);
+			}
+		}
+
+		return QuantUtils.getAverageRatio(QuantUtils.getNonInfinityRatios(ratios), AggregationLevel.PEPTIDE);
 	}
 
 	@Override
