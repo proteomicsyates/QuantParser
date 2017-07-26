@@ -22,6 +22,7 @@ public class IonCountRatio implements QuantRatio {
 	private Score score;
 	private CombinationType combinationType;
 	private final AggregationLevel aggregationLevel;
+	private String description = "Rc";
 
 	public IonCountRatio(AggregationLevel aggregationLevel) {
 		this.aggregationLevel = aggregationLevel;
@@ -33,6 +34,14 @@ public class IonCountRatio implements QuantRatio {
 		} else {
 			ionCountMap.put(cond, peakCount);
 		}
+	}
+
+	public void setAsNormalizedIonCountRatio() {
+		setDescription("NormRc");
+	}
+
+	private void setDescription(String description) {
+		this.description = description;
 	}
 
 	@Override
@@ -96,7 +105,8 @@ public class IonCountRatio implements QuantRatio {
 
 	@Override
 	public String getDescription() {
-		return "Rc";
+
+		return description;
 	}
 
 	@Override
