@@ -215,6 +215,7 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 								addToMap(peptideKey, peptideToSpectraMap, spectrumKey2);
 								StaticQuantMaps.psmMap.addItem(quantifiedPSM);
 								quantifiedPSM.getFileNames().add(fileName);
+								StaticQuantMaps.rawFileNames.add(fileName);
 								psms.add(quantifiedPSM);
 								// add to map
 								if (!localPsmMap.containsKey(spectrumKey)) {
