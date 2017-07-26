@@ -430,8 +430,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 							// have more than one ratio per PSM, because we will
 							// write each ratio in different replicates
 							if (quantifiedPSM instanceof QuantifiedPSM) {
-								QuantRatio validRatio = QuantUtils
-										.getRatioValidForAnalysis((QuantifiedPSM) quantifiedPSM);
+								QuantRatio validRatio = QuantUtils.getRatioValidForAnalysis(quantifiedPSM);
 								if (validRatio != null) {
 									ratioValue = validRatio.getLog2Ratio(condition1, condition2);
 									if (ratioValue == null || Double.isInfinite(ratioValue)
