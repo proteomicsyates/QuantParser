@@ -1,14 +1,19 @@
 package edu.scripps.yates.census.read.model;
 
+import java.util.Set;
+
 import org.apache.log4j.Logger;
 
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
 import edu.scripps.yates.census.read.model.interfaces.StaticItemStorage;
+import gnu.trove.set.hash.THashSet;
 
 public class StaticQuantMaps {
 	private final static Logger log = Logger.getLogger(StaticQuantMaps.class);
+
+	public static Set<String> rawFileNames = new THashSet<String>();
 	/**
 	 * The map that stores the {@link QuantifiedPSMInterface} by the spectrum
 	 * key
@@ -43,6 +48,7 @@ public class StaticQuantMaps {
 			log.info("Clearing quant peptide map");
 		}
 		peptideMap.clear();
+		rawFileNames.clear();
 	}
 
 }
