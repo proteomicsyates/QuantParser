@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,6 +35,7 @@ import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
 import edu.scripps.yates.census.read.util.MyHashMap;
+import edu.scripps.yates.census.read.util.QuantUtils;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
 import edu.scripps.yates.dbindex.IndexedProtein;
 import edu.scripps.yates.dbindex.util.PeptideNotFoundInDBIndexException;
@@ -81,6 +83,7 @@ public class CensusOutParser extends AbstractQuantParser {
 	private static final String PROFILE_SCORE = "PROFILE_SCORE";
 	public static final String AREA_RATIO = "AREA_RATIO";
 	private static final String SAM_INT = "SAM_INT";
+	private static final String PEAK_AREA = "PEAK_AREA";
 	private static final String PEAK_AREA_L = "PEAK_AREA_L";
 	private static final String PEAK_AREA_M = "PEAK_AREA_M";
 	private static final String PEAK_AREA_H = "PEAK_AREA_H";
@@ -100,6 +103,8 @@ public class CensusOutParser extends AbstractQuantParser {
 
 	private static final String XCORR = "XCorr";
 	private static final String DELTACN = "deltaCN";
+
+	private static final String DET_FACTOR = "DET_FACTOR";
 	private boolean onlyOneSpectrumPerChromatographicPeakAndPerSaltStep = false;
 	private boolean skipSingletons = false;
 
@@ -326,6 +331,7 @@ public class CensusOutParser extends AbstractQuantParser {
 					// once the map is populated,
 					// look for each key, if we have more than one psm
 					// in that case, select the best one
+					int numRemoved = 0;
 					for (String key : map.keySet()) {
 						final Set<QuantifiedPSMInterface> psmSet = map.get(key);
 						if (psmSet.size() > 1) {
@@ -339,20 +345,26 @@ public class CensusOutParser extends AbstractQuantParser {
 							// remove the psms in toIgnore Set
 							if (!toIgnore.isEmpty()) {
 								for (QuantifiedPSMInterface psmToIgnore : toIgnore) {
+									numRemoved++;
 									localPsmMap.remove(psmToIgnore.getKey());
 									StaticQuantMaps.psmMap.remove(psmToIgnore);
+									// remove it from its peptide
+									QuantifiedPeptideInterface quantifiedPeptide = psmToIgnore.getQuantifiedPeptide();
+									if (quantifiedPeptide != null) {
+										quantifiedPeptide.getQuantifiedPSMs().remove(psmToIgnore);
+									}
+									// remove it from its proteins
+									Set<QuantifiedProteinInterface> quantifiedProteins = psmToIgnore
+											.getQuantifiedProteins();
+									for (QuantifiedProteinInterface protein : quantifiedProteins) {
+										protein.getQuantifiedPSMs().remove(psmToIgnore);
+									}
 								}
 							}
 						}
 					}
-					log.info("AFTER FILTERING: (" + experimentKey + ") " + localPsmMap.size()
-							+ " PSMs from this parser. " + StaticQuantMaps.psmMap.size() + " PSMs in the system");
-					log.info("AFTER FILTERING: (" + experimentKey + ") " + localProteinMap.size()
-							+ " Proteins from this parser. " + StaticQuantMaps.proteinMap.size()
-							+ " Proteins in the system");
-					log.info("AFTER FILTERING: (" + experimentKey + ") " + localPeptideMap.size()
-							+ " Peptides from this parser. " + StaticQuantMaps.peptideMap.size()
-							+ " Peptides in the system");
+					log.info(numRemoved + " PSMs where redundant and removed.");
+
 				}
 			}
 			if (!someValidFile)
@@ -445,9 +457,17 @@ public class CensusOutParser extends AbstractQuantParser {
 	private String getSpectrumPerChromatographicPeakAndPerSaltStepKey(QuantifiedPSMInterface psm) {
 		StringBuilder sb = new StringBuilder();
 		String rawFileName = psm.getRawFileNames().iterator().next();
-		if (rawFileName.startsWith("H")) {
-			rawFileName = rawFileName.substring(1);
+
+		if (rawFileName.startsWith("H") || rawFileName.startsWith("M")) {
+			String substring = rawFileName.substring(1);
+			// only take it if there is another one like that in the static map
+			// this will avoid to consider an H or an M in the file name that
+			// were part of the name and not meaning anything
+			if (StaticQuantMaps.rawFileNames.contains(substring)) {
+				rawFileName = substring;
+			}
 		}
+
 		sb.append(psm.getSequence()).append("_").append(rawFileName).append("_").append(psm.getCharge());
 		return sb.toString();
 	}
@@ -473,6 +493,7 @@ public class CensusOutParser extends AbstractQuantParser {
 			} else {
 				rawFileName = inputFileName;
 			}
+			StaticQuantMaps.rawFileNames.add(rawFileName);
 			// scan number
 			int scanNumber = 0;
 			if (mapValues.containsKey(SCAN)) {
@@ -530,7 +551,7 @@ public class CensusOutParser extends AbstractQuantParser {
 				if (mapValues.containsKey(RATIO + ratioSuffix)) {
 					try {
 
-						final double ratioValue = Double.valueOf(mapValues.get(RATIO + ratioSuffix));
+						final double ratioValue = QuantUtils.parseCensusRatioValue(mapValues.get(RATIO + ratioSuffix));
 						CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
 								labelDenominator, AggregationLevel.PSM, RATIO);
 						RatioScore ratioScore = null;
@@ -574,6 +595,13 @@ public class CensusOutParser extends AbstractQuantParser {
 										"probability score based on LR");
 								ratio.setRatioScore(ratioScore);
 							}
+						} else if (mapValues.containsKey(DET_FACTOR + ratioSuffix)) {
+							scoreValue = mapValues.get(DET_FACTOR + ratioSuffix);
+							if (!"NA".equals(scoreValue)) {
+								ratioScore = new RatioScore(scoreValue, DET_FACTOR,
+										"PSM-level quantification confidence metric", "PSM-level Determining factor");
+								ratio.setRatioScore(ratioScore);
+							}
 						}
 						// get the regression_factor anyway, but add it only in
 						// case
@@ -598,17 +626,15 @@ public class CensusOutParser extends AbstractQuantParser {
 								if (regressionFactor != null && ("NA".equals(regressionFactor)
 										|| Double.valueOf(-1.0).equals(Double.valueOf(regressionFactor)))) {
 									// check area_ratio value. If the are_ratio
-									// is <
-									// 1,
-									// leave it as 0. If the area_ratio is > 1,
-									// convert
-									// it
-									// to +INF.
+									// is < 1, leave it as 0. If the area_ratio
+									// is > 1,
+									// convert it to +INF.
 									// note that all numbers are not log
 									// numbers.
 									if (mapValues.containsKey(AREA_RATIO + ratioSuffix)) {
-										String areaRatioValue = mapValues.get(AREA_RATIO + ratioSuffix);
-										if (areaRatioValue.equals("INF") || Double.valueOf(areaRatioValue) > 1) {
+										double areaRatioValue = QuantUtils
+												.parseCensusRatioValue(mapValues.get(AREA_RATIO + ratioSuffix));
+										if (Double.isInfinite(areaRatioValue) || areaRatioValue > 1) {
 											ratio = new CensusRatio(Double.POSITIVE_INFINITY, false, conditionsByLabels,
 													labelNumerator, labelDenominator, AggregationLevel.PSM, RATIO);
 											if (ratioScore != null) {
@@ -628,24 +654,46 @@ public class CensusOutParser extends AbstractQuantParser {
 					}
 				}
 
-				// PSM area ratio
+				// PSM AREA RATIO
 				// add PSM ratios from census out
 				if (mapValues.containsKey(AREA_RATIO + ratioSuffix)) {
 					try {
-						double ratioValue;
-						String ratioValueString = mapValues.get(AREA_RATIO + ratioSuffix);
-						if (ratioValueString.contains("INF")) {
-							if (ratioValueString.equals("INF")) {
-								ratioValue = Double.POSITIVE_INFINITY;
-							} else {
-								ratioValue = Double.NEGATIVE_INFINITY;
-							}
-						} else {
-							ratioValue = Double.valueOf(mapValues.get(AREA_RATIO + ratioSuffix));
-						}
+						double ratioValue = QuantUtils.parseCensusRatioValue(mapValues.get(AREA_RATIO + ratioSuffix));
 
 						CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
 								labelDenominator, AggregationLevel.PSM, AREA_RATIO);
+						// profile score
+						// PROFILE SCORE IS NOT SPECIFIC FOR A PAIR OF LABELS
+						if (mapValues.containsKey(PROFILE_SCORE)) {
+							String scoreValue = mapValues.get(PROFILE_SCORE);
+							if (!"NA".equals(scoreValue)) {
+								RatioScore ratioScore = new RatioScore(scoreValue, PROFILE_SCORE,
+										"PSM-level quantification confidence metric",
+										"fitting score comparing peak and gaussian distribution");
+								ratio.setRatioScore(ratioScore);
+							}
+						} else if (mapValues.containsKey(SINGLETON_SCORE)) {
+							String scoreValue = mapValues.get(SINGLETON_SCORE);
+							if (!"NA".equals(scoreValue)) {
+								RatioScore ratioScore = new RatioScore(scoreValue, SINGLETON_SCORE,
+										"PSM-level quantification confidence metric", "Singleton score");
+								ratio.setRatioScore(ratioScore);
+							}
+						}
+						// add ratio to PSM
+						quantifiedPSM.addRatio(ratio);
+					} catch (NumberFormatException e) {
+						// skip this
+					}
+				}
+				// PSM AREA RATIO
+				// add PSM ratios from census out
+				if (mapValues.containsKey(NORM_RATIO + ratioSuffix)) {
+					try {
+						double ratioValue = QuantUtils.parseCensusRatioValue(mapValues.get(NORM_RATIO + ratioSuffix));
+
+						CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
+								labelDenominator, AggregationLevel.PSM, NORM_RATIO);
 						// profile score
 						// PROFILE SCORE IS NOT SPECIFIC FOR A PAIR OF LABELS
 						if (mapValues.containsKey(PROFILE_SCORE)) {
@@ -703,25 +751,23 @@ public class CensusOutParser extends AbstractQuantParser {
 					QuantificationLabel labelNumerator = ratioDescriptor.getLabel1();
 					QuantificationLabel labelDenominator = ratioDescriptor.getLabel2();
 					String ratioSuffix = ratioDescriptor.getRatioSuffix();
+					if (mapValues.containsKey(RATIO + ratioSuffix)) {
+						final double ratioValue = QuantUtils.parseCensusRatioValue(mapValues.get(RATIO + ratioSuffix));
+						CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
+								labelDenominator, AggregationLevel.PSM, RATIO);
+						quantifiedPSM.addRatio(ratio);
+					}
 					if (mapValues.containsKey(NORM_RATIO + ratioSuffix)) {
-						final double ratioValue = Double.valueOf(mapValues.get(NORM_RATIO + ratioSuffix));
+						final double ratioValue = QuantUtils
+								.parseCensusRatioValue(mapValues.get(NORM_RATIO + ratioSuffix));
 						CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
 								labelDenominator, AggregationLevel.PSM, NORM_RATIO);
 						quantifiedPSM.addRatio(ratio);
 					}
 					if (mapValues.containsKey(AREA_RATIO + ratioSuffix)) {
 						try {
-							double ratioValue;
-							String ratioValueString = mapValues.get(AREA_RATIO + ratioSuffix);
-							if (ratioValueString.contains("INF")) {
-								if (ratioValueString.equals("INF")) {
-									ratioValue = Double.POSITIVE_INFINITY;
-								} else {
-									ratioValue = Double.NEGATIVE_INFINITY;
-								}
-							} else {
-								ratioValue = Double.valueOf(mapValues.get(AREA_RATIO + ratioSuffix));
-							}
+							double ratioValue = QuantUtils
+									.parseCensusRatioValue(mapValues.get(AREA_RATIO + ratioSuffix));
 							CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
 									labelDenominator, AggregationLevel.PSM, AREA_RATIO);
 							// add ratio to PSM
@@ -733,50 +779,49 @@ public class CensusOutParser extends AbstractQuantParser {
 				}
 			}
 			// PSM amounts
-			QuantAmount light = null;
-			QuantAmount medium = null;
-			QuantAmount heavy = null;
+
 			// SAM_INT
 			// light peptide peak area from reconstructed
 			// chromatogram
 			if (mapValues.containsKey(SAM_INT)) {
 				try {
 					final double value = Double.valueOf(mapValues.get(SAM_INT));
-					light = new QuantAmount(value, AmountType.AREA, getLightCondition(conditionsByLabels));
+					QuantAmount amount = new QuantAmount(value, AmountType.AREA, getLightCondition(conditionsByLabels));
+					if (singleton && amount.getValue() != 0.0) {
+						amount.setSingleton(true);
+					}
 					// add amount to PSM
-					quantifiedPSM.addAmount(light);
+					quantifiedPSM.addAmount(amount);
 				} catch (NumberFormatException e) {
 					// skip this
 				}
 			}
-			if (mapValues.containsKey(PEAK_AREA_L)) {
-				try {
-					final double value = Double.valueOf(mapValues.get(PEAK_AREA_L));
-					light = new QuantAmount(value, AmountType.AREA, getLightCondition(conditionsByLabels));
-					// add amount to PSM
-					quantifiedPSM.addAmount(light);
-				} catch (NumberFormatException e) {
-					// skip this
-				}
-			}
-			if (mapValues.containsKey(PEAK_AREA_M)) {
-				try {
-					final double value = Double.valueOf(mapValues.get(PEAK_AREA_M));
-					medium = new QuantAmount(value, AmountType.AREA, getMediumCondition(conditionsByLabels));
-					// add amount to PSM
-					quantifiedPSM.addAmount(medium);
-				} catch (NumberFormatException e) {
-					// skip this
-				}
-			}
-			if (mapValues.containsKey(PEAK_AREA_H)) {
-				try {
-					final double value = Double.valueOf(mapValues.get(PEAK_AREA_H));
-					heavy = new QuantAmount(value, AmountType.AREA, getHeavyCondition(conditionsByLabels));
-					// add amount to PSM
-					quantifiedPSM.addAmount(heavy);
-				} catch (NumberFormatException e) {
-					// skip this
+
+			// get the peak areas of all the conditions (all the labels)
+			Set<String> usedSuffixes = new HashSet<String>();
+			for (RatioDescriptor ratioDescriptor : ratioDescriptors) {
+				Map<String, QuantCondition> conditionsByIndividualRatioSuffixes = ratioDescriptor
+						.getConditionsByIndividualRatioSuffixes();
+				for (String suffix : conditionsByIndividualRatioSuffixes.keySet()) {
+					if (usedSuffixes.contains(suffix)) {
+						continue;
+					}
+					usedSuffixes.add(suffix);
+					QuantCondition quantCondition = conditionsByIndividualRatioSuffixes.get(suffix);
+
+					if (mapValues.containsKey(PEAK_AREA + suffix)) {
+						try {
+							final double value = Double.valueOf(mapValues.get(PEAK_AREA + suffix));
+							QuantAmount amount = new QuantAmount(value, AmountType.AREA, quantCondition);
+							if (singleton && amount.getValue() != 0.0) {
+								amount.setSingleton(true);
+							}
+							// add amount to PSM
+							quantifiedPSM.addAmount(amount);
+						} catch (NumberFormatException e) {
+							// skip this
+						}
+					}
 				}
 			}
 			// REF_INT
@@ -785,24 +830,17 @@ public class CensusOutParser extends AbstractQuantParser {
 			if (mapValues.containsKey(REF_INT)) {
 				try {
 					final double value = Double.valueOf(mapValues.get(REF_INT));
-					heavy = new QuantAmount(value, AmountType.AREA, getHeavyCondition(conditionsByLabels));
+					QuantAmount amount = new QuantAmount(value, AmountType.AREA, getHeavyCondition(conditionsByLabels));
+					if (singleton && amount.getValue() != 0.0) {
+						amount.setSingleton(true);
+					}
 					// add amount to PSM
-					quantifiedPSM.addAmount(heavy);
+					quantifiedPSM.addAmount(amount);
 				} catch (NumberFormatException e) {
 					// skip this
 				}
 			}
-			if (singleton) {
-				if (light != null && light.getValue() != 0.0) {
-					light.setSingleton(true);
-				}
-				if (medium != null && medium.getValue() != 0.0) {
-					medium.setSingleton(true);
-				}
-				if (heavy != null && heavy.getValue() != 0.0) {
-					heavy.setSingleton(true);
-				}
-			}
+
 			// REGRESSION_FACTOR
 			// regression score (r)
 			if (mapValues.containsKey(AmountType.REGRESSION_FACTOR.name())) {
@@ -1232,10 +1270,12 @@ public class CensusOutParser extends AbstractQuantParser {
 			}
 			split = newSplit;
 		}
-		if (split.length == sLineHeaderList.size()) {
+		if (split.length == sLineHeaderList.size() || split.length + 1 == sLineHeaderList.size()) {
 			int i = 0;
 			for (String header : sLineHeaderList) {
-				map.put(header, split[i]);
+				if (i < split.length) {
+					map.put(header, split[i]);
+				}
 				i++;
 			}
 		} else {
@@ -1257,13 +1297,6 @@ public class CensusOutParser extends AbstractQuantParser {
 
 		}
 		return list.toArray(new String[0]);
-	}
-
-	/**
-	 * @return the onlyOneSpectrumPerChromatographicPeakAndPerSaltStep
-	 */
-	public boolean isOnlyOneSpectrumPerChromatographicPeakAndPerSaltStep() {
-		return onlyOneSpectrumPerChromatographicPeakAndPerSaltStep;
 	}
 
 	/**
