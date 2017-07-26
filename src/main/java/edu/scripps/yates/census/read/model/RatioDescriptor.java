@@ -1,5 +1,8 @@
 package edu.scripps.yates.census.read.model;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import edu.scripps.yates.census.analysis.QuantCondition;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
 
@@ -46,6 +49,19 @@ public class RatioDescriptor {
 		String letter2 = getLetterForLabel(label2);
 
 		return "_" + letter1 + "_" + letter2;
+	}
+
+	/**
+	 * This returns a map of a suffix for each quantcondition, so [_L,
+	 * lightcondition] for a light condition
+	 * 
+	 * @return
+	 */
+	public Map<String, QuantCondition> getConditionsByIndividualRatioSuffixes() {
+		Map<String, QuantCondition> ret = new HashMap<String, QuantCondition>();
+		ret.put("_" + getLetterForLabel(label1), condition1);
+		ret.put("_" + getLetterForLabel(label2), condition2);
+		return ret;
 	}
 
 	private String getLetterForLabel(QuantificationLabel label) {
