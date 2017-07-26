@@ -121,6 +121,9 @@ public class QuantUtils {
 		QuantCondition cond1 = null;
 		QuantCondition cond2 = null;
 		List<Double> ratioValues = new ArrayList<Double>();
+		if (nonInfinityRatios.size() == 1) {
+			return nonInfinityRatios.iterator().next();
+		}
 		for (QuantRatio quantRatio : nonInfinityRatios) {
 			if (cond1 == null) {
 				cond1 = quantRatio.getQuantCondition1();
@@ -149,7 +152,11 @@ public class QuantUtils {
 		final Double[] ratioValuesArray = ratioValues.toArray(new Double[0]);
 		final double mean = Maths.mean(ratioValuesArray);
 		final double stdev = Maths.stddev(ratioValuesArray);
-		CensusRatio ret = new CensusRatio(mean, true, cond1, cond2, aggregationLevel, "Average of ratios");
+		String ratioDescription = "Average of ratios";
+		if (ratioValues.size() < 2) {
+			ratioDescription = "Ratio";
+		}
+		CensusRatio ret = new CensusRatio(mean, true, cond1, cond2, aggregationLevel, ratioDescription);
 		ret.setCombinationType(CombinationType.AVERAGE);
 		RatioScore ratioScore = new RatioScore(String.valueOf(stdev), "STDEV", "Standard deviation of log2 ratios",
 				"Standard deviation of multiple log2 ratios");
@@ -394,6 +401,7 @@ public class QuantUtils {
 			ratio.addIonCount(cond2, normalizedPeakCount2);
 
 		}
+		ratio.setAsNormalizedIonCountRatio();
 		return ratio;
 	}
 
@@ -441,7 +449,9 @@ public class QuantUtils {
 			ratio.addIonCount(cond2, normalizedPeakCount2);
 
 		}
+		ratio.setAsNormalizedIonCountRatio();
 		return ratio;
+
 	}
 
 	/**
@@ -527,6 +537,32 @@ public class QuantUtils {
 			uplr = new UniprotProteinRetriever(uniprotVersion, uniprotAnnotationsFolder, true);
 		}
 		return uplr;
+	}
+
+	public static double parseCensusRatioValue(String stringValue) {
+		if (stringValue == null) {
+			return Double.NaN;
+		}
+		if (stringValue.toUpperCase().contains("INF")) {
+			if (stringValue.toUpperCase().contains("-")) {
+				return Double.NEGATIVE_INFINITY;
+			} else {
+				return Double.POSITIVE_INFINITY;
+			}
+		}
+		if (stringValue.equals("1000")) {
+			return Double.POSITIVE_INFINITY;
+		}
+		if (stringValue.equals("0.001")) {
+			return Double.NEGATIVE_INFINITY;
+		}
+
+		try {
+			return Double.valueOf(stringValue);
+		} catch (NumberFormatException e) {
+			log.warn("Census ratio is not recognized: '" + stringValue + "'");
+			return Double.NaN;
+		}
 	}
 
 }
