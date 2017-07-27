@@ -28,6 +28,8 @@ public class CensusRatio implements QuantRatio {
 	private CombinationType combinationType;
 	private Condition condition1;
 	private Condition condition2;
+	private Integer quantifiedSitePositionInPeptide;
+	private Character quantifiedAA;
 
 	public static CensusRatio getNaNRatio(QuantCondition quantConditionNumerator,
 			QuantCondition quantConditionDenominator, AggregationLevel aggregationLevel, String description) {
@@ -331,6 +333,26 @@ public class CensusRatio implements QuantRatio {
 	 */
 	public void setCondition2(Condition condition2) {
 		this.condition2 = condition2;
+	}
+
+	@Override
+	public Character getQuantifiedAA() {
+		return quantifiedAA;
+	}
+
+	@Override
+	public Integer getQuantifiedSitePositionInPeptide() {
+		return quantifiedSitePositionInPeptide;
+	}
+
+	@Override
+	public void setQuantifiedAA(Character quantifiedAA) {
+		this.quantifiedAA = quantifiedAA;
+	}
+
+	@Override
+	public void setQuantifiedSitePositionInPeptide(int quantifiedSitePositionInPeptide) {
+		this.quantifiedSitePositionInPeptide = quantifiedSitePositionInPeptide;
 	}
 
 }

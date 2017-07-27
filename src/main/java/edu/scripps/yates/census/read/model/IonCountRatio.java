@@ -23,6 +23,9 @@ public class IonCountRatio implements QuantRatio {
 	private CombinationType combinationType;
 	private final AggregationLevel aggregationLevel;
 	private String description = "Rc";
+	private Condition condition2;
+	private Integer quantifiedSitePositionInPeptide;
+	private Character quantifiedAA;
 
 	public IonCountRatio(AggregationLevel aggregationLevel) {
 		this.aggregationLevel = aggregationLevel;
@@ -197,5 +200,25 @@ public class IonCountRatio implements QuantRatio {
 	@Override
 	public QuantCondition getQuantCondition2() {
 		return (QuantCondition) getCondition2();
+	}
+
+	@Override
+	public Integer getQuantifiedSitePositionInPeptide() {
+		return quantifiedSitePositionInPeptide;
+	}
+
+	@Override
+	public void setQuantifiedSitePositionInPeptide(int quantifiedSitePositionInPeptide) {
+		this.quantifiedSitePositionInPeptide = quantifiedSitePositionInPeptide;
+	}
+
+	@Override
+	public Character getQuantifiedAA() {
+		return quantifiedAA;
+	}
+
+	@Override
+	public void setQuantifiedAA(Character quantifiedAA) {
+		this.quantifiedAA = quantifiedAA;
 	}
 }

@@ -15,6 +15,4 @@ public interface IsobaricQuantParser extends QuantParser {
 
 	void addIonExclusions(Collection<IonExclusion> ionExclusions);
 
-	void addQuantifiedAA(char aa);
-
 }

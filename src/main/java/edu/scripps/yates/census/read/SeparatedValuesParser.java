@@ -31,6 +31,7 @@ import edu.scripps.yates.dbindex.util.PeptideNotFoundInDBIndexException;
 import edu.scripps.yates.utilities.fasta.FastaParser;
 import edu.scripps.yates.utilities.model.enums.AggregationLevel;
 import edu.scripps.yates.utilities.remote.RemoteSSHFileReference;
+import edu.scripps.yates.utilities.strings.StringUtils;
 import gnu.trove.map.hash.THashMap;
 
 public class SeparatedValuesParser extends AbstractQuantParser {
@@ -299,7 +300,27 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 
 				// add ratio to PSM
 				quantifiedPSM.addRatio(ratio);
-
+				if (!getQuantifiedAAs().isEmpty()) {
+					for (Character c : getQuantifiedAAs()) {
+						if (quantifiedPSM.getSequence().contains(String.valueOf(c))) {
+							ratio.setQuantifiedAA(c);
+						}
+					}
+					// check for ambiguity on the quantified site
+					int numSites = 0;
+					int quantifiedSitePositionInPeptide = -1;
+					for (Character c : getQuantifiedAAs()) {
+						List<Integer> allPositionsOf = StringUtils.allPositionsOf(quantifiedPSM.getSequence(), c);
+						numSites = +allPositionsOf.size();
+						if (allPositionsOf.size() == 1) {
+							quantifiedSitePositionInPeptide = allPositionsOf.get(0);
+						}
+					}
+					// if no ambiguities
+					if (numSites == 1) {
+						ratio.setQuantifiedSitePositionInPeptide(quantifiedSitePositionInPeptide);
+					}
+				}
 			} catch (NumberFormatException e) {
 				// skip this
 			}

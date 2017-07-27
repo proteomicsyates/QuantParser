@@ -22,8 +22,6 @@ public class IsoRatio extends CensusRatio {
 	private final Map<QuantCondition, QuantificationLabel> labelsByConditions;
 	private final Map<QuantificationLabel, QuantCondition> conditionsByLabels;
 	private RatioScore ratioScore;
-	private Character quantifiedAA;
-	private Integer quantifiedSitePositionInPeptide;
 
 	/**
 	 *
@@ -240,22 +238,6 @@ public class IsoRatio extends CensusRatio {
 		if (ionsByLabel.containsKey(labelsByConditions.get(conditionDenominator)))
 			return ionsByLabel.get(labelsByConditions.get(conditionDenominator)).getIntensity();
 		return Double.NaN;
-	}
-
-	public Character getQuantifiedAA() {
-		return quantifiedAA;
-	}
-
-	public Integer getQuantifiedSitePositionInPeptide() {
-		return quantifiedSitePositionInPeptide;
-	}
-
-	public void setQuantifiedAA(Character quantifiedAA) {
-		this.quantifiedAA = quantifiedAA;
-	}
-
-	public void setQuantifiedSitePositionInPeptide(Integer quantifiedSitePositionInPeptide) {
-		this.quantifiedSitePositionInPeptide = quantifiedSitePositionInPeptide;
 	}
 
 }

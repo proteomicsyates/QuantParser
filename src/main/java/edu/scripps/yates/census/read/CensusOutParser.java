@@ -43,6 +43,7 @@ import edu.scripps.yates.utilities.model.enums.AggregationLevel;
 import edu.scripps.yates.utilities.model.enums.AmountType;
 import edu.scripps.yates.utilities.proteomicsmodel.Amount;
 import edu.scripps.yates.utilities.remote.RemoteSSHFileReference;
+import edu.scripps.yates.utilities.strings.StringUtils;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
 
@@ -106,7 +107,8 @@ public class CensusOutParser extends AbstractQuantParser {
 
 	private static final String DET_FACTOR = "DET_FACTOR";
 	private boolean onlyOneSpectrumPerChromatographicPeakAndPerSaltStep = false;
-	private boolean skipSingletons = false;
+	private boolean skipSingletons = false; // by default
+	private boolean skipNonResolvedPeaks = true; // by default
 
 	public CensusOutParser() {
 		super();
@@ -649,6 +651,7 @@ public class CensusOutParser extends AbstractQuantParser {
 						}
 						// add ratio to PSM
 						quantifiedPSM.addRatio(ratio);
+
 					} catch (NumberFormatException e) {
 						// skip this
 					}
@@ -802,6 +805,7 @@ public class CensusOutParser extends AbstractQuantParser {
 			for (RatioDescriptor ratioDescriptor : ratioDescriptors) {
 				Map<String, QuantCondition> conditionsByIndividualRatioSuffixes = ratioDescriptor
 						.getConditionsByIndividualRatioSuffixes();
+				Set<String> differentValuesOfPeakArea = new HashSet<String>();
 				for (String suffix : conditionsByIndividualRatioSuffixes.keySet()) {
 					if (usedSuffixes.contains(suffix)) {
 						continue;
@@ -811,7 +815,18 @@ public class CensusOutParser extends AbstractQuantParser {
 
 					if (mapValues.containsKey(PEAK_AREA + suffix)) {
 						try {
-							final double value = Double.valueOf(mapValues.get(PEAK_AREA + suffix));
+							String stringValue = mapValues.get(PEAK_AREA + suffix);
+							if (isSkipNonResolvedPeaks() && differentValuesOfPeakArea.contains(stringValue)) {
+								log.warn("PSM '" + quantifiedPSM.getPSMIdentifier()
+										+ "' contains not resolved quantitation values (Repeated peak area '"
+										+ stringValue + "'). Skipping it...");
+								// removing it from local and static maps
+								StaticQuantMaps.psmMap.remove(quantifiedPSM);
+								localPsmMap.remove(quantifiedPSM.getKey());
+								return;
+							}
+							differentValuesOfPeakArea.add(stringValue);
+							final double value = Double.valueOf(stringValue);
 							QuantAmount amount = new QuantAmount(value, AmountType.AREA, quantCondition);
 							if (singleton && amount.getValue() != 0.0) {
 								amount.setSingleton(true);
@@ -933,12 +948,47 @@ public class CensusOutParser extends AbstractQuantParser {
 				// add to protein-experiment map
 				addToMap(experimentKey, experimentToProteinsMap, proteinKey);
 			}
+
+			// in case of quantifing sites, set the sites to the ratios in case
+			// of no ambiguities
+			if (!getQuantifiedAAs().isEmpty()) {
+				for (QuantRatio ratio : quantifiedPSM.getRatios()) {
+					for (Character c : getQuantifiedAAs()) {
+						if (quantifiedPSM.getSequence().contains(String.valueOf(c))) {
+							ratio.setQuantifiedAA(c);
+						}
+					}
+					// check for ambiguity on the quantified site
+					int numSites = 0;
+					int quantifiedSitePositionInPeptide = -1;
+					for (Character c : getQuantifiedAAs()) {
+						List<Integer> allPositionsOf = StringUtils.allPositionsOf(quantifiedPSM.getSequence(), c);
+						numSites = +allPositionsOf.size();
+						if (allPositionsOf.size() == 1) {
+							quantifiedSitePositionInPeptide = allPositionsOf.get(0);
+						}
+					}
+					// if no ambiguities
+					if (numSites == 1) {
+						ratio.setQuantifiedSitePositionInPeptide(quantifiedSitePositionInPeptide);
+					}
+				}
+			}
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
 			log.warn(e);
 			log.info("Error reading line '" + line + "' from file. Skipping it...");
 
 		}
+
+	}
+
+	private boolean isSkipNonResolvedPeaks() {
+		return skipNonResolvedPeaks;
+	}
+
+	public void setSkipNonResolvedPeaks(boolean skipNonResolvedPeaks) {
+		this.skipNonResolvedPeaks = skipNonResolvedPeaks;
 	}
 
 	private QuantCondition getLightCondition(Map<QuantificationLabel, QuantCondition> conditionsByLabels) {

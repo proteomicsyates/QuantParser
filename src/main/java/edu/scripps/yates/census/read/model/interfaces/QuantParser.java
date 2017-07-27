@@ -52,4 +52,7 @@ public interface QuantParser {
 
 	boolean isIgnoreNotFoundPeptidesInDB();
 
+	void addQuantifiedAA(char aa);
+
+	Set<Character> getQuantifiedAAs();
 }

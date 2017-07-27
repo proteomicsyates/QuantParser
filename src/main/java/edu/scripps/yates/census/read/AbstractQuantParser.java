@@ -45,7 +45,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 	protected Pattern decoyPattern;
 	public static Set<String> peptidesMissingInDB = new THashSet<String>();
 	protected boolean ignoreNotFoundPeptidesInDB;
-
+	private final Set<Character> quantifiedAAs = new THashSet<Character>();
 	// MAPS
 	// key=experimentkey, values=proteinKeys
 	protected final Map<String, Set<String>> experimentToProteinsMap = new THashMap<String, Set<String>>();
@@ -617,5 +617,15 @@ public abstract class AbstractQuantParser implements QuantParser {
 
 	public void setRetrieveFastaIsoforms(boolean retrieveFastaIsoforms) {
 		this.retrieveFastaIsoforms = retrieveFastaIsoforms;
+	}
+
+	@Override
+	public void addQuantifiedAA(char aa) {
+		this.quantifiedAAs.add(aa);
+	}
+
+	@Override
+	public Set<Character> getQuantifiedAAs() {
+		return quantifiedAAs;
 	}
 }
