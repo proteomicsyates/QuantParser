@@ -27,10 +27,9 @@ public interface QuantRatio extends edu.scripps.yates.utilities.proteomicsmodel.
 
 	public Character getQuantifiedAA();
 
-	public Integer getQuantifiedSitePositionInPeptide();
-
 	public void setQuantifiedAA(Character c);
 
 	public void setQuantifiedSitePositionInPeptide(int quantifiedSitePositionInPeptide);
 
+	public Integer getQuantifiedSitePositionInPeptide();
 }
