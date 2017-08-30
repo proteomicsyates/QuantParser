@@ -201,12 +201,14 @@ public abstract class AbstractQuantParser implements QuantParser {
 		labelsByConditionsByFile.put(remoteFileReference, labelsByConditions);
 		QuantCondition condition1 = null;
 		QuantCondition condition2 = null;
-		for (QuantCondition condition : labelsByConditions.keySet()) {
-			final QuantificationLabel quantificationLabel = labelsByConditions.get(condition);
-			if (quantificationLabel == labelNumerator) {
-				condition1 = condition;
-			} else if (quantificationLabel == labelDenominator) {
-				condition2 = condition;
+		if (labelsByConditions != null) {
+			for (QuantCondition condition : labelsByConditions.keySet()) {
+				final QuantificationLabel quantificationLabel = labelsByConditions.get(condition);
+				if (quantificationLabel == labelNumerator) {
+					condition1 = condition;
+				} else if (quantificationLabel == labelDenominator) {
+					condition2 = condition;
+				}
 			}
 		}
 

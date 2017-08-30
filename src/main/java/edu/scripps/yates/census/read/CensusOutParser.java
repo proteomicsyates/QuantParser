@@ -184,8 +184,10 @@ public class CensusOutParser extends AbstractQuantParser {
 				final Map<QuantCondition, QuantificationLabel> labelsByConditions = labelsByConditionsByFile
 						.get(remoteFileRetriever);
 				final Map<QuantificationLabel, QuantCondition> conditionsByLabels = new THashMap<QuantificationLabel, QuantCondition>();
-				for (QuantCondition cond : labelsByConditions.keySet()) {
-					conditionsByLabels.put(labelsByConditions.get(cond), cond);
+				if (labelsByConditions != null) {
+					for (QuantCondition cond : labelsByConditions.keySet()) {
+						conditionsByLabels.put(labelsByConditions.get(cond), cond);
+					}
 				}
 				List<RatioDescriptor> ratioDescriptors = ratioDescriptorsByFile.get(remoteFileRetriever);
 				// QuantificationLabel labelNumerator =

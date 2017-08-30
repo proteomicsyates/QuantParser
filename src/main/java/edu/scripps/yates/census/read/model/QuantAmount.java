@@ -128,6 +128,7 @@ public class QuantAmount implements Amount {
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
@@ -138,8 +139,14 @@ public class QuantAmount implements Amount {
 		return super.equals(obj);
 	}
 
+	@Override
+	public int hashCode() {
+		return -1;
+	}
+
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
