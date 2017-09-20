@@ -467,7 +467,7 @@ public class CensusOutParser extends AbstractQuantParser {
 			// only take it if there is another one like that in the static map
 			// this will avoid to consider an H or an M in the file name that
 			// were part of the name and not meaning anything
-			if (StaticQuantMaps.rawFileNames.contains(substring)) {
+			if (StaticQuantMaps.rawFileNamesContains(substring)) {
 				rawFileName = substring;
 			}
 		}
@@ -497,7 +497,7 @@ public class CensusOutParser extends AbstractQuantParser {
 			} else {
 				rawFileName = inputFileName;
 			}
-			StaticQuantMaps.rawFileNames.add(rawFileName);
+			StaticQuantMaps.addRawFileName(rawFileName);
 			// scan number
 			int scanNumber = 0;
 			if (mapValues.containsKey(SCAN)) {

@@ -248,7 +248,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 		if (rawFileName == null) {
 			rawFileName = inputFileName;
 		}
-		StaticQuantMaps.rawFileNames.add(rawFileName);
+		StaticQuantMaps.addRawFileName(rawFileName);
 		// scan number
 		int scanNumber = 0;
 		try {
