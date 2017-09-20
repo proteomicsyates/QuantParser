@@ -1,48 +1,104 @@
 package edu.scripps.yates.census.read.model.interfaces;
 
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
 import gnu.trove.map.hash.THashMap;
 
 public class StaticItemStorage<T extends HasKey> {
 	private final Map<String, T> map = new THashMap<String, T>();
+	private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
 	public boolean contains(T hasKeyObj) {
-		return map.containsKey(hasKeyObj.getKey());
+		ReadLock readLock = lock.readLock();
+		try {
+			readLock.lock();
+			return map.containsKey(hasKeyObj.getKey());
+		} finally {
+			readLock.unlock();
+		}
 	}
 
 	public boolean containsKey(String key) {
-		return map.containsKey(key);
+		ReadLock readLock = lock.readLock();
+		try {
+			readLock.lock();
+			return map.containsKey(key);
+		} finally {
+			readLock.unlock();
+		}
 	}
 
 	public T addItem(T hasKeyObj) {
-
-		return map.put(hasKeyObj.getKey(), hasKeyObj);
-
+		WriteLock writeLock = lock.writeLock();
+		try {
+			writeLock.lock();
+			return map.put(hasKeyObj.getKey(), hasKeyObj);
+		} finally {
+			writeLock.unlock();
+		}
 	}
 
 	public T getItem(String key) {
-		return map.get(key);
+		ReadLock readLock = lock.readLock();
+		try {
+			readLock.lock();
+			return map.get(key);
+		} finally {
+			readLock.unlock();
+		}
 	}
 
 	public int size() {
-		return map.size();
+		ReadLock readLock = lock.readLock();
+		try {
+			readLock.lock();
+			return map.size();
+		} finally {
+			readLock.unlock();
+		}
 	}
 
 	public void clear() {
-		map.clear();
+		WriteLock writeLock = lock.writeLock();
+		try {
+			writeLock.lock();
+			map.clear();
+		} finally {
+			writeLock.unlock();
+		}
 	}
 
 	public T remove(T hasKeyObj) {
-		return map.remove(hasKeyObj.getKey());
+		WriteLock writeLock = lock.writeLock();
+		try {
+			writeLock.lock();
+			return map.remove(hasKeyObj.getKey());
+		} finally {
+			writeLock.unlock();
+		}
 	}
 
 	public T remove(String key) {
-		return map.remove(key);
+		WriteLock writeLock = lock.writeLock();
+		try {
+			writeLock.lock();
+			return map.remove(key);
+		} finally {
+			writeLock.unlock();
+		}
 
 	}
 
 	public boolean isEmpty() {
-		return map.isEmpty();
+		ReadLock readLock = lock.readLock();
+		try {
+			readLock.lock();
+			return map.isEmpty();
+		} finally {
+			readLock.unlock();
+		}
 	}
 }
