@@ -41,17 +41,17 @@ public class StaticQuantMaps {
 
 		log.info("Clearing static quantitative maps");
 		if (!proteinMap.isEmpty()) {
-			log.info("Clearing quant protein map");
+			log.info("Clearing quant protein map of " + proteinMap.size());
 		}
 		proteinMap.clear();
 
 		if (!psmMap.isEmpty()) {
-			log.info("Clearing quant PSM map");
+			log.info("Clearing quant PSM map of " + psmMap.size());
 		}
 		psmMap.clear();
 
 		if (!peptideMap.isEmpty()) {
-			log.info("Clearing quant peptide map");
+			log.info("Clearing quant peptide map " + peptideMap.size());
 		}
 		peptideMap.clear();
 
