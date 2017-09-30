@@ -981,6 +981,10 @@ public class CensusOutParser extends AbstractQuantParser {
 			log.warn(e);
 			log.info("Error reading line '" + line + "' from file. Skipping it...");
 
+		} catch (NullPointerException e) {
+			e.printStackTrace();
+			log.warn(e);
+			log.info("Error reading line '" + line + "' from file. Skipping it...");
 		}
 
 	}
