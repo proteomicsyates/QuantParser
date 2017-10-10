@@ -357,12 +357,21 @@ public class CensusOutParser extends AbstractQuantParser {
 									if (quantifiedPeptide != null) {
 										quantifiedPeptide.getQuantifiedPSMs().remove(psmToIgnore);
 									}
+									if (quantifiedPeptide.getQuantifiedPSMs().isEmpty()) {
+										localPeptideMap.remove(quantifiedPeptide.getKey());
+										StaticQuantMaps.peptideMap.remove(quantifiedPeptide);
+									}
 									// remove it from its proteins
 									Set<QuantifiedProteinInterface> quantifiedProteins = psmToIgnore
 											.getQuantifiedProteins();
 									for (QuantifiedProteinInterface protein : quantifiedProteins) {
 										protein.getQuantifiedPSMs().remove(psmToIgnore);
+										if (protein.getQuantifiedPSMs().isEmpty()) {
+											localProteinMap.remove(protein.getKey());
+											StaticQuantMaps.proteinMap.remove(protein);
+										}
 									}
+
 								}
 							}
 						}
@@ -982,9 +991,9 @@ public class CensusOutParser extends AbstractQuantParser {
 			log.info("Error reading line '" + line + "' from file. Skipping it...");
 
 		} catch (NullPointerException e) {
-			e.printStackTrace();
+			// e.printStackTrace();
 			log.warn(e);
-			log.info("Error reading line '" + line + "' from file. Skipping it...");
+			log.warn("Error reading line '" + line + "' from file. Skipping it...");
 		}
 
 	}
@@ -1000,7 +1009,11 @@ public class CensusOutParser extends AbstractQuantParser {
 	private QuantCondition getLightCondition(Map<QuantificationLabel, QuantCondition> conditionsByLabels) {
 		for (QuantificationLabel label : conditionsByLabels.keySet()) {
 			if (label.isLight()) {
-				return conditionsByLabels.get(label);
+				final QuantCondition quantCondition = conditionsByLabels.get(label);
+				if (quantCondition == null) {
+					log.warn("condition is null");
+				}
+				return quantCondition;
 			}
 		}
 		return null;
