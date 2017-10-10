@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
+
 import edu.scripps.yates.annotations.uniprot.UniprotEntryUtil;
 import edu.scripps.yates.annotations.uniprot.UniprotProteinLocalRetriever;
 import edu.scripps.yates.annotations.uniprot.xml.Entry;
@@ -29,6 +31,7 @@ import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
 
 public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements QuantifiedPeptideInterface {
+	private final static Logger log = Logger.getLogger(QuantifiedPeptide.class);
 	protected String sequenceKey;
 	protected final Set<QuantifiedPSMInterface> psms = new THashSet<QuantifiedPSMInterface>();
 	private final Set<Amount> amounts = new THashSet<Amount>();
@@ -213,7 +216,9 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 		List<QuantRatio> ratios = new ArrayList<QuantRatio>();
 		for (QuantifiedPSMInterface psm : getQuantifiedPSMs()) {
 			QuantRatio ratio = QuantUtils.getRatioValidForAnalysis(psm);
-			ratios.add(ratio);
+			if (ratio != null) {
+				ratios.add(ratio);
+			}
 		}
 		return QuantUtils.getAverageRatio(QuantUtils.getNonInfinityRatios(ratios), AggregationLevel.PEPTIDE);
 	}
