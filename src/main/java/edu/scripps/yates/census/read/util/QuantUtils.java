@@ -214,7 +214,6 @@ public class QuantUtils {
 	}
 
 	public static QuantRatio getRatioValidForAnalysis(QuantifiedPSMInterface quantifiedPSM) {
-
 		// RATIO for non singletons and AREA_RATIO for singletons
 		if (quantifiedPSM instanceof QuantifiedPSM) {
 			if (quantifiedPSM.isSingleton()) {
