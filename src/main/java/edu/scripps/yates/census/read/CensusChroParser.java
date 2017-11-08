@@ -40,6 +40,8 @@ import gnu.trove.set.hash.THashSet;
 
 public class CensusChroParser extends AbstractIsobaricQuantParser {
 	private static final Logger log = Logger.getLogger(CensusChroParser.class);
+	public static final String ISOBARIC_INTENSITY_RATIO = "Ri";
+	public static final String ISOBARIC_COUNT_RATIO = "Rc";
 
 	public CensusChroParser() {
 		super();
@@ -183,9 +185,6 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 					// processing different census chro files in the same parser
 					QuantifiedProteinInterface quantifiedProtein = null;
 					final String proteinKey = KeyUtils.getProteinKey(protein);
-					if (proteinKey.contains("Q03181")) {
-						log.info(proteinKey);
-					}
 					if (StaticQuantMaps.proteinMap.containsKey(proteinKey)) {
 						quantifiedProtein = StaticQuantMaps.proteinMap.getItem(proteinKey);
 					} else {
