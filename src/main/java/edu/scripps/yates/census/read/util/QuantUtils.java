@@ -222,19 +222,22 @@ public class QuantUtils {
 				return getRatioByName(quantifiedPSM, CensusOutParser.RATIO);
 			}
 		} else {
-			QuantRatio ret = getRatioByName(quantifiedPSM, CensusOutParser.RATIO);
-			if (ret == null) {
-				ret = getRatioByName(quantifiedPSM, CensusOutParser.AREA_RATIO);
+			if (quantifiedPSM instanceof IsobaricQuantifiedPSM) {
+				throw new IllegalArgumentException("This shouldnt be an isobaric psm");
+			} else {
+				QuantRatio ret = getRatioByName(quantifiedPSM, CensusOutParser.RATIO);
+				if (ret == null) {
+					ret = getRatioByName(quantifiedPSM, CensusOutParser.AREA_RATIO);
+				}
+				if (ret == null) {
+					ret = getRatioByName(quantifiedPSM, CensusOutParser.NORM_RATIO);
+				}
+				return ret;
 			}
-			if (ret == null) {
-				ret = getRatioByName(quantifiedPSM, CensusOutParser.NORM_RATIO);
-			}
-			return ret;
 		}
-
 	}
 
-	private static QuantRatio getRatioByName(QuantifiedPSMInterface quantifiedPSM, String ratioDescription) {
+	public static QuantRatio getRatioByName(QuantifiedPSMInterface quantifiedPSM, String ratioDescription) {
 		if (quantifiedPSM != null && quantifiedPSM.getRatios() != null) {
 			for (QuantRatio ratio : quantifiedPSM.getRatios()) {
 				if (ratio.getDescription().equals(ratioDescription)) {
