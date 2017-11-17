@@ -11,9 +11,6 @@ public interface HasRatios {
 	public QuantRatio getConsensusRatio(QuantCondition quantConditionNumerator,
 			QuantCondition quantConditionDenominator);
 
-	public QuantRatio getConsensusRatio(QuantCondition quantConditionNumerator,
-			QuantCondition quantConditionDenominator, String replicateName);
-
 	public Set<QuantRatio> getNonInfinityRatios();
 
 	public void addRatio(QuantRatio ratio);
