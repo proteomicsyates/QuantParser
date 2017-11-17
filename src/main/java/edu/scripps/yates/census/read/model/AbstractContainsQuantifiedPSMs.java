@@ -28,23 +28,11 @@ public abstract class AbstractContainsQuantifiedPSMs implements HasRatios {
 		return ratios;
 	}
 
-	public Set<QuantRatio> getRatios(String replicateName) {
-		Set<QuantRatio> replicateRatios = new THashSet<QuantRatio>();
-
-		for (QuantifiedPSMInterface psm : getQuantifiedPSMs()) {
-			if (psm.getFileNames().contains(replicateName)) {
-				replicateRatios.addAll(psm.getRatios());
-			}
-		}
-
-		return replicateRatios;
-	}
-
 	@Override
 	public double getMeanRatios(QuantCondition quantConditionNumerator, QuantCondition quantConditionDenominator) {
 		List<Double> ratioValues = new ArrayList<Double>();
 		for (QuantifiedPSMInterface psm : getQuantifiedPSMs()) {
-			QuantRatio ratio = QuantUtils.getRatioValidForAnalysis(psm);
+			QuantRatio ratio = QuantUtils.getRepresentativeRatio(psm);
 			ratioValues.add(ratio.getLog2Ratio(quantConditionNumerator, quantConditionDenominator));
 		}
 		return Maths.mean(ratioValues.toArray(new Double[0]));
@@ -55,7 +43,7 @@ public abstract class AbstractContainsQuantifiedPSMs implements HasRatios {
 		List<Double> ratioValues = new ArrayList<Double>();
 
 		for (QuantifiedPSMInterface psm : getQuantifiedPSMs()) {
-			QuantRatio ratio = QuantUtils.getRatioValidForAnalysis(psm);
+			QuantRatio ratio = QuantUtils.getRepresentativeRatio(psm);
 			ratioValues.add(ratio.getLog2Ratio(quantConditionNumerator, quantConditionDenominator));
 		}
 
