@@ -519,9 +519,10 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	public Set<IsoRatio> getNonInfinityIsoRatios() {
 		Set<IsoRatio> ret = new THashSet<IsoRatio>();
 		for (IsoRatio isoRatio : getIsoRatios()) {
-			if (Double.compare(isoRatio.getLog2Ratio(isoRatio.getLabel1(), isoRatio.getLabel2()), Double.MAX_VALUE) == 0
-					|| Double.compare(isoRatio.getLog2Ratio(isoRatio.getLabel1(), isoRatio.getLabel2()),
-							-Double.MAX_VALUE) == 0) {
+			final Double log2Ratio = isoRatio.getLog2Ratio(isoRatio.getLabel1(), isoRatio.getLabel2());
+			if (Double.isNaN(log2Ratio) || Double.isInfinite(log2Ratio)
+					|| Double.compare(log2Ratio, Double.MAX_VALUE) == 0
+					|| Double.compare(log2Ratio, -Double.MAX_VALUE) == 0) {
 				continue;
 			}
 			ret.add(isoRatio);
