@@ -173,9 +173,6 @@ public class CensusRatio implements QuantRatio {
 		if (log2Value != null && Double.isNaN(log2Value)) {
 			return Double.NaN;
 		}
-		if (quantConditionNumerator == null || quantConditionDenominator == null) {
-			System.out.println("Censusratio.java line 162 log");
-		}
 		if (this.quantConditionNumerator.equals(quantConditionNumerator)
 				&& this.quantConditionDenominator.equals(quantConditionDenominator)) {
 			return getLog2Value();
