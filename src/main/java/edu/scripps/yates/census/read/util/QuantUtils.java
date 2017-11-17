@@ -103,7 +103,8 @@ public class QuantUtils {
 		Set<QuantRatio> set = new THashSet<QuantRatio>();
 		for (QuantRatio ratio : ratios) {
 			final double log2Ratio = ratio.getLog2Ratio(ratio.getQuantCondition1(), ratio.getQuantCondition2());
-			if (Double.compare(log2Ratio, Double.MAX_VALUE) == 0 || Double.compare(log2Ratio, -Double.MAX_VALUE) == 0) {
+			if (Double.isInfinite(log2Ratio) || Double.compare(log2Ratio, Double.MAX_VALUE) == 0
+					|| Double.compare(log2Ratio, -Double.MAX_VALUE) == 0) {
 				continue;
 			}
 			if (!Double.isInfinite(log2Ratio) && !Double.isNaN(log2Ratio)) {
