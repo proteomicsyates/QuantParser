@@ -86,10 +86,10 @@ public class IsoRatio extends CensusRatio {
 			double value = Double.valueOf(ion1.getIntensity()) / Double.valueOf(ion2.getIntensity());
 			return Math.log(value) / Math.log(2);
 		} else if (ionsByLabel.containsKey(labelNumerator) && !ionsByLabel.containsKey(labelDenominator)) {
-			return Double.MAX_VALUE;
+			return Double.POSITIVE_INFINITY;
 		} else if (!ionsByLabel.containsKey(labelNumerator) && ionsByLabel.containsKey(labelDenominator)) {
 			// ion1==null && ion2!=null
-			return -Double.MAX_VALUE;
+			return Double.NEGATIVE_INFINITY;
 		} else {
 			throw new IllegalArgumentException(
 					"No ratio value found for labels: " + labelNumerator + "/" + labelDenominator);
@@ -161,7 +161,7 @@ public class IsoRatio extends CensusRatio {
 			return value;
 
 		} else if (ionsByLabel.containsKey(labelNumerator) && !ionsByLabel.containsKey(labelDenominator)) {
-			return Double.MAX_VALUE; // n/0
+			return Double.POSITIVE_INFINITY; // n/0
 		} else if (!ionsByLabel.containsKey(labelNumerator) && ionsByLabel.containsKey(labelDenominator)) {
 			// ion1==null && ion2!=null
 			return 0.0; // 0/n
