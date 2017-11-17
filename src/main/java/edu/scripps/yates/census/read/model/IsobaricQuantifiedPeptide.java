@@ -384,14 +384,4 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements Quan
 		return getIonCountRatio(quantConditionNumerator, quantConditionDenominator);
 	}
 
-	/**
-	 * In case of OspbaricQuantifiedPeptide, the consensusRatio is the
-	 * ionCountRatio
-	 */
-	@Override
-	public QuantRatio getConsensusRatio(QuantCondition quantConditionNumerator,
-			QuantCondition quantConditionDenominator, String replicateName) {
-		return getIonCountRatio(quantConditionNumerator, quantConditionDenominator, replicateName);
-	}
-
 }

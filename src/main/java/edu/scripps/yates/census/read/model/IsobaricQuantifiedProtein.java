@@ -441,18 +441,6 @@ public class IsobaricQuantifiedProtein extends AbstractContainsQuantifiedPSMs
 		return ratios;
 	}
 
-	@Override
-	public Set<QuantRatio> getRatios(String replicateName) {
-		if (ratios.isEmpty()) {
-			for (IsobaricQuantifiedPSM psm : getIsobaricQuantifiedPSMs()) {
-				if (psm.getFileNames().contains(replicateName)) {
-					ratios.addAll(psm.getRatios());
-				}
-			}
-		}
-		return ratios;
-	}
-
 	/**
 	 * Returns true if the protein contains any {@link Ion} labeled with a
 	 * certain {@link QuantificationLabel} not paired with any other label
@@ -692,12 +680,6 @@ public class IsobaricQuantifiedProtein extends AbstractContainsQuantifiedPSMs
 	@Override
 	public QuantRatio getConsensusRatio(QuantCondition cond1, QuantCondition cond2) {
 		return QuantUtils.getAverageRatio(QuantUtils.getNonInfinityRatios(getRatios()), AggregationLevel.PROTEIN);
-	}
-
-	@Override
-	public QuantRatio getConsensusRatio(QuantCondition cond1, QuantCondition cond2, String replicateName) {
-		return QuantUtils.getAverageRatio(QuantUtils.getNonInfinityRatios(getRatios(replicateName)),
-				AggregationLevel.PROTEIN);
 	}
 
 	@Override

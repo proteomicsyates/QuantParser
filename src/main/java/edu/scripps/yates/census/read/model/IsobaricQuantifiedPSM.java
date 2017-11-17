@@ -929,16 +929,6 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	}
 
 	@Override
-	public QuantRatio getConsensusRatio(QuantCondition quantConditionNumerator,
-			QuantCondition quantConditionDenominator, String replicateName) {
-		if (getFileNames().iterator().next().equals(replicateName)) {
-			return QuantUtils.getAverageRatio(QuantUtils.getNonInfinityRatios(getRatios()), AggregationLevel.PSM);
-		}
-		return null;
-
-	}
-
-	@Override
 	public boolean isDiscarded() {
 
 		return discarded;

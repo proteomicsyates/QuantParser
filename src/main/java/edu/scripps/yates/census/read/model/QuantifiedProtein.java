@@ -281,13 +281,6 @@ public class QuantifiedProtein extends AbstractContainsQuantifiedPSMs implements
 	}
 
 	@Override
-	public QuantRatio getConsensusRatio(QuantCondition quantConditionNumerator,
-			QuantCondition quantConditionDenominator, String replicateName) {
-		return QuantUtils.getAverageRatio(QuantUtils.getNonInfinityRatios(getRatios(replicateName)),
-				AggregationLevel.PROTEIN);
-	}
-
-	@Override
 	public boolean isDiscarded() {
 
 		return discarded;

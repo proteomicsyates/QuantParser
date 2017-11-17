@@ -130,10 +130,4 @@ public class QuantifiedProteinGroup extends AbstractContainsQuantifiedPSMs {
 		return QuantUtils.getAverageRatio(QuantUtils.getNonInfinityRatios(getRatios()), AggregationLevel.PROTEINGROUP);
 	}
 
-	@Override
-	public QuantRatio getConsensusRatio(QuantCondition quantConditionNumerator,
-			QuantCondition quantConditionDenominator, String replicateName) {
-		return QuantUtils.getAverageRatio(QuantUtils.getNonInfinityRatios(getRatios(replicateName)),
-				AggregationLevel.PROTEIN);
-	}
 }

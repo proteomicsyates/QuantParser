@@ -355,15 +355,6 @@ public class QuantifiedPSM implements GroupablePSM, PeptideSequenceInterface, Ha
 	}
 
 	@Override
-	public QuantRatio getConsensusRatio(QuantCondition quantConditionNumerator,
-			QuantCondition quantConditionDenominator, String replicateName) {
-		if (getFileNames().contains(replicateName)) {
-			return QuantUtils.getAverageRatio(QuantUtils.getNonInfinityRatios(getRatios()), AggregationLevel.PSM);
-		}
-		return null;
-	}
-
-	@Override
 	public boolean isDiscarded() {
 
 		return discarded;
