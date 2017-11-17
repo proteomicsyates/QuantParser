@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,7 @@ import edu.scripps.yates.census.read.CensusOutParser;
 import edu.scripps.yates.census.read.model.CensusRatio;
 import edu.scripps.yates.census.read.model.Ion;
 import edu.scripps.yates.census.read.model.IonCountRatio;
+import edu.scripps.yates.census.read.model.IsoRatio;
 import edu.scripps.yates.census.read.model.IsobaricQuantifiedPSM;
 import edu.scripps.yates.census.read.model.IsobaricQuantifiedPeptide;
 import edu.scripps.yates.census.read.model.QuantifiedPSM;
@@ -164,38 +166,6 @@ public class QuantUtils {
 		return ret;
 	}
 
-	/**
-	 * Gets a {@link Set} of {@link QuantRatio} as consensus ratios of the
-	 * {@link Collection}of {@link QuantifiedPeptideInterface}, calling to
-	 * getConsensusRatio() in each {@link QuantifiedPeptideInterface}
-	 *
-	 * @param peptides
-	 * @param cond1
-	 * @param cond2
-	 * @param replicateName
-	 *            if not null, get only the consensus {@link QuantRatio} for
-	 *            that replicate
-	 * @return
-	 */
-	public static Set<QuantRatio> getConsensusRatios(Collection<QuantifiedPeptideInterface> peptides,
-			QuantCondition cond1, QuantCondition cond2, String replicateName) {
-		Set<QuantRatio> ret = new THashSet<QuantRatio>();
-		for (QuantifiedPeptideInterface peptide : peptides) {
-			if (replicateName != null) {
-				final QuantRatio consensusRatio = peptide.getConsensusRatio(cond1, cond2, replicateName);
-				if (consensusRatio != null) {
-					ret.add(consensusRatio);
-				}
-			} else {
-				final QuantRatio consensusRatio = peptide.getConsensusRatio(cond1, cond2);
-				if (consensusRatio != null) {
-					ret.add(consensusRatio);
-				}
-			}
-		}
-		return ret;
-	}
-
 	public static Double getMaxAmountValueByAmountType(Set<Amount> amounts, AmountType amountType) {
 		double max = -Double.MAX_VALUE;
 		if (amounts != null) {
@@ -213,7 +183,7 @@ public class QuantUtils {
 		return null;
 	}
 
-	public static QuantRatio getRatioValidForAnalysis(QuantifiedPSMInterface quantifiedPSM) {
+	public static QuantRatio getRepresentativeRatio(QuantifiedPSMInterface quantifiedPSM) {
 		// RATIO for non singletons and AREA_RATIO for singletons
 		if (quantifiedPSM instanceof QuantifiedPSM) {
 			if (quantifiedPSM.isSingleton()) {
@@ -224,6 +194,31 @@ public class QuantUtils {
 		} else {
 			if (quantifiedPSM instanceof IsobaricQuantifiedPSM) {
 				throw new IllegalArgumentException("This shouldnt be an isobaric psm");
+			} else {
+				QuantRatio ret = getRatioByName(quantifiedPSM, CensusOutParser.RATIO);
+				if (ret == null) {
+					ret = getRatioByName(quantifiedPSM, CensusOutParser.AREA_RATIO);
+				}
+				if (ret == null) {
+					ret = getRatioByName(quantifiedPSM, CensusOutParser.NORM_RATIO);
+				}
+				return ret;
+			}
+		}
+	}
+
+	public static QuantRatio getRatioValidForIntegrationAnalysis(QuantifiedPSMInterface quantifiedPSM) {
+		// RATIO for non singletons and AREA_RATIO for singletons
+		if (quantifiedPSM instanceof QuantifiedPSM) {
+			if (quantifiedPSM.isSingleton()) {
+				return getRatioByName(quantifiedPSM, CensusOutParser.AREA_RATIO);
+			} else {
+				return getRatioByName(quantifiedPSM, CensusOutParser.RATIO);
+			}
+		} else {
+			if (quantifiedPSM instanceof IsobaricQuantifiedPSM) {
+				throw new IllegalArgumentException(
+						"This shouldnt be an isobaric psm. In that case, there is more than one ratio per psm for the integration analysis.");
 			} else {
 				QuantRatio ret = getRatioByName(quantifiedPSM, CensusOutParser.RATIO);
 				if (ret == null) {
@@ -565,6 +560,19 @@ public class QuantUtils {
 			log.warn("Census ratio is not recognized: '" + stringValue + "'");
 			return Double.NaN;
 		}
+	}
+
+	public static Set<IsoRatio> getIsobaricRatiosForSiteFromPeptide(IsobaricQuantifiedPeptide peptide,
+			int positionInPeptide) {
+		Set<IsoRatio> ret = new HashSet<IsoRatio>();
+
+		Set<IsoRatio> individualIsoRatios = peptide.getIsoRatios();
+		for (IsoRatio isoRatio : individualIsoRatios) {
+			if (isoRatio.getQuantifiedSitePositionInPeptide() == positionInPeptide) {
+				ret.add(isoRatio);
+			}
+		}
+		return ret;
 	}
 
 }
