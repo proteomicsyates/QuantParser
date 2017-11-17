@@ -960,7 +960,7 @@ public class CensusOutParser extends AbstractQuantParser {
 				addToMap(experimentKey, experimentToProteinsMap, proteinKey);
 			}
 
-			// in case of quantifing sites, set the sites to the ratios in case
+			// in case of quantifying sites, set the sites to the ratios in case
 			// of no ambiguities
 			if (!getQuantifiedAAs().isEmpty()) {
 				for (QuantRatio ratio : quantifiedPSM.getRatios()) {
