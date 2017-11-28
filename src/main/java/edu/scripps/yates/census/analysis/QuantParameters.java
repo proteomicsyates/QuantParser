@@ -12,6 +12,7 @@ public class QuantParameters {
 	private long timeout;
 	private int maxIterations;
 	private boolean usePython = true; // by default
+	private String ratioName;
 
 	public QuantParameters(boolean calibration, Double outlierRemovalFDR, File sanxotScriptsFolder, long timeout,
 			int maxIterations, boolean usePython) {
@@ -115,5 +116,13 @@ public class QuantParameters {
 	 */
 	public void setUsePython(boolean usePython) {
 		this.usePython = usePython;
+	}
+
+	public String getRatioName() {
+		return ratioName;
+	}
+
+	public void setRatioName(String ratioName) {
+		this.ratioName = ratioName;
 	}
 }
