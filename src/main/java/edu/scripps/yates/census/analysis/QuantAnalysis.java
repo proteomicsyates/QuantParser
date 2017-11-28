@@ -21,6 +21,7 @@ import edu.scripps.yates.census.analysis.util.KeyUtils;
 import edu.scripps.yates.census.analysis.wrappers.IntegrationResultWrapper;
 import edu.scripps.yates.census.analysis.wrappers.OutStatsLine;
 import edu.scripps.yates.census.analysis.wrappers.SanXotAnalysisResult;
+import edu.scripps.yates.census.read.model.IonCountRatio;
 import edu.scripps.yates.census.read.model.IonSerie.IonSerieType;
 import edu.scripps.yates.census.read.model.IsoRatio;
 import edu.scripps.yates.census.read.model.IsobaricQuantifiedPSM;
@@ -386,6 +387,9 @@ public class QuantAnalysis implements PropertyChangeListener {
 												+ " is not suitable for Isobaric Isotopologues. Use instead "
 												+ QuantificationType.ISOTOPOLOGUES);
 									}
+								} else if (ratio instanceof IonCountRatio) {
+									throw new IllegalArgumentException(
+											"Ion count ratios is not suitable for ratio integration since they are peptide node level.");
 								}
 								// TODO
 								// double qualityMeasurement =
@@ -430,7 +434,15 @@ public class QuantAnalysis implements PropertyChangeListener {
 							// have more than one ratio per PSM, because we will
 							// write each ratio in different replicates
 							if (quantifiedPSM instanceof QuantifiedPSM) {
-								QuantRatio validRatio = QuantUtils.getRatioValidForIntegrationAnalysis(quantifiedPSM);
+								QuantRatio validRatio = null;
+
+								if (quantParameters.getRatioName() != null
+										&& !"".equals(quantParameters.getRatioName())) {
+									validRatio = QuantUtils.getRatioByName(quantifiedPSM,
+											quantParameters.getRatioName());
+								} else {
+									validRatio = QuantUtils.getRatioValidForIntegrationAnalysis(quantifiedPSM);
+								}
 								if (validRatio != null) {
 									ratioValue = validRatio.getLog2Ratio(condition1, condition2);
 									if (ratioValue == null || Double.isInfinite(ratioValue)
