@@ -44,6 +44,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 	private final static int RATIO_WEIGHT_COL = 3;
 	private final static int PROTEIN_ACC_COL = 4;
 	private static final String RATIO_WEIGHT = "Ratio initial weigh";
+	public static final String RATIO = "RATIO";
 
 	public SeparatedValuesParser(String separator) {
 		super();
@@ -285,7 +286,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 		if (ratioValue != null) {
 			try {
 				CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
-						labelDenominator, AggregationLevel.PSM, "RATIO");
+						labelDenominator, AggregationLevel.PSM, RATIO);
 				// set singleton
 				if (ratioValue == 0 || Double.compare(Double.POSITIVE_INFINITY, ratioValue) == 0) {
 					if (quantifiedPSM instanceof QuantifiedPSM) {
