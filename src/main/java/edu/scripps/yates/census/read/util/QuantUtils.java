@@ -26,6 +26,7 @@ import edu.scripps.yates.census.read.model.IsobaricQuantifiedPeptide;
 import edu.scripps.yates.census.read.model.QuantifiedPSM;
 import edu.scripps.yates.census.read.model.QuantifiedPeptide;
 import edu.scripps.yates.census.read.model.RatioScore;
+import edu.scripps.yates.census.read.model.interfaces.HasRatios;
 import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface;
@@ -155,9 +156,9 @@ public class QuantUtils {
 		final Double[] ratioValuesArray = ratioValues.toArray(new Double[0]);
 		final double mean = Maths.mean(ratioValuesArray);
 		final double stdev = Maths.stddev(ratioValuesArray);
-		String ratioDescription = "Average of ratios";
-		if (ratioValues.size() < 2) {
-			ratioDescription = "Ratio";
+		String ratioDescription = nonInfinityRatios.iterator().next().getDescription();
+		if (ratioValues.size() > 1) {
+			ratioDescription = "Average of " + ratioDescription;
 		}
 		CensusRatio ret = new CensusRatio(mean, true, cond1, cond2, aggregationLevel, ratioDescription);
 		ret.setCombinationType(CombinationType.AVERAGE);
@@ -186,19 +187,26 @@ public class QuantUtils {
 
 	public static QuantRatio getRepresentativeRatio(QuantifiedPSMInterface quantifiedPSM) {
 		// RATIO for non singletons and AREA_RATIO for singletons
+		// UPDATE ON 28th Nov 2017: Use just AREA_RATIO
 		if (quantifiedPSM instanceof QuantifiedPSM) {
-			if (quantifiedPSM.isSingleton()) {
-				return getRatioByName(quantifiedPSM, CensusOutParser.AREA_RATIO);
-			} else {
-				return getRatioByName(quantifiedPSM, CensusOutParser.RATIO);
-			}
+			// if (quantifiedPSM.isSingleton()) {
+			return getRatioByName(quantifiedPSM, CensusOutParser.AREA_RATIO);
+			// } else {
+			// return getRatioByName(quantifiedPSM, CensusOutParser.RATIO);
+			// }
 		} else {
 			if (quantifiedPSM instanceof IsobaricQuantifiedPSM) {
 				throw new IllegalArgumentException("This shouldnt be an isobaric psm");
 			} else {
-				QuantRatio ret = getRatioByName(quantifiedPSM, CensusOutParser.RATIO);
+				// QuantRatio ret = getRatioByName(quantifiedPSM,
+				// CensusOutParser.RATIO);
+				// if (ret == null) {
+				// ret = getRatioByName(quantifiedPSM,
+				// CensusOutParser.AREA_RATIO);
+				// }
+				QuantRatio ret = getRatioByName(quantifiedPSM, CensusOutParser.AREA_RATIO);
 				if (ret == null) {
-					ret = getRatioByName(quantifiedPSM, CensusOutParser.AREA_RATIO);
+					ret = getRatioByName(quantifiedPSM, CensusOutParser.RATIO);
 				}
 				if (ret == null) {
 					ret = getRatioByName(quantifiedPSM, CensusOutParser.NORM_RATIO);
@@ -210,20 +218,27 @@ public class QuantUtils {
 
 	public static QuantRatio getRatioValidForIntegrationAnalysis(QuantifiedPSMInterface quantifiedPSM) {
 		// RATIO for non singletons and AREA_RATIO for singletons
+		// UPDATE ON 28th Nov 2017: Use just AREA_RATIO
 		if (quantifiedPSM instanceof QuantifiedPSM) {
-			if (quantifiedPSM.isSingleton()) {
-				return getRatioByName(quantifiedPSM, CensusOutParser.AREA_RATIO);
-			} else {
-				return getRatioByName(quantifiedPSM, CensusOutParser.RATIO);
-			}
+			// if (quantifiedPSM.isSingleton()) {
+			return getRatioByName(quantifiedPSM, CensusOutParser.AREA_RATIO);
+			// } else {
+			// return getRatioByName(quantifiedPSM, CensusOutParser.RATIO);
+			// }
 		} else {
 			if (quantifiedPSM instanceof IsobaricQuantifiedPSM) {
 				throw new IllegalArgumentException(
 						"This shouldnt be an isobaric psm. In that case, there is more than one ratio per psm for the integration analysis.");
 			} else {
-				QuantRatio ret = getRatioByName(quantifiedPSM, CensusOutParser.RATIO);
+				// QuantRatio ret = getRatioByName(quantifiedPSM,
+				// CensusOutParser.RATIO);
+				// if (ret == null) {
+				// ret = getRatioByName(quantifiedPSM,
+				// CensusOutParser.AREA_RATIO);
+				// }
+				QuantRatio ret = getRatioByName(quantifiedPSM, CensusOutParser.AREA_RATIO);
 				if (ret == null) {
-					ret = getRatioByName(quantifiedPSM, CensusOutParser.AREA_RATIO);
+					ret = getRatioByName(quantifiedPSM, CensusOutParser.RATIO);
 				}
 				if (ret == null) {
 					ret = getRatioByName(quantifiedPSM, CensusOutParser.NORM_RATIO);
@@ -233,15 +248,31 @@ public class QuantUtils {
 		}
 	}
 
-	public static QuantRatio getRatioByName(QuantifiedPSMInterface quantifiedPSM, String ratioDescription) {
-		if (quantifiedPSM != null && quantifiedPSM.getRatios() != null) {
-			for (QuantRatio ratio : quantifiedPSM.getRatios()) {
+	public static QuantRatio getRatioByName(HasRatios quantifiedPSMorPeptideOrProtein, String ratioDescription) {
+		final List<QuantRatio> ratiosByName = getRatiosByName(quantifiedPSMorPeptideOrProtein, ratioDescription);
+		if (ratiosByName.isEmpty()) {
+			return null;
+		}
+		return ratiosByName.get(0);
+	}
+
+	public static List<QuantRatio> getRatiosByName(HasRatios quantifiedPSMorPeptideOrProtein, String ratioDescription) {
+		if (quantifiedPSMorPeptideOrProtein != null && quantifiedPSMorPeptideOrProtein.getRatios() != null) {
+			return getRatiosByName(quantifiedPSMorPeptideOrProtein.getRatios(), ratioDescription);
+		}
+		return Collections.emptyList();
+	}
+
+	public static List<QuantRatio> getRatiosByName(Collection<QuantRatio> quantRatios, String ratioDescription) {
+		List<QuantRatio> ratios = new ArrayList<QuantRatio>();
+		if (quantRatios != null) {
+			for (QuantRatio ratio : quantRatios) {
 				if (ratio.getDescription().equals(ratioDescription)) {
-					return ratio;
+					ratios.add(ratio);
 				}
 			}
 		}
-		return null;
+		return ratios;
 	}
 
 	public static List<QuantifiedPeptideInterface> getSortedPeptidesByFullSequence(
