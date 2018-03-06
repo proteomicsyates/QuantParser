@@ -1008,6 +1008,23 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 						set.add(isoRatio);
 						ret.put(quantifiedPosition, set);
 					}
+				} else if (!Double.isNaN(isoRatio.getValue())
+						&& isoRatio.getLog2Ratio(serieBLight.getLabel(), serieBHeavy.getLabel()).isInfinite()) {
+					// also, if the ratio is infinite, it doesn't matters
+					// I will assign the ratio to all positions
+					for (Integer quantifiedPosition : tmpPositions) {
+						Character quantifiedAA = sequence.charAt(quantifiedPosition - 1);
+						IsoRatio clonedIsoRatio = cloneIsoRatio(isoRatio);
+						clonedIsoRatio.setQuantifiedAA(quantifiedAA);
+						clonedIsoRatio.setQuantifiedSitePositionInPeptide(quantifiedPosition);
+						if (ret.containsKey(quantifiedPosition)) {
+							ret.get(quantifiedPosition).add(clonedIsoRatio);
+						} else {
+							Set<IsoRatio> set = new THashSet<IsoRatio>();
+							set.add(clonedIsoRatio);
+							ret.put(quantifiedPosition, set);
+						}
+					}
 				}
 			}
 		}
@@ -1049,10 +1066,35 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 						set.add(isoRatio);
 						ret.put(quantifiedPosition, set);
 					}
+				} else if (!Double.isNaN(isoRatio.getValue())
+						&& isoRatio.getLog2Ratio(serieBLight.getLabel(), serieBHeavy.getLabel()).isInfinite()) {
+					// also, if the ratio is infinite, it doesn't matters
+					// I will assign the ratio to all positions
+					for (Integer quantifiedPosition : tmpPositions) {
+						Character quantifiedAA = sequence.charAt(quantifiedPosition - 1);
+						IsoRatio clonedIsoRatio = cloneIsoRatio(isoRatio);
+						clonedIsoRatio.setQuantifiedAA(quantifiedAA);
+						clonedIsoRatio.setQuantifiedSitePositionInPeptide(quantifiedPosition);
+						if (ret.containsKey(quantifiedPosition)) {
+							ret.get(quantifiedPosition).add(clonedIsoRatio);
+						} else {
+							Set<IsoRatio> set = new THashSet<IsoRatio>();
+							set.add(clonedIsoRatio);
+							ret.put(quantifiedPosition, set);
+						}
+					}
 				}
 			}
 		}
 		return ret;
+	}
+
+	private IsoRatio cloneIsoRatio(IsoRatio isoRatio) {
+		IsoRatio clonedRatio = new IsoRatio(isoRatio.getIon(isoRatio.getLabel1()), isoRatio.getLabel1(),
+				isoRatio.getQuantCondition1(), isoRatio.getIon(isoRatio.getLabel2()), isoRatio.getLabel2(),
+				isoRatio.getQuantCondition2(), isoRatio.getNumIon(), isoRatio.getIonSerieType(),
+				isoRatio.getAggregationLevel());
+		return clonedRatio;
 	}
 
 	public TIntObjectHashMap<Set<IsoRatio>> getSiteSpecificRatios(Set<Character> aas) {
