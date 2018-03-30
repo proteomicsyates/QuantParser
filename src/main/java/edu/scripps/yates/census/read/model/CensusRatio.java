@@ -4,6 +4,9 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
+
 import edu.scripps.yates.census.analysis.QuantCondition;
 import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
@@ -30,6 +33,7 @@ public class CensusRatio implements QuantRatio {
 	private Condition condition2;
 	private Integer quantifiedSitePositionInPeptide;
 	private Character quantifiedAA;
+	private final static HashFunction goodFastHash = Hashing.goodFastHash(256);
 
 	public static CensusRatio getNaNRatio(QuantCondition quantConditionNumerator,
 			QuantCondition quantConditionDenominator, AggregationLevel aggregationLevel, String description) {
@@ -289,6 +293,14 @@ public class CensusRatio implements QuantRatio {
 			return toString().equals(obj.toString());
 		}
 		return super.equals(obj);
+	}
+
+	@Override
+	public int hashCode() {
+
+		return goodFastHash.hashUnencodedChars(toString()).asInt();
+		// if two ratios are equal, they should have an equal hashcode, so, make
+		// it dependent of toString
 	}
 
 	/*
