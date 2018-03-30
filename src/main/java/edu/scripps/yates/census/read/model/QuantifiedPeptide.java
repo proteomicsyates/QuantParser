@@ -70,7 +70,7 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 	public boolean addQuantifiedPSM(QuantifiedPSMInterface quantPSM, boolean recursive) {
 		if (sequenceKey.equals(KeyUtils.getSequenceKey(quantPSM, true))) {
 			if (!psms.contains(quantPSM)) {
-				psms.add(quantPSM);
+				boolean ret = psms.add(quantPSM);
 				if (recursive) {
 					quantPSM.setQuantifiedPeptide(this, false);
 					final Set<QuantifiedProteinInterface> quantifiedProteins = quantPSM.getQuantifiedProteins();
@@ -78,9 +78,11 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 						protein.addPeptide(this, false);
 					}
 				}
+				return ret;
 			}
 		}
 		return false;
+
 	}
 
 	/**
