@@ -80,6 +80,7 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 				}
 				return ret;
 			}
+			return false;
 		}
 		return false;
 
