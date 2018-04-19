@@ -37,10 +37,13 @@ public interface QuantifiedPeptideInterface extends PeptideSequenceInterface, Ha
 	 * @param quantifiedAAs
 	 * @param uplr
 	 *            used in order to get the protein sequence
+	 * @param proteinSequences
+	 *            map of protein sequences
+	 * @param dBIndex
 	 * @return
 	 */
 	public Map<PositionInPeptide, List<PositionInProtein>> getProteinKeysByPeptideKeysForQuantifiedAAs(
-			char[] quantifiedAAs, UniprotProteinLocalRetriever uplr);
+			char[] quantifiedAAs, UniprotProteinLocalRetriever uplr, Map<String, String> proteinSequences);
 
 	public Map<Character, List<PositionInProtein>> getPositionInProteinForSites(char[] quantifiedAAs,
 			UniprotProteinLocalRetriever uplr);
