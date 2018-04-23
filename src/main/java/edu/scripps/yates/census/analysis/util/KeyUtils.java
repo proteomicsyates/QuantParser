@@ -30,12 +30,26 @@ public class KeyUtils {
 	// public static String getProteinKey(String locus) {
 	// return FastaParser.getACC(locus).getFirstelement();
 	// }
-	public static String getProteinKey(ProteinType protein) {
+	public static String getProteinKey(ProteinType protein, boolean ignoreACCFormat) {
+		if (ignoreACCFormat) {
+			if (protein.getLocus().contains(" ")) {
+				return protein.getLocus().substring(0, protein.getLocus().indexOf(" "));
+			} else {
+				return protein.getLocus();
+			}
+		}
 		return FastaParser.getACC(protein.getLocus()).getFirstelement();
 	}
 
-	public static String getProteinKey(IndexedProtein indexedProtein) {
+	public static String getProteinKey(IndexedProtein indexedProtein, boolean ignoreACCFormat) {
 		final String fastaDefLine = indexedProtein.getFastaDefLine();
+		if (ignoreACCFormat) {
+			if (fastaDefLine.contains(" ")) {
+				return fastaDefLine.substring(0, fastaDefLine.indexOf(" "));
+			} else {
+				return fastaDefLine;
+			}
+		}
 		return FastaParser.getACC(fastaDefLine).getFirstelement();
 	}
 
@@ -51,7 +65,7 @@ public class KeyUtils {
 	 */
 	public static String getSpectrumKey(QuantifiedPSMInterface psm, boolean chargeSensible) {
 
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		if (psm.getRawFileNames() != null && !psm.getRawFileNames().isEmpty())
 			sb.append(psm.getRawFileNames().iterator().next());
 		if (!"".equals(sb.toString())) {
@@ -153,7 +167,7 @@ public class KeyUtils {
 			}
 		});
 		String key = "";
-		for (GroupableProtein protein : group) {
+		for (final GroupableProtein protein : group) {
 			if (!"".equals(key))
 				key += ",";
 			key += protein.getAccession();
