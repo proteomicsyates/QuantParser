@@ -55,4 +55,8 @@ public interface QuantParser {
 	void addQuantifiedAA(char aa);
 
 	Set<Character> getQuantifiedAAs();
+
+	void setIgnoreTaxonomies(boolean ignoreTaxonomies);
+
+	boolean isIgnoreTaxonomies();
 }

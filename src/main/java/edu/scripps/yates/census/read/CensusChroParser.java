@@ -67,7 +67,7 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 
 	public CensusChroParser(File xmlFile) throws FileNotFoundException {
 		super();
-		Map<QuantCondition, QuantificationLabel> labelsByConditions = new THashMap<QuantCondition, QuantificationLabel>();
+		final Map<QuantCondition, QuantificationLabel> labelsByConditions = new THashMap<QuantCondition, QuantificationLabel>();
 		labelsByConditions.put(new QuantCondition("condition 1"), QuantificationLabel.LIGHT);
 		labelsByConditions.put(new QuantCondition("condition 2"), QuantificationLabel.HEAVY);
 		addFile(xmlFile, labelsByConditions, QuantificationLabel.LIGHT, QuantificationLabel.HEAVY);
@@ -106,10 +106,10 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 	private RelexChro unmarshall(InputStream inputStream) {
 		try {
 			final JAXBContext jaxbContext = JAXBContext.newInstance(RelexChro.class);
-			Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
-			RelexChro ret = (RelexChro) unmarshaller.unmarshal(inputStream);
+			final Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+			final RelexChro ret = (RelexChro) unmarshaller.unmarshal(inputStream);
 			return ret;
-		} catch (JAXBException e) {
+		} catch (final JAXBException e) {
 			e.printStackTrace();
 			log.warn(e.getMessage());
 		}
@@ -130,7 +130,7 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 		try {
 
 			boolean someValidFile = false;
-			for (RemoteSSHFileReference remoteFileRetriever : remoteFileRetrievers) {
+			for (final RemoteSSHFileReference remoteFileRetriever : remoteFileRetrievers) {
 				final InputStream remoteFile = remoteFileRetriever.getRemoteInputStream();
 				if (remoteFile == null)
 					continue;
@@ -143,8 +143,9 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 				} else {
 					someValidFile = true;
 				}
-				String experimentKey = FilenameUtils.getBaseName(remoteFileRetriever.getOutputFile().getAbsolutePath());
-				String fileName = FilenameUtils.getName(remoteFileRetriever.getOutputFile().getAbsolutePath());
+				final String experimentKey = FilenameUtils
+						.getBaseName(remoteFileRetriever.getOutputFile().getAbsolutePath());
+				final String fileName = FilenameUtils.getName(remoteFileRetriever.getOutputFile().getAbsolutePath());
 				log.info(experimentKey);
 				log.info(relex.getVersion());
 				if (!"Census v. 2.36 Chro file".equals(relex.getVersion())) {
@@ -157,12 +158,12 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 				log.info("Iterating proteins and getting their peptides for searching them on the Fasta database");
 				int numDecoy = 0;
 				// get all the Quantified PSMs first
-				Set<QuantifiedPSMInterface> psms = new THashSet<QuantifiedPSMInterface>();
+				final Set<QuantifiedPSMInterface> psms = new THashSet<QuantifiedPSMInterface>();
 				int numTotalPeptides = 0;
-				int totalProteins = proteins.size();
+				final int totalProteins = proteins.size();
 				int counter = 0;
-				DecimalFormat df = new DecimalFormat("#.#");
-				for (ProteinType protein : proteins) {
+				final DecimalFormat df = new DecimalFormat("#.#");
+				for (final ProteinType protein : proteins) {
 
 					counter++;
 					if (counter % 100 == 0)
@@ -184,7 +185,7 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 					// that the protein has been already created if we are
 					// processing different census chro files in the same parser
 					QuantifiedProteinInterface quantifiedProtein = null;
-					final String proteinKey = KeyUtils.getProteinKey(protein);
+					final String proteinKey = KeyUtils.getProteinKey(protein, isIgnoreACCFormat());
 					if (StaticQuantMaps.proteinMap.containsKey(proteinKey)) {
 						quantifiedProtein = StaticQuantMaps.proteinMap.getItem(proteinKey);
 					} else {
@@ -194,7 +195,7 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 
 					final List<Peptide> peptideList = protein.getPeptide();
 					if (peptideList != null) {
-						for (Peptide peptide : peptideList) {
+						for (final Peptide peptide : peptideList) {
 
 							numTotalPeptides++;
 							if (peptide.getFrag() != null && peptide.getFrag().getBr() != null
@@ -230,7 +231,8 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 									quantifiedPeptide = (IsobaricQuantifiedPeptide) StaticQuantMaps.peptideMap
 											.getItem(peptideKey);
 								} else {
-									quantifiedPeptide = new IsobaricQuantifiedPeptide(quantifiedPSM);
+									quantifiedPeptide = new IsobaricQuantifiedPeptide(quantifiedPSM,
+											isIgnoreTaxonomies());
 								}
 								StaticQuantMaps.peptideMap.addItem(quantifiedPeptide);
 
@@ -247,7 +249,7 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 								if (dbIndex != null) {
 									final String seq = quantifiedPSM.getFullSequence();
 
-									String cleanSeq = FastaParser.cleanSequence(seq);
+									final String cleanSeq = FastaParser.cleanSequence(seq);
 
 									final Set<IndexedProtein> indexedProteins = dbIndex.getProteins(cleanSeq);
 									if (indexedProteins.isEmpty()) {
@@ -262,7 +264,7 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 									}
 									// create a new Quantified Protein for each
 									// indexedProtein
-									for (IndexedProtein indexedProtein : indexedProteins) {
+									for (final IndexedProtein indexedProtein : indexedProteins) {
 										// apply the pattern if available
 										if (decoyPattern != null) {
 											final Matcher matcher = decoyPattern.matcher(indexedProtein.getAccession());
@@ -272,15 +274,16 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 												continue;
 											}
 										}
-										String proteinKey2 = KeyUtils.getProteinKey(indexedProtein);
+										final String proteinKey2 = KeyUtils.getProteinKey(indexedProtein,
+												isIgnoreACCFormat());
 
 										QuantifiedProteinInterface newQuantifiedProtein = null;
 										if (StaticQuantMaps.proteinMap.containsKey(proteinKey2)) {
 											newQuantifiedProtein = StaticQuantMaps.proteinMap.getItem(proteinKey2);
 
 										} else {
-											newQuantifiedProtein = new QuantifiedProteinFromDBIndexEntry(
-													indexedProtein);
+											newQuantifiedProtein = new QuantifiedProteinFromDBIndexEntry(indexedProtein,
+													isIgnoreTaxonomies(), isIgnoreACCFormat());
 										}
 										StaticQuantMaps.proteinMap.addItem(newQuantifiedProtein);
 										registerProteins(newQuantifiedProtein, experimentKey, quantifiedPSM,
@@ -313,11 +316,11 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 				throw new IllegalArgumentException("some error occurred while reading the files");
 
 			processed = true;
-		} catch (PeptideNotFoundInDBIndexException e) {
+		} catch (final PeptideNotFoundInDBIndexException e) {
 			if (!super.ignoreNotFoundPeptidesInDB) {
 				throw e;
 			}
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			e.printStackTrace();
 		} finally
 

@@ -178,25 +178,26 @@ public class CensusOutParser extends AbstractQuantParser {
 		log.info("Processing quant file...");
 
 		try {
-			int numDecoy = 0;
+			final int numDecoy = 0;
 			boolean someValidFile = false;
-			for (RemoteSSHFileReference remoteFileRetriever : remoteFileRetrievers) {
+			for (final RemoteSSHFileReference remoteFileRetriever : remoteFileRetrievers) {
 				final Map<QuantCondition, QuantificationLabel> labelsByConditions = labelsByConditionsByFile
 						.get(remoteFileRetriever);
 				final Map<QuantificationLabel, QuantCondition> conditionsByLabels = new THashMap<QuantificationLabel, QuantCondition>();
 				if (labelsByConditions != null) {
-					for (QuantCondition cond : labelsByConditions.keySet()) {
+					for (final QuantCondition cond : labelsByConditions.keySet()) {
 						conditionsByLabels.put(labelsByConditions.get(cond), cond);
 					}
 				}
-				List<RatioDescriptor> ratioDescriptors = ratioDescriptorsByFile.get(remoteFileRetriever);
+				final List<RatioDescriptor> ratioDescriptors = ratioDescriptorsByFile.get(remoteFileRetriever);
 				// QuantificationLabel labelNumerator =
 				// numeratorLabelByFile.get(remoteFileRetriever);
 				// QuantificationLabel labelDenominator =
 				// denominatorLabelByFile.get(remoteFileRetriever);
 
-				String experimentKey = FilenameUtils.getBaseName(remoteFileRetriever.getOutputFile().getAbsolutePath());
-				String fileName = FilenameUtils.getName(remoteFileRetriever.getOutputFile().getAbsolutePath());
+				final String experimentKey = FilenameUtils
+						.getBaseName(remoteFileRetriever.getOutputFile().getAbsolutePath());
+				final String fileName = FilenameUtils.getName(remoteFileRetriever.getOutputFile().getAbsolutePath());
 				log.info(experimentKey);
 				// get all the Quantified PSMs first
 				// Set<QuantifiedPSMInterface> psms = new
@@ -211,10 +212,10 @@ public class CensusOutParser extends AbstractQuantParser {
 							new InputStreamReader(new BufferedInputStream(remoteFileRetriever.getRemoteInputStream())));
 
 					String line;
-					List<String> pLineHeaderList = new ArrayList<String>();
-					List<String> sLineHeaderList = new ArrayList<String>();
-					List<String> singletonSLineHeaderList = new ArrayList<String>();
-					Set<QuantifiedProteinInterface> proteinGroup = new THashSet<QuantifiedProteinInterface>();
+					final List<String> pLineHeaderList = new ArrayList<String>();
+					final List<String> sLineHeaderList = new ArrayList<String>();
+					final List<String> singletonSLineHeaderList = new ArrayList<String>();
+					final Set<QuantifiedProteinInterface> proteinGroup = new THashSet<QuantifiedProteinInterface>();
 					boolean itWasPeptides = false;
 					while ((line = br.readLine()) != null) {
 						if (line.startsWith(H)) {
@@ -247,12 +248,12 @@ public class CensusOutParser extends AbstractQuantParser {
 									proteinGroup.clear();
 								}
 								itWasPeptides = false;
-								QuantifiedProteinInterface quantifiedProtein = processProteinLine(line, pLineHeaderList,
-										conditionsByLabels, ratioDescriptors, numDecoy);
+								final QuantifiedProteinInterface quantifiedProtein = processProteinLine(line,
+										pLineHeaderList, conditionsByLabels, ratioDescriptors, numDecoy);
 								proteinGroup.add(quantifiedProtein);
-							} catch (DiscardProteinException e) {
+							} catch (final DiscardProteinException e) {
 								continue;
-							} catch (IllegalArgumentException e) {
+							} catch (final IllegalArgumentException e) {
 								log.error(e);
 							}
 						} else if (line.startsWith(S)) {
@@ -291,11 +292,11 @@ public class CensusOutParser extends AbstractQuantParser {
 
 					br.close();
 
-				} catch (PeptideNotFoundInDBIndexException e) {
+				} catch (final PeptideNotFoundInDBIndexException e) {
 					if (!super.ignoreNotFoundPeptidesInDB) {
 						throw e;
 					}
-				} catch (Exception e) {
+				} catch (final Exception e) {
 
 					e.printStackTrace();
 					throw e;
@@ -321,13 +322,13 @@ public class CensusOutParser extends AbstractQuantParser {
 					// create a map in which the key is the peptideSequence +
 					// rawFile (removing the H) + chargeState
 					// and the values are Sets of psms
-					Map<String, Set<QuantifiedPSMInterface>> map = new THashMap<String, Set<QuantifiedPSMInterface>>();
-					for (QuantifiedPSMInterface psm : localPsmMap.values()) {
-						String key = getSpectrumPerChromatographicPeakAndPerSaltStepKey(psm);
+					final Map<String, Set<QuantifiedPSMInterface>> map = new THashMap<String, Set<QuantifiedPSMInterface>>();
+					for (final QuantifiedPSMInterface psm : localPsmMap.values()) {
+						final String key = getSpectrumPerChromatographicPeakAndPerSaltStepKey(psm);
 						if (map.containsKey(key)) {
 							map.get(key).add(psm);
 						} else {
-							Set<QuantifiedPSMInterface> set = new THashSet<QuantifiedPSMInterface>();
+							final Set<QuantifiedPSMInterface> set = new THashSet<QuantifiedPSMInterface>();
 							set.add(psm);
 							map.put(key, set);
 						}
@@ -336,24 +337,25 @@ public class CensusOutParser extends AbstractQuantParser {
 					// look for each key, if we have more than one psm
 					// in that case, select the best one
 					int numRemoved = 0;
-					for (String key : map.keySet()) {
+					for (final String key : map.keySet()) {
 						final Set<QuantifiedPSMInterface> psmSet = map.get(key);
 						if (psmSet.size() > 1) {
-							QuantifiedPSMInterface bestPSM = getBestPSM(psmSet);
-							Set<QuantifiedPSMInterface> toIgnore = new THashSet<QuantifiedPSMInterface>();
-							for (QuantifiedPSMInterface psm : psmSet) {
+							final QuantifiedPSMInterface bestPSM = getBestPSM(psmSet);
+							final Set<QuantifiedPSMInterface> toIgnore = new THashSet<QuantifiedPSMInterface>();
+							for (final QuantifiedPSMInterface psm : psmSet) {
 								if (!psm.equals(bestPSM)) {
 									toIgnore.add(psm);
 								}
 							}
 							// remove the psms in toIgnore Set
 							if (!toIgnore.isEmpty()) {
-								for (QuantifiedPSMInterface psmToIgnore : toIgnore) {
+								for (final QuantifiedPSMInterface psmToIgnore : toIgnore) {
 									numRemoved++;
 									localPsmMap.remove(psmToIgnore.getKey());
 									StaticQuantMaps.psmMap.remove(psmToIgnore);
 									// remove it from its peptide
-									QuantifiedPeptideInterface quantifiedPeptide = psmToIgnore.getQuantifiedPeptide();
+									final QuantifiedPeptideInterface quantifiedPeptide = psmToIgnore
+											.getQuantifiedPeptide();
 									if (quantifiedPeptide != null) {
 										quantifiedPeptide.getQuantifiedPSMs().remove(psmToIgnore);
 									}
@@ -362,9 +364,9 @@ public class CensusOutParser extends AbstractQuantParser {
 										StaticQuantMaps.peptideMap.remove(quantifiedPeptide);
 									}
 									// remove it from its proteins
-									Set<QuantifiedProteinInterface> quantifiedProteins = psmToIgnore
+									final Set<QuantifiedProteinInterface> quantifiedProteins = psmToIgnore
 											.getQuantifiedProteins();
-									for (QuantifiedProteinInterface protein : quantifiedProteins) {
+									for (final QuantifiedProteinInterface protein : quantifiedProteins) {
 										protein.getQuantifiedPSMs().remove(psmToIgnore);
 										if (protein.getQuantifiedPSMs().isEmpty()) {
 											localProteinMap.remove(protein.getKey());
@@ -384,7 +386,7 @@ public class CensusOutParser extends AbstractQuantParser {
 				throw new IllegalArgumentException("some error occurred while reading the files");
 
 			processed = true;
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			e.printStackTrace();
 		} finally {
 			// if (processed) {
@@ -405,15 +407,15 @@ public class CensusOutParser extends AbstractQuantParser {
 	 * @return
 	 */
 	private QuantifiedPSMInterface getBestPSM(Set<QuantifiedPSMInterface> psmSet) {
-		List<QuantifiedPSMInterface> list = new ArrayList<QuantifiedPSMInterface>();
+		final List<QuantifiedPSMInterface> list = new ArrayList<QuantifiedPSMInterface>();
 		list.addAll(psmSet);
 		Collections.sort(list, new Comparator<QuantifiedPSMInterface>() {
 
 			@Override
 			public int compare(QuantifiedPSMInterface o1, QuantifiedPSMInterface o2) {
 				// regression_factor
-				Double regressionFactor1 = getRatioScore(REGRESSION_FACTOR, o1);
-				Double regressionFactor2 = getRatioScore(REGRESSION_FACTOR, o2);
+				final Double regressionFactor1 = getRatioScore(REGRESSION_FACTOR, o1);
+				final Double regressionFactor2 = getRatioScore(REGRESSION_FACTOR, o2);
 				if (regressionFactor1 != null && regressionFactor2 != null) {
 					final int compare = Double.compare(regressionFactor2, regressionFactor1);
 					if (compare != 0) {
@@ -421,8 +423,8 @@ public class CensusOutParser extends AbstractQuantParser {
 					}
 				}
 				// xcorr
-				Float xcorr1 = o1.getXcorr();
-				Float xcorr2 = o2.getXcorr();
+				final Float xcorr1 = o1.getXcorr();
+				final Float xcorr2 = o2.getXcorr();
 				if (xcorr1 != null && xcorr2 != null) {
 					final int compare = Float.compare(xcorr2, xcorr1);
 					if (compare != 0) {
@@ -434,12 +436,12 @@ public class CensusOutParser extends AbstractQuantParser {
 
 			private Double getRatioScore(String scoreName, QuantifiedPSMInterface o1) {
 				if (o1.getRatios() != null) {
-					for (QuantRatio quantRatio : o1.getRatios()) {
+					for (final QuantRatio quantRatio : o1.getRatios()) {
 						if (quantRatio.getAssociatedConfidenceScore() != null) {
 							if (quantRatio.getAssociatedConfidenceScore().getScoreName().equals(scoreName)) {
 								try {
 									return Double.valueOf(quantRatio.getAssociatedConfidenceScore().getValue());
-								} catch (NumberFormatException e) {
+								} catch (final NumberFormatException e) {
 
 								}
 							}
@@ -447,7 +449,7 @@ public class CensusOutParser extends AbstractQuantParser {
 					}
 				}
 				if (o1.getAmounts() != null) {
-					for (Amount amount : o1.getAmounts()) {
+					for (final Amount amount : o1.getAmounts()) {
 						if (amount.getAmountType().name().equals(scoreName)) {
 							return amount.getValue();
 						}
@@ -468,11 +470,11 @@ public class CensusOutParser extends AbstractQuantParser {
 	 * @return
 	 */
 	private String getSpectrumPerChromatographicPeakAndPerSaltStepKey(QuantifiedPSMInterface psm) {
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		String rawFileName = psm.getRawFileNames().iterator().next();
 
 		if (rawFileName.startsWith("H") || rawFileName.startsWith("M")) {
-			String substring = rawFileName.substring(1);
+			final String substring = rawFileName.substring(1);
 			// only take it if there is another one like that in the static map
 			// this will avoid to consider an H or an M in the file name that
 			// were part of the name and not meaning anything
@@ -493,13 +495,13 @@ public class CensusOutParser extends AbstractQuantParser {
 
 		// new psm
 		try {
-			MyHashMap<String, String> mapValues = getMapFromSLine(sLineHeaderList, line);
+			final MyHashMap<String, String> mapValues = getMapFromSLine(sLineHeaderList, line);
 
-			String sequence = mapValues.get(SEQUENCE);
+			final String sequence = mapValues.get(SEQUENCE);
 
 			// dont look into the QuantifiedPSM.map because each
 			// line is always a new PSM
-			String inputFileName = FilenameUtils.getName(remoteFileRetriever.getOutputFile().getAbsolutePath());
+			final String inputFileName = FilenameUtils.getName(remoteFileRetriever.getOutputFile().getAbsolutePath());
 			String rawFileName = null;
 			if (mapValues.containsKey(FILENAME)) {
 				rawFileName = mapValues.get(FILENAME);
@@ -521,7 +523,7 @@ public class CensusOutParser extends AbstractQuantParser {
 				try {
 					xcorr = Float.valueOf(mapValues.get(XCORR));
 					((QuantifiedPSM) quantifiedPSM).setXcorr(xcorr);
-				} catch (NumberFormatException e) {
+				} catch (final NumberFormatException e) {
 
 				}
 			}
@@ -531,7 +533,7 @@ public class CensusOutParser extends AbstractQuantParser {
 				try {
 					deltaCn = Float.valueOf(mapValues.get(DELTACN));
 					((QuantifiedPSM) quantifiedPSM).setDeltaCN(deltaCn);
-				} catch (NumberFormatException e) {
+				} catch (final NumberFormatException e) {
 
 				}
 			}
@@ -551,8 +553,8 @@ public class CensusOutParser extends AbstractQuantParser {
 			}
 
 			if (ratioDescriptors.size() == 1) {
-				QuantificationLabel labelNumerator = ratioDescriptors.get(0).getLabel1();
-				QuantificationLabel labelDenominator = ratioDescriptors.get(0).getLabel2();
+				final QuantificationLabel labelNumerator = ratioDescriptors.get(0).getLabel1();
+				final QuantificationLabel labelDenominator = ratioDescriptors.get(0).getLabel2();
 				String ratioSuffix = ratioDescriptors.get(0).getRatioSuffix();
 				// PSM regular ratio
 				// add PSM ratios from census out
@@ -645,7 +647,7 @@ public class CensusOutParser extends AbstractQuantParser {
 									// note that all numbers are not log
 									// numbers.
 									if (mapValues.containsKey(AREA_RATIO + ratioSuffix)) {
-										double areaRatioValue = QuantUtils
+										final double areaRatioValue = QuantUtils
 												.parseCensusRatioValue(mapValues.get(AREA_RATIO + ratioSuffix));
 										if (Double.isInfinite(areaRatioValue) || areaRatioValue > 1) {
 											ratio = new CensusRatio(Double.POSITIVE_INFINITY, false, conditionsByLabels,
@@ -657,13 +659,13 @@ public class CensusOutParser extends AbstractQuantParser {
 									}
 								}
 							}
-						} catch (NumberFormatException e) {
+						} catch (final NumberFormatException e) {
 							// do nothing
 						}
 						// add ratio to PSM
 						quantifiedPSM.addRatio(ratio);
 
-					} catch (NumberFormatException e) {
+					} catch (final NumberFormatException e) {
 						// skip this
 					}
 				}
@@ -672,31 +674,32 @@ public class CensusOutParser extends AbstractQuantParser {
 				// add PSM ratios from census out
 				if (mapValues.containsKey(AREA_RATIO + ratioSuffix)) {
 					try {
-						double ratioValue = QuantUtils.parseCensusRatioValue(mapValues.get(AREA_RATIO + ratioSuffix));
+						final double ratioValue = QuantUtils
+								.parseCensusRatioValue(mapValues.get(AREA_RATIO + ratioSuffix));
 
-						CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
+						final CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
 								labelDenominator, AggregationLevel.PSM, AREA_RATIO);
 						// profile score
 						// PROFILE SCORE IS NOT SPECIFIC FOR A PAIR OF LABELS
 						if (mapValues.containsKey(PROFILE_SCORE)) {
-							String scoreValue = mapValues.get(PROFILE_SCORE);
+							final String scoreValue = mapValues.get(PROFILE_SCORE);
 							if (!"NA".equals(scoreValue)) {
-								RatioScore ratioScore = new RatioScore(scoreValue, PROFILE_SCORE,
+								final RatioScore ratioScore = new RatioScore(scoreValue, PROFILE_SCORE,
 										"PSM-level quantification confidence metric",
 										"fitting score comparing peak and gaussian distribution");
 								ratio.setRatioScore(ratioScore);
 							}
 						} else if (mapValues.containsKey(SINGLETON_SCORE)) {
-							String scoreValue = mapValues.get(SINGLETON_SCORE);
+							final String scoreValue = mapValues.get(SINGLETON_SCORE);
 							if (!"NA".equals(scoreValue)) {
-								RatioScore ratioScore = new RatioScore(scoreValue, SINGLETON_SCORE,
+								final RatioScore ratioScore = new RatioScore(scoreValue, SINGLETON_SCORE,
 										"PSM-level quantification confidence metric", "Singleton score");
 								ratio.setRatioScore(ratioScore);
 							}
 						}
 						// add ratio to PSM
 						quantifiedPSM.addRatio(ratio);
-					} catch (NumberFormatException e) {
+					} catch (final NumberFormatException e) {
 						// skip this
 					}
 				}
@@ -704,31 +707,32 @@ public class CensusOutParser extends AbstractQuantParser {
 				// add PSM ratios from census out
 				if (mapValues.containsKey(NORM_RATIO + ratioSuffix)) {
 					try {
-						double ratioValue = QuantUtils.parseCensusRatioValue(mapValues.get(NORM_RATIO + ratioSuffix));
+						final double ratioValue = QuantUtils
+								.parseCensusRatioValue(mapValues.get(NORM_RATIO + ratioSuffix));
 
-						CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
+						final CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
 								labelDenominator, AggregationLevel.PSM, NORM_RATIO);
 						// profile score
 						// PROFILE SCORE IS NOT SPECIFIC FOR A PAIR OF LABELS
 						if (mapValues.containsKey(PROFILE_SCORE)) {
-							String scoreValue = mapValues.get(PROFILE_SCORE);
+							final String scoreValue = mapValues.get(PROFILE_SCORE);
 							if (!"NA".equals(scoreValue)) {
-								RatioScore ratioScore = new RatioScore(scoreValue, PROFILE_SCORE,
+								final RatioScore ratioScore = new RatioScore(scoreValue, PROFILE_SCORE,
 										"PSM-level quantification confidence metric",
 										"fitting score comparing peak and gaussian distribution");
 								ratio.setRatioScore(ratioScore);
 							}
 						} else if (mapValues.containsKey(SINGLETON_SCORE)) {
-							String scoreValue = mapValues.get(SINGLETON_SCORE);
+							final String scoreValue = mapValues.get(SINGLETON_SCORE);
 							if (!"NA".equals(scoreValue)) {
-								RatioScore ratioScore = new RatioScore(scoreValue, SINGLETON_SCORE,
+								final RatioScore ratioScore = new RatioScore(scoreValue, SINGLETON_SCORE,
 										"PSM-level quantification confidence metric", "Singleton score");
 								ratio.setRatioScore(ratioScore);
 							}
 						}
 						// add ratio to PSM
 						quantifiedPSM.addRatio(ratio);
-					} catch (NumberFormatException e) {
+					} catch (final NumberFormatException e) {
 						// skip this
 					}
 				}
@@ -739,7 +743,7 @@ public class CensusOutParser extends AbstractQuantParser {
 					final String headerNumerator = getHeaderForTMTLabel(labelNumerator);
 					if (mapValues.containsKey(headerNumerator)) {
 						numeratorIntensity = Double.valueOf(mapValues.get(headerNumerator));
-						QuantAmount amount = new QuantAmount(numeratorIntensity, AmountType.NORMALIZED_INTENSITY,
+						final QuantAmount amount = new QuantAmount(numeratorIntensity, AmountType.NORMALIZED_INTENSITY,
 								conditionsByLabels.get(labelDenominator));
 						quantifiedPSM.addAmount(amount);
 					}
@@ -748,45 +752,45 @@ public class CensusOutParser extends AbstractQuantParser {
 					final String headerDenominator = getHeaderForTMTLabel(labelDenominator);
 					if (mapValues.containsKey(headerDenominator)) {
 						denominatorIntensity = Double.valueOf(mapValues.get(headerDenominator));
-						QuantAmount amount = new QuantAmount(denominatorIntensity, AmountType.NORMALIZED_INTENSITY,
-								conditionsByLabels.get(labelDenominator));
+						final QuantAmount amount = new QuantAmount(denominatorIntensity,
+								AmountType.NORMALIZED_INTENSITY, conditionsByLabels.get(labelDenominator));
 						quantifiedPSM.addAmount(amount);
 					}
 					// build the ratio
-					Double ratioValue = numeratorIntensity / denominatorIntensity;
-					CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
+					final Double ratioValue = numeratorIntensity / denominatorIntensity;
+					final CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
 							labelDenominator, AggregationLevel.PSM, labelNumerator + "/" + labelDenominator);
 					quantifiedPSM.addRatio(ratio);
 				}
 			} else {
 				// having more than one ratioDescriptor, means that we have L,
 				// M, H
-				for (RatioDescriptor ratioDescriptor : ratioDescriptors) {
-					QuantificationLabel labelNumerator = ratioDescriptor.getLabel1();
-					QuantificationLabel labelDenominator = ratioDescriptor.getLabel2();
-					String ratioSuffix = ratioDescriptor.getRatioSuffix();
+				for (final RatioDescriptor ratioDescriptor : ratioDescriptors) {
+					final QuantificationLabel labelNumerator = ratioDescriptor.getLabel1();
+					final QuantificationLabel labelDenominator = ratioDescriptor.getLabel2();
+					final String ratioSuffix = ratioDescriptor.getRatioSuffix();
 					if (mapValues.containsKey(RATIO + ratioSuffix)) {
 						final double ratioValue = QuantUtils.parseCensusRatioValue(mapValues.get(RATIO + ratioSuffix));
-						CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
+						final CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
 								labelDenominator, AggregationLevel.PSM, RATIO);
 						quantifiedPSM.addRatio(ratio);
 					}
 					if (mapValues.containsKey(NORM_RATIO + ratioSuffix)) {
 						final double ratioValue = QuantUtils
 								.parseCensusRatioValue(mapValues.get(NORM_RATIO + ratioSuffix));
-						CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
+						final CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
 								labelDenominator, AggregationLevel.PSM, NORM_RATIO);
 						quantifiedPSM.addRatio(ratio);
 					}
 					if (mapValues.containsKey(AREA_RATIO + ratioSuffix)) {
 						try {
-							double ratioValue = QuantUtils
+							final double ratioValue = QuantUtils
 									.parseCensusRatioValue(mapValues.get(AREA_RATIO + ratioSuffix));
-							CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
-									labelDenominator, AggregationLevel.PSM, AREA_RATIO);
+							final CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels,
+									labelNumerator, labelDenominator, AggregationLevel.PSM, AREA_RATIO);
 							// add ratio to PSM
 							quantifiedPSM.addRatio(ratio);
-						} catch (NumberFormatException e) {
+						} catch (final NumberFormatException e) {
 							// skip this
 						}
 					}
@@ -800,33 +804,34 @@ public class CensusOutParser extends AbstractQuantParser {
 			if (mapValues.containsKey(SAM_INT)) {
 				try {
 					final double value = Double.valueOf(mapValues.get(SAM_INT));
-					QuantAmount amount = new QuantAmount(value, AmountType.AREA, getLightCondition(conditionsByLabels));
+					final QuantAmount amount = new QuantAmount(value, AmountType.AREA,
+							getLightCondition(conditionsByLabels));
 					if (singleton && amount.getValue() != 0.0) {
 						amount.setSingleton(true);
 					}
 					// add amount to PSM
 					quantifiedPSM.addAmount(amount);
-				} catch (NumberFormatException e) {
+				} catch (final NumberFormatException e) {
 					// skip this
 				}
 			}
 
 			// get the peak areas of all the conditions (all the labels)
-			Set<String> usedSuffixes = new HashSet<String>();
-			for (RatioDescriptor ratioDescriptor : ratioDescriptors) {
-				Map<String, QuantCondition> conditionsByIndividualRatioSuffixes = ratioDescriptor
+			final Set<String> usedSuffixes = new HashSet<String>();
+			for (final RatioDescriptor ratioDescriptor : ratioDescriptors) {
+				final Map<String, QuantCondition> conditionsByIndividualRatioSuffixes = ratioDescriptor
 						.getConditionsByIndividualRatioSuffixes();
-				Set<String> differentValuesOfPeakArea = new HashSet<String>();
-				for (String suffix : conditionsByIndividualRatioSuffixes.keySet()) {
+				final Set<String> differentValuesOfPeakArea = new HashSet<String>();
+				for (final String suffix : conditionsByIndividualRatioSuffixes.keySet()) {
 					if (usedSuffixes.contains(suffix)) {
 						continue;
 					}
 					usedSuffixes.add(suffix);
-					QuantCondition quantCondition = conditionsByIndividualRatioSuffixes.get(suffix);
+					final QuantCondition quantCondition = conditionsByIndividualRatioSuffixes.get(suffix);
 
 					if (mapValues.containsKey(PEAK_AREA + suffix)) {
 						try {
-							String stringValue = mapValues.get(PEAK_AREA + suffix);
+							final String stringValue = mapValues.get(PEAK_AREA + suffix);
 							if (isSkipNonResolvedPeaks() && differentValuesOfPeakArea.contains(stringValue)) {
 								log.warn("PSM '" + quantifiedPSM.getPSMIdentifier()
 										+ "' contains not resolved quantitation values (Repeated peak area '"
@@ -838,13 +843,13 @@ public class CensusOutParser extends AbstractQuantParser {
 							}
 							differentValuesOfPeakArea.add(stringValue);
 							final double value = Double.valueOf(stringValue);
-							QuantAmount amount = new QuantAmount(value, AmountType.AREA, quantCondition);
+							final QuantAmount amount = new QuantAmount(value, AmountType.AREA, quantCondition);
 							if (singleton && amount.getValue() != 0.0) {
 								amount.setSingleton(true);
 							}
 							// add amount to PSM
 							quantifiedPSM.addAmount(amount);
-						} catch (NumberFormatException e) {
+						} catch (final NumberFormatException e) {
 							// skip this
 						}
 					}
@@ -856,13 +861,14 @@ public class CensusOutParser extends AbstractQuantParser {
 			if (mapValues.containsKey(REF_INT)) {
 				try {
 					final double value = Double.valueOf(mapValues.get(REF_INT));
-					QuantAmount amount = new QuantAmount(value, AmountType.AREA, getHeavyCondition(conditionsByLabels));
+					final QuantAmount amount = new QuantAmount(value, AmountType.AREA,
+							getHeavyCondition(conditionsByLabels));
 					if (singleton && amount.getValue() != 0.0) {
 						amount.setSingleton(true);
 					}
 					// add amount to PSM
 					quantifiedPSM.addAmount(amount);
-				} catch (NumberFormatException e) {
+				} catch (final NumberFormatException e) {
 					// skip this
 				}
 			}
@@ -872,11 +878,11 @@ public class CensusOutParser extends AbstractQuantParser {
 			if (mapValues.containsKey(AmountType.REGRESSION_FACTOR.name())) {
 				try {
 					final double value = Double.valueOf(mapValues.get(AmountType.REGRESSION_FACTOR.name()));
-					QuantAmount amount = new QuantAmount(value, AmountType.REGRESSION_FACTOR,
+					final QuantAmount amount = new QuantAmount(value, AmountType.REGRESSION_FACTOR,
 							getLightCondition(conditionsByLabels));
 					// add amount to PSM
 					quantifiedPSM.addAmount(amount);
-				} catch (NumberFormatException e) {
+				} catch (final NumberFormatException e) {
 					// skip this
 				}
 			}
@@ -887,7 +893,7 @@ public class CensusOutParser extends AbstractQuantParser {
 			if (StaticQuantMaps.peptideMap.containsKey(peptideKey)) {
 				quantifiedPeptide = StaticQuantMaps.peptideMap.getItem(peptideKey);
 			} else {
-				quantifiedPeptide = new QuantifiedPeptide(quantifiedPSM);
+				quantifiedPeptide = new QuantifiedPeptide(quantifiedPSM, isIgnoreTaxonomies());
 			}
 			StaticQuantMaps.peptideMap.addItem(quantifiedPeptide);
 
@@ -898,7 +904,7 @@ public class CensusOutParser extends AbstractQuantParser {
 			}
 
 			if (dbIndex != null) {
-				String cleanSeq = quantifiedPSM.getSequence();
+				final String cleanSeq = quantifiedPSM.getSequence();
 				final Set<IndexedProtein> indexedProteins = dbIndex.getProteins(cleanSeq);
 				if (indexedProteins.isEmpty()) {
 					if (!ignoreNotFoundPeptidesInDB) {
@@ -911,14 +917,15 @@ public class CensusOutParser extends AbstractQuantParser {
 				}
 				// create a new Quantified Protein for each
 				// indexedProtein
-				for (IndexedProtein indexedProtein : indexedProteins) {
-					String proteinKey = KeyUtils.getProteinKey(indexedProtein);
+				for (final IndexedProtein indexedProtein : indexedProteins) {
+					final String proteinKey = KeyUtils.getProteinKey(indexedProtein, isIgnoreACCFormat());
 					QuantifiedProteinInterface newQuantifiedProtein = null;
 					if (StaticQuantMaps.proteinMap.containsKey(proteinKey)) {
 						newQuantifiedProtein = StaticQuantMaps.proteinMap.getItem(proteinKey);
 
 					} else {
-						newQuantifiedProtein = new QuantifiedProteinFromDBIndexEntry(indexedProtein);
+						newQuantifiedProtein = new QuantifiedProteinFromDBIndexEntry(indexedProtein,
+								isIgnoreTaxonomies(), isIgnoreACCFormat());
 
 					}
 					StaticQuantMaps.proteinMap.addItem(newQuantifiedProtein);
@@ -943,7 +950,7 @@ public class CensusOutParser extends AbstractQuantParser {
 			// use the already created quantified
 			// protein
 
-			for (QuantifiedProteinInterface quantifiedProtein : quantifiedProteins) {
+			for (final QuantifiedProteinInterface quantifiedProtein : quantifiedProteins) {
 				// add psm to the proteins
 				quantifiedProtein.addPSM(quantifiedPSM, true);
 				// add protein to the psm
@@ -952,7 +959,7 @@ public class CensusOutParser extends AbstractQuantParser {
 				quantifiedProtein.addPeptide(quantifiedPeptide, true);
 				// add to the map (if it was already there
 				// is not a problem, it will be only once)
-				String proteinKey = quantifiedProtein.getKey();
+				final String proteinKey = quantifiedProtein.getKey();
 				addToMap(proteinKey, proteinToPeptidesMap, KeyUtils.getSequenceKey(quantifiedPSM, true));
 				// add protein to protein map
 				localProteinMap.put(proteinKey, quantifiedProtein);
@@ -963,8 +970,8 @@ public class CensusOutParser extends AbstractQuantParser {
 			// in case of quantifying sites, set the sites to the ratios in case
 			// of no ambiguities
 			if (!getQuantifiedAAs().isEmpty()) {
-				for (QuantRatio ratio : quantifiedPSM.getRatios()) {
-					for (Character c : getQuantifiedAAs()) {
+				for (final QuantRatio ratio : quantifiedPSM.getRatios()) {
+					for (final Character c : getQuantifiedAAs()) {
 						if (quantifiedPSM.getSequence().contains(String.valueOf(c))) {
 							ratio.setQuantifiedAA(c);
 						}
@@ -972,8 +979,8 @@ public class CensusOutParser extends AbstractQuantParser {
 					// check for ambiguity on the quantified site
 					int numSites = 0;
 					int quantifiedSitePositionInPeptide = -1;
-					for (Character c : getQuantifiedAAs()) {
-						List<Integer> allPositionsOf = StringUtils.allPositionsOf(quantifiedPSM.getSequence(), c);
+					for (final Character c : getQuantifiedAAs()) {
+						final List<Integer> allPositionsOf = StringUtils.allPositionsOf(quantifiedPSM.getSequence(), c);
 						numSites = +allPositionsOf.size();
 						if (allPositionsOf.size() == 1) {
 							quantifiedSitePositionInPeptide = allPositionsOf.get(0);
@@ -985,12 +992,12 @@ public class CensusOutParser extends AbstractQuantParser {
 					}
 				}
 			}
-		} catch (IllegalArgumentException e) {
+		} catch (final IllegalArgumentException e) {
 			e.printStackTrace();
 			log.warn(e);
 			log.info("Error reading line '" + line + "' from file. Skipping it...");
 
-		} catch (NullPointerException e) {
+		} catch (final NullPointerException e) {
 			// e.printStackTrace();
 			log.warn(e);
 			log.warn("Error reading line '" + line + "' from file. Skipping it...");
@@ -1007,7 +1014,7 @@ public class CensusOutParser extends AbstractQuantParser {
 	}
 
 	private QuantCondition getLightCondition(Map<QuantificationLabel, QuantCondition> conditionsByLabels) {
-		for (QuantificationLabel label : conditionsByLabels.keySet()) {
+		for (final QuantificationLabel label : conditionsByLabels.keySet()) {
 			if (label.isLight()) {
 				final QuantCondition quantCondition = conditionsByLabels.get(label);
 				if (quantCondition == null) {
@@ -1020,7 +1027,7 @@ public class CensusOutParser extends AbstractQuantParser {
 	}
 
 	private QuantCondition getHeavyCondition(Map<QuantificationLabel, QuantCondition> conditionsByLabels) {
-		for (QuantificationLabel label : conditionsByLabels.keySet()) {
+		for (final QuantificationLabel label : conditionsByLabels.keySet()) {
 			if (label.isHeavy()) {
 				return conditionsByLabels.get(label);
 			}
@@ -1029,7 +1036,7 @@ public class CensusOutParser extends AbstractQuantParser {
 	}
 
 	private QuantCondition getMediumCondition(Map<QuantificationLabel, QuantCondition> conditionsByLabels) {
-		for (QuantificationLabel label : conditionsByLabels.keySet()) {
+		for (final QuantificationLabel label : conditionsByLabels.keySet()) {
 			if (label.isMedium()) {
 				return conditionsByLabels.get(label);
 			}
@@ -1076,15 +1083,15 @@ public class CensusOutParser extends AbstractQuantParser {
 			Map<QuantificationLabel, QuantCondition> conditionsByLabels, List<RatioDescriptor> ratioDescriptors,
 			int numDecoy) throws DiscardProteinException {
 		// new protein
-		MyHashMap<String, String> mapValues = getMapFromPLine(pLineHeaderList, line);
-		String proteinACC = mapValues.get(LOCUS);
+		final MyHashMap<String, String> mapValues = getMapFromPLine(pLineHeaderList, line);
+		final String proteinACC = mapValues.get(LOCUS);
 
 		QuantifiedProteinInterface quantifiedProtein = null;
 		if (StaticQuantMaps.proteinMap.containsKey(proteinACC)) {
 			quantifiedProtein = StaticQuantMaps.proteinMap.getItem(proteinACC);
 		} else {
-			quantifiedProtein = new QuantifiedProtein(proteinACC);
-			String description = mapValues.get(DESCRIPTION);
+			quantifiedProtein = new QuantifiedProtein(proteinACC, isIgnoreTaxonomies());
+			final String description = mapValues.get(DESCRIPTION);
 			quantifiedProtein.setDescription(description);
 		}
 		StaticQuantMaps.proteinMap.addItem(quantifiedProtein);
@@ -1101,9 +1108,9 @@ public class CensusOutParser extends AbstractQuantParser {
 
 		// if we only have one ratio descriptor, it is L over H
 		if (ratioDescriptors.size() == 1) {
-			QuantificationLabel labelNumerator = ratioDescriptors.get(0).getLabel1();
-			QuantificationLabel labelDenominator = ratioDescriptors.get(0).getLabel2();
-			String ratioSuffix = ratioDescriptors.get(0).getRatioSuffix();
+			final QuantificationLabel labelNumerator = ratioDescriptors.get(0).getLabel1();
+			final QuantificationLabel labelDenominator = ratioDescriptors.get(0).getLabel2();
+			final String ratioSuffix = ratioDescriptors.get(0).getRatioSuffix();
 			// add protein ratio
 			// first look if the composite ratio is calculated
 			if (mapValues.containsKey(COMPOSITE_RATIO)) {
@@ -1116,10 +1123,10 @@ public class CensusOutParser extends AbstractQuantParser {
 							stdValue = "0.0";
 						}
 					}
-					QuantRatio ratio = new CensusRatio(ratioValue, stdValue, false, conditionsByLabels, labelNumerator,
-							labelDenominator, AggregationLevel.PROTEIN, COMPOSITE_RATIO);
+					final QuantRatio ratio = new CensusRatio(ratioValue, stdValue, false, conditionsByLabels,
+							labelNumerator, labelDenominator, AggregationLevel.PROTEIN, COMPOSITE_RATIO);
 					quantifiedProtein.addRatio(ratio);
-				} catch (NumberFormatException e) {
+				} catch (final NumberFormatException e) {
 					// skip this
 				}
 				// if there is not composite ratio, use the
@@ -1134,10 +1141,10 @@ public class CensusOutParser extends AbstractQuantParser {
 							stdValue = "0.0";
 						}
 					}
-					QuantRatio ratio = new CensusRatio(ratioValue, stdValue, false, conditionsByLabels, labelNumerator,
-							labelDenominator, AggregationLevel.PROTEIN, COMPOSITE_RATIO);
+					final QuantRatio ratio = new CensusRatio(ratioValue, stdValue, false, conditionsByLabels,
+							labelNumerator, labelDenominator, AggregationLevel.PROTEIN, COMPOSITE_RATIO);
 					quantifiedProtein.addRatio(ratio);
-				} catch (NumberFormatException e) {
+				} catch (final NumberFormatException e) {
 					// skip this
 				}
 				// if there is not composite ratio, use the
@@ -1153,21 +1160,21 @@ public class CensusOutParser extends AbstractQuantParser {
 								stdValue = "0.0";
 							}
 						}
-						QuantRatio ratio = new CensusRatio(ratioValue, stdValue, false, conditionsByLabels,
+						final QuantRatio ratio = new CensusRatio(ratioValue, stdValue, false, conditionsByLabels,
 								labelNumerator, labelDenominator, AggregationLevel.PROTEIN, AVERAGE_RATIO);
 						quantifiedProtein.addRatio(ratio);
 					}
-				} catch (NumberFormatException e) {
+				} catch (final NumberFormatException e) {
 					// skip this
 				}
 				try {
 					if (mapValues.containsKey(AREA_RATIO)) {
 						final double ratioValue = Double.valueOf(mapValues.get(AREA_RATIO));
-						QuantRatio ratio = new CensusRatio(ratioValue, null, false, conditionsByLabels, labelNumerator,
-								labelDenominator, AggregationLevel.PROTEIN, AREA_RATIO);
+						final QuantRatio ratio = new CensusRatio(ratioValue, null, false, conditionsByLabels,
+								labelNumerator, labelDenominator, AggregationLevel.PROTEIN, AREA_RATIO);
 						quantifiedProtein.addRatio(ratio);
 					}
-				} catch (NumberFormatException e) {
+				} catch (final NumberFormatException e) {
 					// skip this
 				}
 			} else if (mapValues.containsKey(AVERAGE_RATIO + ratioSuffix)
@@ -1182,30 +1189,30 @@ public class CensusOutParser extends AbstractQuantParser {
 								stdValue = "0.0";
 							}
 						}
-						QuantRatio ratio = new CensusRatio(ratioValue, stdValue, false, conditionsByLabels,
+						final QuantRatio ratio = new CensusRatio(ratioValue, stdValue, false, conditionsByLabels,
 								labelNumerator, labelDenominator, AggregationLevel.PROTEIN, AVERAGE_RATIO);
 						quantifiedProtein.addRatio(ratio);
 					}
-				} catch (NumberFormatException e) {
+				} catch (final NumberFormatException e) {
 					// skip this
 				}
 				try {
 					if (mapValues.containsKey(AREA_RATIO + ratioSuffix)) {
 						final double ratioValue = Double.valueOf(mapValues.get(AREA_RATIO + ratioSuffix));
-						QuantRatio ratio = new CensusRatio(ratioValue, null, false, conditionsByLabels, labelNumerator,
-								labelDenominator, AggregationLevel.PROTEIN, AREA_RATIO);
+						final QuantRatio ratio = new CensusRatio(ratioValue, null, false, conditionsByLabels,
+								labelNumerator, labelDenominator, AggregationLevel.PROTEIN, AREA_RATIO);
 						quantifiedProtein.addRatio(ratio);
 					}
-				} catch (NumberFormatException e) {
+				} catch (final NumberFormatException e) {
 					// skip this
 				}
 			}
 		} else {
 			// having more than one ratio descriptor, it is L, M, H
-			for (RatioDescriptor ratioDescriptor : ratioDescriptors) {
-				QuantificationLabel labelNumerator = ratioDescriptor.getLabel1();
-				QuantificationLabel labelDenominator = ratioDescriptor.getLabel2();
-				String ratioSuffix = ratioDescriptor.getRatioSuffix();
+			for (final RatioDescriptor ratioDescriptor : ratioDescriptors) {
+				final QuantificationLabel labelNumerator = ratioDescriptor.getLabel1();
+				final QuantificationLabel labelDenominator = ratioDescriptor.getLabel2();
+				final String ratioSuffix = ratioDescriptor.getRatioSuffix();
 				// add protein ratio
 				// first look if the normalized composite ratio is calculated
 				if (mapValues.containsKey(NORM_COMPOSITE_RATIO + ratioSuffix)
@@ -1220,10 +1227,10 @@ public class CensusOutParser extends AbstractQuantParser {
 									stdValue = "0.0";
 								}
 							}
-							QuantRatio ratio = new CensusRatio(ratioValue, stdValue, false, conditionsByLabels,
+							final QuantRatio ratio = new CensusRatio(ratioValue, stdValue, false, conditionsByLabels,
 									labelNumerator, labelDenominator, AggregationLevel.PROTEIN, NORM_COMPOSITE_RATIO);
 							quantifiedProtein.addRatio(ratio);
-						} catch (NumberFormatException e) {
+						} catch (final NumberFormatException e) {
 							// skip this
 						}
 						// if there is not composite ratio, use the
@@ -1239,10 +1246,10 @@ public class CensusOutParser extends AbstractQuantParser {
 									stdValue = "0.0";
 								}
 							}
-							QuantRatio ratio = new CensusRatio(ratioValue, stdValue, false, conditionsByLabels,
+							final QuantRatio ratio = new CensusRatio(ratioValue, stdValue, false, conditionsByLabels,
 									labelNumerator, labelDenominator, AggregationLevel.PROTEIN, COMPOSITE_RATIO);
 							quantifiedProtein.addRatio(ratio);
-						} catch (NumberFormatException e) {
+						} catch (final NumberFormatException e) {
 							// skip this
 						}
 						// if there is not composite ratio, use the
@@ -1260,21 +1267,21 @@ public class CensusOutParser extends AbstractQuantParser {
 									stdValue = "0.0";
 								}
 							}
-							QuantRatio ratio = new CensusRatio(ratioValue, stdValue, false, conditionsByLabels,
+							final QuantRatio ratio = new CensusRatio(ratioValue, stdValue, false, conditionsByLabels,
 									labelNumerator, labelDenominator, AggregationLevel.PROTEIN, NORM_STDEV);
 							quantifiedProtein.addRatio(ratio);
 						}
-					} catch (NumberFormatException e) {
+					} catch (final NumberFormatException e) {
 						// skip this
 					}
 					try {
 						if (mapValues.containsKey(MEDIAN_AREA_RATIO + ratioSuffix)) {
 							final double ratioValue = Double.valueOf(mapValues.get(MEDIAN_AREA_RATIO + ratioSuffix));
-							QuantRatio ratio = new CensusRatio(ratioValue, null, false, conditionsByLabels,
+							final QuantRatio ratio = new CensusRatio(ratioValue, null, false, conditionsByLabels,
 									labelNumerator, labelDenominator, AggregationLevel.PROTEIN, MEDIAN_AREA_RATIO);
 							quantifiedProtein.addRatio(ratio);
 						}
-					} catch (NumberFormatException e) {
+					} catch (final NumberFormatException e) {
 						// skip this
 					}
 				}
@@ -1285,11 +1292,11 @@ public class CensusOutParser extends AbstractQuantParser {
 	}
 
 	private MyHashMap<String, String> getMapFromPLine(List<String> pLineHeaderList, String line) {
-		MyHashMap<String, String> map = new MyHashMap<String, String>();
+		final MyHashMap<String, String> map = new MyHashMap<String, String>();
 		String[] split = line.split("\t");
 		if (split.length != pLineHeaderList.size()) {
 			// try to see if there is one that is empty
-			String[] splitTMP = new String[split.length - 1];
+			final String[] splitTMP = new String[split.length - 1];
 			if (split[5].equals("")) {
 
 				for (int i = 0; i < split.length - 1; i++) {
@@ -1304,7 +1311,7 @@ public class CensusOutParser extends AbstractQuantParser {
 		}
 		if (split.length == pLineHeaderList.size()) {
 			int i = 1;
-			for (String header : pLineHeaderList) {
+			for (final String header : pLineHeaderList) {
 				if (header.equals(PLINE)) {
 					continue;
 				}
@@ -1319,7 +1326,7 @@ public class CensusOutParser extends AbstractQuantParser {
 	}
 
 	private MyHashMap<String, String> getMapFromSLine(List<String> sLineHeaderList, String line) {
-		MyHashMap<String, String> map = new MyHashMap<String, String>();
+		final MyHashMap<String, String> map = new MyHashMap<String, String>();
 		String[] split = line.split("\t");
 		// not remove the last element:
 		final int upToThisIndex = split.length - 1;
@@ -1329,7 +1336,7 @@ public class CensusOutParser extends AbstractQuantParser {
 		// shifted to the right one column from the sequence
 		if ("".equals(split[1]) && "".equals(split[2]) && split.length == sLineHeaderList.size() + 1) {
 			// copy into a new array
-			String[] newSplit = new String[sLineHeaderList.size()];
+			final String[] newSplit = new String[sLineHeaderList.size()];
 			for (int index = 0; index < newSplit.length; index++) {
 				if (index <= 1) {
 					newSplit[index] = split[index];
@@ -1341,7 +1348,7 @@ public class CensusOutParser extends AbstractQuantParser {
 		}
 		if (split.length == sLineHeaderList.size() || split.length + 1 == sLineHeaderList.size()) {
 			int i = 0;
-			for (String header : sLineHeaderList) {
+			for (final String header : sLineHeaderList) {
 				if (i < split.length) {
 					map.put(header, split[i]);
 				}
@@ -1355,9 +1362,9 @@ public class CensusOutParser extends AbstractQuantParser {
 	}
 
 	private String[] removeElements(String[] split, String elementToRemove, int upToThisIndex) {
-		List<String> list = new ArrayList<String>();
+		final List<String> list = new ArrayList<String>();
 		int index = -1;
-		for (String splitElement : split) {
+		for (final String splitElement : split) {
 			index++;
 			if (splitElement.equals(elementToRemove) && index < upToThisIndex) {
 				continue;

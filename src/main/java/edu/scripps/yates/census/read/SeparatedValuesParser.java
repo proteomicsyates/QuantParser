@@ -53,63 +53,72 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 
 	public SeparatedValuesParser(List<RemoteSSHFileReference> remoteSSHServers, String separator,
 			List<Map<QuantCondition, QuantificationLabel>> labelsByConditions, QuantificationLabel labelNumerator,
-			QuantificationLabel labelDenominator) {
+			QuantificationLabel labelDenominator, boolean ignoreTaxonomies) {
 		super(remoteSSHServers, labelsByConditions, labelNumerator, labelDenominator);
 		this.separator = separator;
+		setIgnoreTaxonomies(ignoreTaxonomies);
 	}
 
 	public SeparatedValuesParser(String separator, Map<QuantCondition, QuantificationLabel> labelsByConditions,
 			Collection<RemoteSSHFileReference> remoteSSHServers, QuantificationLabel labelNumerator,
-			QuantificationLabel labelDenominator) {
+			QuantificationLabel labelDenominator, boolean ignoreTaxonomies) {
 		super(labelsByConditions, remoteSSHServers, labelNumerator, labelDenominator);
 		this.separator = separator;
+		setIgnoreTaxonomies(ignoreTaxonomies);
 	}
 
 	public SeparatedValuesParser(RemoteSSHFileReference remoteSSHServer, String separator,
 			Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelNumerator,
-			QuantificationLabel labelDenominator) throws FileNotFoundException {
+			QuantificationLabel labelDenominator, boolean ignoreTaxonomies) throws FileNotFoundException {
 		super(remoteSSHServer, labelsByConditions, labelNumerator, labelDenominator);
 		this.separator = separator;
+		setIgnoreTaxonomies(ignoreTaxonomies);
 	}
 
 	public SeparatedValuesParser(File xmlFile, String separator,
 			Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelNumerator,
-			QuantificationLabel labelDenominator) throws FileNotFoundException {
+			QuantificationLabel labelDenominator, boolean ignoreTaxonomies) throws FileNotFoundException {
 		super(xmlFile, labelsByConditions, labelNumerator, labelDenominator);
 		this.separator = separator;
+		setIgnoreTaxonomies(ignoreTaxonomies);
 	}
 
 	public SeparatedValuesParser(File[] xmlFiles, String separator,
 			Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelNumerator,
-			QuantificationLabel labelDenominator) throws FileNotFoundException {
+			QuantificationLabel labelDenominator, boolean ignoreTaxonomies) throws FileNotFoundException {
 		super(xmlFiles, labelsByConditions, labelNumerator, labelDenominator);
 		this.separator = separator;
+		setIgnoreTaxonomies(ignoreTaxonomies);
 	}
 
 	public SeparatedValuesParser(File[] xmlFiles, String separator,
 			Map<QuantCondition, QuantificationLabel>[] labelsByConditions, QuantificationLabel[] labelNumerator,
-			QuantificationLabel[] labelDenominator) throws FileNotFoundException {
+			QuantificationLabel[] labelDenominator, boolean ignoreTaxonomies) throws FileNotFoundException {
 		super(xmlFiles, labelsByConditions, labelNumerator, labelDenominator);
 		this.separator = separator;
+		setIgnoreTaxonomies(ignoreTaxonomies);
 	}
 
 	public SeparatedValuesParser(Collection<File> xmlFiles, String separator,
 			Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelNumerator,
-			QuantificationLabel labelDenominator) throws FileNotFoundException {
+			QuantificationLabel labelDenominator, boolean ignoreTaxonomies) throws FileNotFoundException {
 		super(xmlFiles, labelsByConditions, labelNumerator, labelDenominator);
 		this.separator = separator;
+		setIgnoreTaxonomies(ignoreTaxonomies);
 	}
 
 	public SeparatedValuesParser(RemoteSSHFileReference remoteServer, String separator, QuantificationLabel label1,
-			QuantCondition cond1, QuantificationLabel label2, QuantCondition cond2) {
+			QuantCondition cond1, QuantificationLabel label2, QuantCondition cond2, boolean ignoreTaxonomies) {
 		super(remoteServer, label1, cond1, label2, cond2);
 		this.separator = separator;
+		setIgnoreTaxonomies(ignoreTaxonomies);
 	}
 
 	public SeparatedValuesParser(File inputFile, String separator, QuantificationLabel label1, QuantCondition cond1,
-			QuantificationLabel label2, QuantCondition cond2) throws FileNotFoundException {
+			QuantificationLabel label2, QuantCondition cond2, boolean ignoreTaxonomies) throws FileNotFoundException {
 		super(inputFile, label1, cond1, label2, cond2);
 		this.separator = separator;
+		setIgnoreTaxonomies(ignoreTaxonomies);
 	}
 
 	@Override
@@ -118,21 +127,23 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 		log.info("Processing file...");
 
 		try {
-			int numDecoy = 0;
+			final int numDecoy = 0;
 			boolean someValidFile = false;
-			for (RemoteSSHFileReference remoteFileRetriever : remoteFileRetrievers) {
+			for (final RemoteSSHFileReference remoteFileRetriever : remoteFileRetrievers) {
 				final Map<QuantCondition, QuantificationLabel> labelsByConditions = labelsByConditionsByFile
 						.get(remoteFileRetriever);
 				final Map<QuantificationLabel, QuantCondition> conditionsByLabels = new THashMap<QuantificationLabel, QuantCondition>();
-				for (QuantCondition cond : labelsByConditions.keySet()) {
+				for (final QuantCondition cond : labelsByConditions.keySet()) {
 					conditionsByLabels.put(labelsByConditions.get(cond), cond);
 				}
 
-				QuantificationLabel labelNumerator = ratioDescriptorsByFile.get(remoteFileRetriever).get(0).getLabel1();
-				QuantificationLabel labelDenominator = ratioDescriptorsByFile.get(remoteFileRetriever).get(0)
+				final QuantificationLabel labelNumerator = ratioDescriptorsByFile.get(remoteFileRetriever).get(0)
+						.getLabel1();
+				final QuantificationLabel labelDenominator = ratioDescriptorsByFile.get(remoteFileRetriever).get(0)
 						.getLabel2();
 
-				String experimentKey = FilenameUtils.getBaseName(remoteFileRetriever.getOutputFile().getAbsolutePath());
+				final String experimentKey = FilenameUtils
+						.getBaseName(remoteFileRetriever.getOutputFile().getAbsolutePath());
 				log.info(experimentKey);
 				// get all the Quantified PSMs first
 				// Set<QuantifiedPSMInterface> psms = new
@@ -167,7 +178,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 							if (split.length > RATIO_COL && !"".equals(split[RATIO_COL])) {
 								try {
 									ratio = Double.valueOf(split[RATIO_COL]);
-								} catch (NumberFormatException e) {
+								} catch (final NumberFormatException e) {
 									e.printStackTrace();
 									throw new IllegalArgumentException("Error in line:" + numLine + ", col:" + RATIO_COL
 											+ 1 + "\t" + e.getMessage());
@@ -176,7 +187,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 							if (split.length > RATIO_WEIGHT_COL && !"".equals(split[RATIO_WEIGHT_COL])) {
 								try {
 									ratioWeigth = Double.valueOf(split[RATIO_WEIGHT_COL]);
-								} catch (NumberFormatException e) {
+								} catch (final NumberFormatException e) {
 									e.printStackTrace();
 									throw new IllegalArgumentException("Error in line:" + numLine + ", col:"
 											+ RATIO_WEIGHT_COL + 1 + "\t" + e.getMessage());
@@ -194,11 +205,11 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 
 					br.close();
 
-				} catch (PeptideNotFoundInDBIndexException e) {
+				} catch (final PeptideNotFoundInDBIndexException e) {
 					if (!super.ignoreNotFoundPeptidesInDB) {
 						throw e;
 					}
-				} catch (Exception e) {
+				} catch (final Exception e) {
 					e.printStackTrace();
 				} finally {
 					if (br != null) {
@@ -221,7 +232,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 				throw new IllegalArgumentException("some error occurred while reading the files");
 
 			processed = true;
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			e.printStackTrace();
 		} finally {
 			// if (processed) {
@@ -244,7 +255,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 
 		// dont look into the QuantifiedPSM.map because each
 		// line is always a new PSM
-		String inputFileName = FilenameUtils.getName(remoteFileRetriever.getOutputFile().getAbsolutePath());
+		final String inputFileName = FilenameUtils.getName(remoteFileRetriever.getOutputFile().getAbsolutePath());
 		String rawFileName = FastaParser.getFileNameFromPSMIdentifier(psmId);
 		if (rawFileName == null) {
 			rawFileName = inputFileName;
@@ -254,7 +265,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 		int scanNumber = 0;
 		try {
 			scanNumber = Integer.valueOf(FastaParser.getScanFromPSMIdentifier(psmId));
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			// get next available number
 			scanNumber = ++scanNumberTMP;
 		}
@@ -263,7 +274,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 		int chargeState = 0;
 		try {
 			chargeState = Integer.valueOf(FastaParser.getChargeStateFromPSMIdentifier(psmId));
-		} catch (Exception e) {
+		} catch (final Exception e) {
 		}
 		QuantifiedPSMInterface quantifiedPSM = new QuantifiedPSM(sequence, labelsByConditions, peptideToSpectraMap,
 				scanNumber, chargeState, rawFileName, false);
@@ -285,7 +296,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 		// add PSM ratios from census out
 		if (ratioValue != null) {
 			try {
-				CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
+				final CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
 						labelDenominator, AggregationLevel.PSM, RATIO);
 				// set singleton
 				if (ratioValue == 0 || Double.compare(Double.POSITIVE_INFINITY, ratioValue) == 0) {
@@ -294,7 +305,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 					}
 				}
 				if (ratioWeigth != null) {
-					RatioScore ratioScore = new RatioScore(String.valueOf(ratioWeigth), RATIO_WEIGHT,
+					final RatioScore ratioScore = new RatioScore(String.valueOf(ratioWeigth), RATIO_WEIGHT,
 							"PSM-level quantification confidence metric", RATIO_WEIGHT);
 					ratio.setRatioScore(ratioScore);
 				}
@@ -302,7 +313,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 				// add ratio to PSM
 				quantifiedPSM.addRatio(ratio);
 				if (!getQuantifiedAAs().isEmpty()) {
-					for (Character c : getQuantifiedAAs()) {
+					for (final Character c : getQuantifiedAAs()) {
 						if (quantifiedPSM.getSequence().contains(String.valueOf(c))) {
 							ratio.setQuantifiedAA(c);
 						}
@@ -310,8 +321,8 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 					// check for ambiguity on the quantified site
 					int numSites = 0;
 					int quantifiedSitePositionInPeptide = -1;
-					for (Character c : getQuantifiedAAs()) {
-						List<Integer> allPositionsOf = StringUtils.allPositionsOf(quantifiedPSM.getSequence(), c);
+					for (final Character c : getQuantifiedAAs()) {
+						final List<Integer> allPositionsOf = StringUtils.allPositionsOf(quantifiedPSM.getSequence(), c);
 						numSites = +allPositionsOf.size();
 						if (allPositionsOf.size() == 1) {
 							quantifiedSitePositionInPeptide = allPositionsOf.get(0);
@@ -322,7 +333,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 						ratio.setQuantifiedSitePositionInPeptide(quantifiedSitePositionInPeptide);
 					}
 				}
-			} catch (NumberFormatException e) {
+			} catch (final NumberFormatException e) {
 				// skip this
 			}
 		}
@@ -333,7 +344,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 		if (StaticQuantMaps.peptideMap.containsKey(peptideKey)) {
 			quantifiedPeptide = StaticQuantMaps.peptideMap.getItem(peptideKey);
 		} else {
-			quantifiedPeptide = new QuantifiedPeptide(quantifiedPSM);
+			quantifiedPeptide = new QuantifiedPeptide(quantifiedPSM, isIgnoreTaxonomies());
 		}
 		StaticQuantMaps.peptideMap.addItem(quantifiedPeptide);
 		quantifiedPSM.setQuantifiedPeptide(quantifiedPeptide, true);
@@ -343,7 +354,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 		}
 
 		if (dbIndex != null) {
-			String cleanSeq = quantifiedPSM.getSequence();
+			final String cleanSeq = quantifiedPSM.getSequence();
 			final Set<IndexedProtein> indexedProteins = dbIndex.getProteins(cleanSeq);
 			if (indexedProteins.isEmpty()) {
 				if (!super.ignoreNotFoundPeptidesInDB) {
@@ -355,13 +366,14 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 			}
 			// create a new Quantified Protein for each
 			// indexedProtein
-			for (IndexedProtein indexedProtein : indexedProteins) {
-				String proteinKey = KeyUtils.getProteinKey(indexedProtein);
+			for (final IndexedProtein indexedProtein : indexedProteins) {
+				final String proteinKey = KeyUtils.getProteinKey(indexedProtein, isIgnoreACCFormat());
 				QuantifiedProteinInterface quantifiedProtein = null;
 				if (StaticQuantMaps.proteinMap.containsKey(proteinKey)) {
 					quantifiedProtein = StaticQuantMaps.proteinMap.getItem(proteinKey);
 				} else {
-					quantifiedProtein = new QuantifiedProteinFromDBIndexEntry(indexedProtein);
+					quantifiedProtein = new QuantifiedProteinFromDBIndexEntry(indexedProtein, isIgnoreTaxonomies(),
+							isIgnoreACCFormat());
 				}
 				StaticQuantMaps.proteinMap.addItem(quantifiedProtein);
 
@@ -382,12 +394,12 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 			}
 		}
 		if (proteinACC != null) {
-			String proteinKey = proteinACC;
+			final String proteinKey = proteinACC;
 			QuantifiedProteinInterface quantifiedProtein = null;
 			if (StaticQuantMaps.proteinMap.containsKey(proteinKey)) {
 				quantifiedProtein = StaticQuantMaps.proteinMap.getItem(proteinKey);
 			} else {
-				quantifiedProtein = new QuantifiedProtein(proteinKey);
+				quantifiedProtein = new QuantifiedProtein(proteinKey, isIgnoreTaxonomies());
 			}
 			StaticQuantMaps.proteinMap.addItem(quantifiedProtein);
 

@@ -40,6 +40,7 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 	private final String fullSequence;
 	private final String sequence;
 	private Map<Character, List<PositionInProtein>> positionsInProteinsByQuantifiedAA;
+	private final boolean ignoreTaxonomies;
 
 	/**
 	 * Creates a {@link QuantifiedPeptide} object, adding the
@@ -49,10 +50,11 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 	 * @param quantPSM
 	 * @param distinguishModifiedSequences
 	 */
-	public QuantifiedPeptide(QuantifiedPSMInterface quantPSM) {
+	public QuantifiedPeptide(QuantifiedPSMInterface quantPSM, boolean ignoreTaxonomies) {
 		sequenceKey = KeyUtils.getSequenceKey(quantPSM, true);
 		sequence = quantPSM.getSequence();
 		fullSequence = quantPSM.getFullSequence();
+		this.ignoreTaxonomies = ignoreTaxonomies;
 		addQuantifiedPSM(quantPSM, true);
 
 	}
@@ -164,8 +166,10 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 	@Override
 	public Set<String> getTaxonomies() {
 		final Set<String> ret = new THashSet<String>();
-		for (final QuantifiedPSMInterface quantifiedPSM : psms) {
-			ret.addAll(quantifiedPSM.getTaxonomies());
+		if (!ignoreTaxonomies) {
+			for (final QuantifiedPSMInterface quantifiedPSM : psms) {
+				ret.addAll(quantifiedPSM.getTaxonomies());
+			}
 		}
 		return ret;
 	}

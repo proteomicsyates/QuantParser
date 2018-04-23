@@ -47,14 +47,15 @@ public class QuantUtils {
 	private static final Logger log = Logger.getLogger(QuantUtils.class);
 	private static UniprotProteinRetriever uplr;
 
-	public static void addToPeptideMap(QuantifiedPSMInterface quantifiedPSM, Map<String, QuantifiedPeptide> map) {
+	public static void addToPeptideMap(QuantifiedPSMInterface quantifiedPSM, Map<String, QuantifiedPeptide> map,
+			boolean ignoreTaxonomies) {
 		final String sequenceKey = KeyUtils.getSequenceKey(quantifiedPSM, true);
 		QuantifiedPeptide quantifiedPeptide = null;
 		if (map.containsKey(sequenceKey)) {
 			quantifiedPeptide = map.get(sequenceKey);
 			quantifiedPeptide.addQuantifiedPSM(quantifiedPSM, true);
 		} else {
-			quantifiedPeptide = new QuantifiedPeptide(quantifiedPSM);
+			quantifiedPeptide = new QuantifiedPeptide(quantifiedPSM, ignoreTaxonomies);
 			map.put(sequenceKey, quantifiedPeptide);
 		}
 
@@ -62,14 +63,14 @@ public class QuantUtils {
 	}
 
 	public static void addToIsobaricPeptideMap(IsobaricQuantifiedPSM quantifiedPSM,
-			Map<String, IsobaricQuantifiedPeptide> map) {
+			Map<String, IsobaricQuantifiedPeptide> map, boolean ignoreTaxonomies) {
 		final String sequenceKey = KeyUtils.getSequenceKey(quantifiedPSM, true);
 		IsobaricQuantifiedPeptide quantifiedPeptide = null;
 		if (map.containsKey(sequenceKey)) {
 			quantifiedPeptide = map.get(sequenceKey);
 			quantifiedPeptide.addQuantifiedPSM(quantifiedPSM, true);
 		} else {
-			quantifiedPeptide = new IsobaricQuantifiedPeptide(quantifiedPSM);
+			quantifiedPeptide = new IsobaricQuantifiedPeptide(quantifiedPSM, ignoreTaxonomies);
 			map.put(sequenceKey, quantifiedPeptide);
 		}
 
@@ -86,9 +87,9 @@ public class QuantUtils {
 	 */
 	public static Map<String, IsobaricQuantifiedPeptide> getIsobaricQuantifiedPeptides(
 			Collection<IsobaricQuantifiedPSM> quantifiedPSMs) {
-		Map<String, IsobaricQuantifiedPeptide> peptideMap = new THashMap<String, IsobaricQuantifiedPeptide>();
+		final Map<String, IsobaricQuantifiedPeptide> peptideMap = new THashMap<String, IsobaricQuantifiedPeptide>();
 
-		for (IsobaricQuantifiedPSM quantifiedPSM : quantifiedPSMs) {
+		for (final IsobaricQuantifiedPSM quantifiedPSM : quantifiedPSMs) {
 			final QuantifiedPeptideInterface quantifiedPeptide = quantifiedPSM.getQuantifiedPeptide();
 			if (quantifiedPeptide instanceof IsobaricQuantifiedPeptide) {
 				if (!peptideMap.containsKey(quantifiedPeptide.getKey())) {
@@ -101,8 +102,8 @@ public class QuantUtils {
 	}
 
 	public static Set<QuantRatio> getNonInfinityRatios(Collection<QuantRatio> ratios) {
-		Set<QuantRatio> set = new THashSet<QuantRatio>();
-		for (QuantRatio ratio : ratios) {
+		final Set<QuantRatio> set = new THashSet<QuantRatio>();
+		for (final QuantRatio ratio : ratios) {
 			final double log2Ratio = ratio.getLog2Ratio(ratio.getQuantCondition1(), ratio.getQuantCondition2());
 			if (Double.isInfinite(log2Ratio) || Double.compare(log2Ratio, Double.MAX_VALUE) == 0
 					|| Double.compare(log2Ratio, -Double.MAX_VALUE) == 0) {
@@ -124,11 +125,11 @@ public class QuantUtils {
 	public static QuantRatio getAverageRatio(Set<QuantRatio> nonInfinityRatios, AggregationLevel aggregationLevel) {
 		QuantCondition cond1 = null;
 		QuantCondition cond2 = null;
-		List<Double> ratioValues = new ArrayList<Double>();
+		final List<Double> ratioValues = new ArrayList<Double>();
 		if (nonInfinityRatios.size() == 1) {
 			return nonInfinityRatios.iterator().next();
 		}
-		for (QuantRatio quantRatio : nonInfinityRatios) {
+		for (final QuantRatio quantRatio : nonInfinityRatios) {
 			if (cond1 == null) {
 				cond1 = quantRatio.getQuantCondition1();
 			} else {
@@ -149,7 +150,7 @@ public class QuantUtils {
 			}
 		}
 		if (ratioValues.isEmpty()) {
-			CensusRatio ret = new CensusRatio(Double.NaN, false, cond1, cond2, aggregationLevel,
+			final CensusRatio ret = new CensusRatio(Double.NaN, false, cond1, cond2, aggregationLevel,
 					"Peptide with no PSM ratios");
 			return ret;
 		}
@@ -160,10 +161,10 @@ public class QuantUtils {
 		if (ratioValues.size() > 1) {
 			ratioDescription = "Average of " + ratioDescription;
 		}
-		CensusRatio ret = new CensusRatio(mean, true, cond1, cond2, aggregationLevel, ratioDescription);
+		final CensusRatio ret = new CensusRatio(mean, true, cond1, cond2, aggregationLevel, ratioDescription);
 		ret.setCombinationType(CombinationType.AVERAGE);
-		RatioScore ratioScore = new RatioScore(String.valueOf(stdev), "STDEV", "Standard deviation of log2 ratios",
-				"Standard deviation of multiple log2 ratios");
+		final RatioScore ratioScore = new RatioScore(String.valueOf(stdev), "STDEV",
+				"Standard deviation of log2 ratios", "Standard deviation of multiple log2 ratios");
 		ret.setRatioScore(ratioScore);
 		return ret;
 	}
@@ -171,7 +172,7 @@ public class QuantUtils {
 	public static Double getMaxAmountValueByAmountType(Set<Amount> amounts, AmountType amountType) {
 		double max = -Double.MAX_VALUE;
 		if (amounts != null) {
-			for (Amount quantAmount : amounts) {
+			for (final Amount quantAmount : amounts) {
 				if (quantAmount.getAmountType() == amountType) {
 					if (quantAmount.getValue() > max) {
 						max = quantAmount.getValue();
@@ -264,9 +265,9 @@ public class QuantUtils {
 	}
 
 	public static List<QuantRatio> getRatiosByName(Collection<QuantRatio> quantRatios, String ratioDescription) {
-		List<QuantRatio> ratios = new ArrayList<QuantRatio>();
+		final List<QuantRatio> ratios = new ArrayList<QuantRatio>();
 		if (quantRatios != null) {
-			for (QuantRatio ratio : quantRatios) {
+			for (final QuantRatio ratio : quantRatios) {
 				if (ratio.getDescription().equals(ratioDescription)) {
 					ratios.add(ratio);
 				}
@@ -277,7 +278,7 @@ public class QuantUtils {
 
 	public static List<QuantifiedPeptideInterface> getSortedPeptidesByFullSequence(
 			Collection<QuantifiedPeptideInterface> peptides) {
-		List<QuantifiedPeptideInterface> ret = new ArrayList<QuantifiedPeptideInterface>();
+		final List<QuantifiedPeptideInterface> ret = new ArrayList<QuantifiedPeptideInterface>();
 		ret.addAll(peptides);
 		Collections.sort(ret, new Comparator<QuantifiedPeptideInterface>() {
 
@@ -298,8 +299,8 @@ public class QuantUtils {
 	 */
 	public static String getPeptidesFullSequenceString(Collection<QuantifiedPeptideInterface> peptides) {
 
-		StringBuilder sb = new StringBuilder();
-		for (QuantifiedPeptideInterface peptide : QuantUtils.getSortedPeptidesByFullSequence(peptides)) {
+		final StringBuilder sb = new StringBuilder();
+		for (final QuantifiedPeptideInterface peptide : QuantUtils.getSortedPeptidesByFullSequence(peptides)) {
 			if (!"".equals(sb.toString()))
 				sb.append("_");
 			sb.append(peptide.getFullSequence());
@@ -309,7 +310,7 @@ public class QuantUtils {
 
 	public static List<QuantifiedProteinInterface> getSortedQuantifiedProteinsByAcc(
 			Collection<QuantifiedProteinInterface> proteinsToSort) {
-		List<QuantifiedProteinInterface> list = new ArrayList<QuantifiedProteinInterface>();
+		final List<QuantifiedProteinInterface> list = new ArrayList<QuantifiedProteinInterface>();
 		list.addAll(proteinsToSort);
 		Collections.sort(list, new Comparator<QuantifiedProteinInterface>() {
 			@Override
@@ -322,7 +323,7 @@ public class QuantUtils {
 
 	public static int getIonCount(QuantifiedPSMInterface psm, QuantificationLabel label) {
 		if (psm instanceof IsobaricQuantifiedPSM) {
-			IsobaricQuantifiedPSM isoPSM = (IsobaricQuantifiedPSM) psm;
+			final IsobaricQuantifiedPSM isoPSM = (IsobaricQuantifiedPSM) psm;
 			final Set<Ion> ionsByLabel = isoPSM.getIonsByLabel(label);
 			if (ionsByLabel != null) {
 				return ionsByLabel.size();
@@ -340,7 +341,7 @@ public class QuantUtils {
 
 		// get all psms of that peptide
 		final Set<QuantifiedPSMInterface> quantifiedPSMs = quantifiedPeptide.getQuantifiedPSMs();
-		for (QuantifiedPSMInterface quantifiedPSM : quantifiedPSMs) {
+		for (final QuantifiedPSMInterface quantifiedPSM : quantifiedPSMs) {
 			// remove this psms from its proteins
 			final Iterator<QuantifiedProteinInterface> proteinsIterator = quantifiedPSM.getQuantifiedProteins()
 					.iterator();
@@ -367,12 +368,12 @@ public class QuantUtils {
 
 		// remove this protein from its peptides
 		final Set<QuantifiedPeptideInterface> quantifiedPeptides = quantifiedProtein.getQuantifiedPeptides();
-		for (QuantifiedPeptideInterface quantifiedPeptide : quantifiedPeptides) {
+		for (final QuantifiedPeptideInterface quantifiedPeptide : quantifiedPeptides) {
 			quantifiedPeptide.getQuantifiedProteins().remove(quantifiedProtein);
 		}
 		// remove the protein from its psms
 		final Set<QuantifiedPSMInterface> quantifiedPSMs = quantifiedProtein.getQuantifiedPSMs();
-		for (QuantifiedPSMInterface quantifiedPSM : quantifiedPSMs) {
+		for (final QuantifiedPSMInterface quantifiedPSM : quantifiedPSMs) {
 			quantifiedPSM.getQuantifiedProteins().remove(quantifiedProtein);
 		}
 
@@ -410,8 +411,8 @@ public class QuantUtils {
 			Collection<IsobaricQuantifiedPeptide> isobaricQuantifiedPeptides, QuantCondition cond1,
 			QuantCondition cond2, String replicateName) {
 
-		IonCountRatio ratio = new IonCountRatio(AggregationLevel.PEPTIDE);
-		for (IsobaricQuantifiedPeptide isoPeptide : isobaricQuantifiedPeptides) {
+		final IonCountRatio ratio = new IonCountRatio(AggregationLevel.PEPTIDE);
+		for (final IsobaricQuantifiedPeptide isoPeptide : isobaricQuantifiedPeptides) {
 			final int numPSMs = isoPeptide.getQuantifiedPSMs().size();
 			// get number of ions in one condition, and normalize by the
 			// number of PSMs
@@ -420,12 +421,12 @@ public class QuantUtils {
 			if (ionsByCondition.containsKey(cond1)) {
 				peakCount1 = ionsByCondition.get(cond1).size();
 			}
-			double normalizedPeakCount1 = peakCount1 * 1.0 / numPSMs;
+			final double normalizedPeakCount1 = peakCount1 * 1.0 / numPSMs;
 			int peakCount2 = 0;
 			if (ionsByCondition.containsKey(cond2)) {
 				peakCount2 = ionsByCondition.get(cond2).size();
 			}
-			double normalizedPeakCount2 = peakCount2 * 1.0 / numPSMs;
+			final double normalizedPeakCount2 = peakCount2 * 1.0 / numPSMs;
 			ratio.addIonCount(cond1, normalizedPeakCount1);
 			ratio.addIonCount(cond2, normalizedPeakCount2);
 
@@ -455,9 +456,9 @@ public class QuantUtils {
 			Collection<Pair<IsobaricQuantifiedPeptide, PositionInPeptide>> peptidesAndPositionInPeptides,
 			QuantCondition cond1, QuantCondition cond2, String replicateName, char[] quantifiedAAs) {
 
-		IonCountRatio ratio = new IonCountRatio(AggregationLevel.PEPTIDE);
-		for (Pair<IsobaricQuantifiedPeptide, PositionInPeptide> peptideAndPositionInPeptide : peptidesAndPositionInPeptides) {
-			IsobaricQuantifiedPeptide isoPeptide = peptideAndPositionInPeptide.getFirstelement();
+		final IonCountRatio ratio = new IonCountRatio(AggregationLevel.PEPTIDE);
+		for (final Pair<IsobaricQuantifiedPeptide, PositionInPeptide> peptideAndPositionInPeptide : peptidesAndPositionInPeptides) {
+			final IsobaricQuantifiedPeptide isoPeptide = peptideAndPositionInPeptide.getFirstelement();
 			final int positionInPeptide = peptideAndPositionInPeptide.getSecondElement().getPosition();
 			final int numPSMs = isoPeptide.getQuantifiedPSMs().size();
 			// get number of ions in one condition, and normalize by the
@@ -468,12 +469,12 @@ public class QuantUtils {
 			if (ionsByConditionForSites.containsKey(cond1)) {
 				peakCount1 = ionsByConditionForSites.get(cond1).size();
 			}
-			double normalizedPeakCount1 = peakCount1 * 1.0 / numPSMs;
+			final double normalizedPeakCount1 = peakCount1 * 1.0 / numPSMs;
 			int peakCount2 = 0;
 			if (ionsByConditionForSites.containsKey(cond2)) {
 				peakCount2 = ionsByConditionForSites.get(cond2).size();
 			}
-			double normalizedPeakCount2 = peakCount2 * 1.0 / numPSMs;
+			final double normalizedPeakCount2 = peakCount2 * 1.0 / numPSMs;
 			ratio.addIonCount(cond1, normalizedPeakCount1);
 			ratio.addIonCount(cond2, normalizedPeakCount2);
 
@@ -513,7 +514,7 @@ public class QuantUtils {
 	public static IonCountRatio getIonCountRatioForPeptide(IsobaricQuantifiedPeptide isoPeptide, QuantCondition cond1,
 			QuantCondition cond2, String replicateName) {
 
-		IonCountRatio ratio = new IonCountRatio(AggregationLevel.PEPTIDE);
+		final IonCountRatio ratio = new IonCountRatio(AggregationLevel.PEPTIDE);
 
 		// get number of ions in one condition, and normalize by the
 		// number of PSMs
@@ -535,20 +536,20 @@ public class QuantUtils {
 
 	public static List<StringPosition> getPTMPositionsInProtein(String accession, QuantifiedPeptideInterface peptide,
 			String uniprotVersion, File uniprotAnnotationsFolder) {
-		List<StringPosition> ptmPositionsInProtein = new ArrayList<StringPosition>();
-		UniprotProteinRetriever uplr2 = getUniprotProteinLocalRetriever(uniprotVersion, uniprotAnnotationsFolder);
+		final List<StringPosition> ptmPositionsInProtein = new ArrayList<StringPosition>();
+		final UniprotProteinRetriever uplr2 = getUniprotProteinLocalRetriever(uniprotVersion, uniprotAnnotationsFolder);
 		// get protein sequence from uniprot
 		final Map<String, String> annotatedProteinSequence = uplr2.getAnnotatedProteinSequence(accession);
 		if (annotatedProteinSequence.containsKey(accession)) {
 			final String proteinSequence = annotatedProteinSequence.get(accession);
-			List<Integer> positionsInProteinSequence = StringUtils.allPositionsOf(proteinSequence,
+			final List<Integer> positionsInProteinSequence = StringUtils.allPositionsOf(proteinSequence,
 					peptide.getSequence());
 			if (!positionsInProteinSequence.isEmpty()) {
-				for (Integer startingPosition : positionsInProteinSequence) {
+				for (final Integer startingPosition : positionsInProteinSequence) {
 					final List<StringPosition> ptms = peptide.getPtms();
-					for (StringPosition ptmPositionInPeptide : ptms) {
+					for (final StringPosition ptmPositionInPeptide : ptms) {
 						final int positionInPeptide = ptmPositionInPeptide.position;
-						StringPosition ptmPositionInProtein = new StringPosition(ptmPositionInPeptide.string,
+						final StringPosition ptmPositionInProtein = new StringPosition(ptmPositionInPeptide.string,
 								positionInPeptide + startingPosition - 1);
 						ptmPositionsInProtein.add(ptmPositionInProtein);
 					}
@@ -588,7 +589,7 @@ public class QuantUtils {
 
 		try {
 			return Double.valueOf(stringValue);
-		} catch (NumberFormatException e) {
+		} catch (final NumberFormatException e) {
 			log.warn("Census ratio is not recognized: '" + stringValue + "'");
 			return Double.NaN;
 		}
@@ -596,10 +597,10 @@ public class QuantUtils {
 
 	public static Set<IsoRatio> getIsobaricRatiosForSiteFromPeptide(IsobaricQuantifiedPeptide peptide,
 			int positionInPeptide) {
-		Set<IsoRatio> ret = new HashSet<IsoRatio>();
+		final Set<IsoRatio> ret = new HashSet<IsoRatio>();
 
-		Set<IsoRatio> individualIsoRatios = peptide.getIsoRatios();
-		for (IsoRatio isoRatio : individualIsoRatios) {
+		final Set<IsoRatio> individualIsoRatios = peptide.getIsoRatios();
+		for (final IsoRatio isoRatio : individualIsoRatios) {
 			if (isoRatio.getQuantifiedSitePositionInPeptide() == positionInPeptide) {
 				ret.add(isoRatio);
 			}

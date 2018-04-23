@@ -78,6 +78,8 @@ public abstract class AbstractQuantParser implements QuantParser {
 	private String uniprotVersion;
 	protected boolean clearStaticMapsBeforeReading = true;
 	private boolean retrieveFastaIsoforms;
+	private boolean ignoreTaxonomies;
+	private boolean ignoreACCFormat;
 
 	public AbstractQuantParser() {
 
@@ -634,5 +636,23 @@ public abstract class AbstractQuantParser implements QuantParser {
 	@Override
 	public Set<Character> getQuantifiedAAs() {
 		return quantifiedAAs;
+	}
+
+	@Override
+	public void setIgnoreTaxonomies(boolean ignoreTaxonomies) {
+		this.ignoreTaxonomies = ignoreTaxonomies;
+	}
+
+	@Override
+	public boolean isIgnoreTaxonomies() {
+		return ignoreTaxonomies;
+	}
+
+	public boolean isIgnoreACCFormat() {
+		return ignoreACCFormat;
+	}
+
+	public void setIgnoreACCFormat(boolean ignoreACCFormat) {
+		this.ignoreACCFormat = ignoreACCFormat;
 	}
 }
