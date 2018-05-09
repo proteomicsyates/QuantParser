@@ -9,9 +9,9 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import edu.scripps.yates.annotations.uniprot.UniprotEntryUtil;
 import edu.scripps.yates.annotations.uniprot.UniprotProteinLocalRetriever;
 import edu.scripps.yates.annotations.uniprot.xml.Entry;
+import edu.scripps.yates.annotations.util.UniprotEntryUtil;
 import edu.scripps.yates.census.analysis.QuantCondition;
 import edu.scripps.yates.census.analysis.util.KeyUtils;
 import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
@@ -320,6 +320,9 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 					for (final QuantifiedProteinInterface quantifiedProtein : proteins) {
 						final String acc = quantifiedProtein.getAccession();
 						String proteinSequence = null;
+						// it is important that we look for any protein
+						// CONTAINING the accession, so that we can search for
+						// the isoforms and proteoforms
 						if (proteinSequences != null && proteinSequences.containsKey(acc)) {
 							proteinSequence = proteinSequences.get(acc);
 						}
@@ -337,7 +340,9 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 								final int positionOfSiteInProtein = positionInProteinSequence + positionInPeptide - 1;
 								final PositionInProtein positionInProtein = new PositionInProtein(
 										positionOfSiteInProtein, acc);
-								positionsInProtein.add(positionInProtein);
+								if (!positionsInProtein.contains(positionInProtein)) {
+									positionsInProtein.add(positionInProtein);
+								}
 							}
 						} else {
 							throw new IllegalArgumentException("Protein sequence from protein " + acc
