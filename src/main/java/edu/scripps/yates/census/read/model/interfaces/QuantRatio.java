@@ -5,21 +5,21 @@ import edu.scripps.yates.census.read.util.QuantificationLabel;
 
 public interface QuantRatio extends edu.scripps.yates.utilities.proteomicsmodel.Ratio {
 
-	public Double getLog2Ratio(QuantificationLabel labelNumerator, QuantificationLabel labelDenominator);
+	public double getLog2Ratio(QuantificationLabel labelNumerator, QuantificationLabel labelDenominator);
 
-	public Double getNonLogRatio(QuantificationLabel labelNumerator, QuantificationLabel labelDenominator);
+	public double getNonLogRatio(QuantificationLabel labelNumerator, QuantificationLabel labelDenominator);
 
 	public QuantificationLabel getLabel1();
 
 	public QuantificationLabel getLabel2();
 
-	public Double getLog2Ratio(QuantCondition quantConditionNumerator, QuantCondition quantConditionDenominator);
+	public double getLog2Ratio(QuantCondition quantConditionNumerator, QuantCondition quantConditionDenominator);
 
-	public Double getNonLogRatio(QuantCondition quantConditionNumerator, QuantCondition quantConditionDenominator);
+	public double getNonLogRatio(QuantCondition quantConditionNumerator, QuantCondition quantConditionDenominator);
 
-	public Double getLog2Ratio(String condition1Name, String condition2Name);
+	public double getLog2Ratio(String condition1Name, String condition2Name);
 
-	public Double getNonLogRatio(String condition1Name, String condition2Name);
+	public double getNonLogRatio(String condition1Name, String condition2Name);
 
 	public QuantCondition getQuantCondition1();
 

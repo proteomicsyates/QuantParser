@@ -32,6 +32,7 @@ import edu.scripps.yates.utilities.model.factories.AmountEx;
 import edu.scripps.yates.utilities.proteomicsmodel.Amount;
 import edu.scripps.yates.utilities.strings.StringUtils;
 import edu.scripps.yates.utilities.util.StringPosition;
+import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
@@ -734,23 +735,23 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	public double getMeanRatios(QuantCondition quantConditionNumerator, QuantCondition quantConditionDenominator) {
 
 		final Set<IsoRatio> isobaricRatios = getNonInfinityIsoRatios();
-		final List<Double> ratios = new ArrayList<Double>();
+		final TDoubleArrayList ratios = new TDoubleArrayList();
 
 		for (final IsoRatio isoRatio : isobaricRatios) {
 			ratios.add(isoRatio.getLog2Ratio(quantConditionNumerator, quantConditionDenominator));
 		}
-		return Maths.mean(ratios.toArray(new Double[0]));
+		return Maths.mean(ratios);
 	}
 
 	@Override
 	public double getSTDRatios(QuantCondition quantConditionNumerator, QuantCondition quantConditionDenominator) {
 
 		final Set<IsoRatio> isobaricRatios = getNonInfinityIsoRatios();
-		final List<Double> ratios = new ArrayList<Double>();
+		final TDoubleArrayList ratios = new TDoubleArrayList();
 		for (final IsoRatio isoRatio : isobaricRatios) {
 			ratios.add(isoRatio.getLog2Ratio(quantConditionNumerator, quantConditionDenominator));
 		}
-		return Maths.stddev(ratios.toArray(new Double[0]));
+		return Maths.stddev(ratios);
 	}
 
 	@Override
@@ -1010,7 +1011,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 						ret.put(quantifiedPosition, set);
 					}
 				} else if (!Double.isNaN(isoRatio.getValue())
-						&& isoRatio.getLog2Ratio(serieBLight.getLabel(), serieBHeavy.getLabel()).isInfinite()) {
+						&& Double.isFinite(isoRatio.getLog2Ratio(serieBLight.getLabel(), serieBHeavy.getLabel()))) {
 					// also, if the ratio is infinite, it doesn't matters
 					// I will assign the ratio to all positions
 					for (final Integer quantifiedPosition : tmpPositions) {
@@ -1068,7 +1069,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 						ret.put(quantifiedPosition, set);
 					}
 				} else if (!Double.isNaN(isoRatio.getValue())
-						&& isoRatio.getLog2Ratio(serieBLight.getLabel(), serieBHeavy.getLabel()).isInfinite()) {
+						&& Double.isInfinite(isoRatio.getLog2Ratio(serieBLight.getLabel(), serieBHeavy.getLabel()))) {
 					// also, if the ratio is infinite, it doesn't matters
 					// I will assign the ratio to all positions
 					for (final Integer quantifiedPosition : tmpPositions) {

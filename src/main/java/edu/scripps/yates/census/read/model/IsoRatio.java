@@ -1,7 +1,5 @@
 package edu.scripps.yates.census.read.model;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import edu.scripps.yates.census.analysis.QuantCondition;
@@ -10,6 +8,7 @@ import edu.scripps.yates.census.read.model.IonSerie.IonSerieType;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
 import edu.scripps.yates.utilities.maths.Maths;
 import edu.scripps.yates.utilities.model.enums.AggregationLevel;
+import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.map.hash.THashMap;
 
 public class IsoRatio extends CensusRatio {
@@ -79,11 +78,11 @@ public class IsoRatio extends CensusRatio {
 	 * @return the ratio
 	 */
 	@Override
-	public Double getLog2Ratio(QuantificationLabel labelNumerator, QuantificationLabel labelDenominator) {
+	public double getLog2Ratio(QuantificationLabel labelNumerator, QuantificationLabel labelDenominator) {
 		if (ionsByLabel.containsKey(labelNumerator) && ionsByLabel.containsKey(labelDenominator)) {
 			final Ion ion1 = ionsByLabel.get(labelNumerator);
 			final Ion ion2 = ionsByLabel.get(labelDenominator);
-			double value = Double.valueOf(ion1.getIntensity()) / Double.valueOf(ion2.getIntensity());
+			final double value = Double.valueOf(ion1.getIntensity()) / Double.valueOf(ion2.getIntensity());
 			return Math.log(value) / Math.log(2);
 		} else if (ionsByLabel.containsKey(labelNumerator) && !ionsByLabel.containsKey(labelDenominator)) {
 			return Double.POSITIVE_INFINITY;
@@ -112,7 +111,7 @@ public class IsoRatio extends CensusRatio {
 	 * @return the average of the intensities of the peaks of the ratio
 	 */
 	public double getAverageIntensityPeak() {
-		List<Double> values = new ArrayList<Double>();
+		final TDoubleArrayList values = new TDoubleArrayList();
 		if (ionsByLabel.containsKey(quantificationLabel1)) {
 			values.add(Double.valueOf(ionsByLabel.get(quantificationLabel1).getIntensity()));
 		}
@@ -120,7 +119,7 @@ public class IsoRatio extends CensusRatio {
 			values.add(Double.valueOf(ionsByLabel.get(quantificationLabel2).getIntensity()));
 		}
 		if (!values.isEmpty())
-			return Maths.mean(values.toArray(new Double[0]));
+			return Maths.mean(values);
 		return Double.NaN;
 	}
 
@@ -153,11 +152,11 @@ public class IsoRatio extends CensusRatio {
 	 * @return the norLogRatio
 	 */
 	@Override
-	public Double getNonLogRatio(QuantificationLabel labelNumerator, QuantificationLabel labelDenominator) {
+	public double getNonLogRatio(QuantificationLabel labelNumerator, QuantificationLabel labelDenominator) {
 		if (ionsByLabel.containsKey(labelNumerator) && ionsByLabel.containsKey(labelDenominator)) {
 			final Ion ion1 = ionsByLabel.get(labelNumerator);
 			final Ion ion2 = ionsByLabel.get(labelDenominator);
-			double value = Double.valueOf(ion1.getIntensity()) / Double.valueOf(ion2.getIntensity());
+			final double value = Double.valueOf(ion1.getIntensity()) / Double.valueOf(ion2.getIntensity());
 			return value;
 
 		} else if (ionsByLabel.containsKey(labelNumerator) && !ionsByLabel.containsKey(labelDenominator)) {
@@ -192,11 +191,11 @@ public class IsoRatio extends CensusRatio {
 
 		System.out.println(1.0 / 0);
 
-		List<Double> ratioValues = new ArrayList<Double>();
+		final TDoubleArrayList ratioValues = new TDoubleArrayList();
 		ratioValues.add(Double.POSITIVE_INFINITY);
 		ratioValues.add(4.0);
 		ratioValues.add(6.0);
-		final double mean = Maths.mean(ratioValues.toArray(new Double[0]));
+		final double mean = Maths.mean(ratioValues);
 		System.out.println("mean=" + mean);
 
 		System.out.println("OK");
@@ -217,7 +216,7 @@ public class IsoRatio extends CensusRatio {
 		if (massesByLabel.containsKey(label)) {
 			return massesByLabel.get(label);
 		}
-		for (QuantificationLabel label2 : massesByLabel.keySet()) {
+		for (final QuantificationLabel label2 : massesByLabel.keySet()) {
 			if (label2.isLight() == label.isLight()) {
 				return massesByLabel.get(label);
 			}
@@ -226,7 +225,7 @@ public class IsoRatio extends CensusRatio {
 	}
 
 	@Override
-	public Double getLog2Ratio(QuantCondition quantConditionNumerator, QuantCondition quantConditionDenominator) {
+	public double getLog2Ratio(QuantCondition quantConditionNumerator, QuantCondition quantConditionDenominator) {
 		return getLog2Ratio(labelsByConditions.get(quantConditionNumerator),
 				labelsByConditions.get(quantConditionDenominator));
 	}

@@ -104,7 +104,7 @@ public class CensusRatio implements QuantRatio {
 	}
 
 	@Override
-	public Double getLog2Ratio(QuantificationLabel labelNumerator, QuantificationLabel labelDenominator) {
+	public double getLog2Ratio(QuantificationLabel labelNumerator, QuantificationLabel labelDenominator) {
 		if (log2Value != null && Double.isNaN(log2Value)) {
 			return Double.NaN;
 		}
@@ -132,7 +132,7 @@ public class CensusRatio implements QuantRatio {
 	}
 
 	@Override
-	public Double getNonLogRatio(QuantificationLabel labelNumerator, QuantificationLabel labelDenominator) {
+	public double getNonLogRatio(QuantificationLabel labelNumerator, QuantificationLabel labelDenominator) {
 		if (nonLogValue != null && Double.isNaN(nonLogValue)) {
 			return Double.NaN;
 		}
@@ -173,7 +173,7 @@ public class CensusRatio implements QuantRatio {
 	}
 
 	@Override
-	public Double getLog2Ratio(QuantCondition quantConditionNumerator, QuantCondition quantConditionDenominator) {
+	public double getLog2Ratio(QuantCondition quantConditionNumerator, QuantCondition quantConditionDenominator) {
 		if (log2Value != null && Double.isNaN(log2Value)) {
 			return Double.NaN;
 		}
@@ -192,7 +192,7 @@ public class CensusRatio implements QuantRatio {
 	}
 
 	@Override
-	public Double getNonLogRatio(QuantCondition quantConditionNumerator, QuantCondition quantConditionDenominator) {
+	public double getNonLogRatio(QuantCondition quantConditionNumerator, QuantCondition quantConditionDenominator) {
 		if (nonLogValue != null && Double.isNaN(nonLogValue)) {
 			return Double.NaN;
 		}
@@ -209,7 +209,7 @@ public class CensusRatio implements QuantRatio {
 	}
 
 	@Override
-	public Double getLog2Ratio(String condition1Name, String condition2Name) {
+	public double getLog2Ratio(String condition1Name, String condition2Name) {
 		return getLog2Ratio(getConditionByName(condition1Name), getConditionByName(condition2Name));
 	}
 
@@ -229,7 +229,7 @@ public class CensusRatio implements QuantRatio {
 	}
 
 	@Override
-	public Double getNonLogRatio(String condition1Name, String condition2Name) {
+	public double getNonLogRatio(String condition1Name, String condition2Name) {
 		return getNonLogRatio(getConditionByName(condition1Name), getConditionByName(condition2Name));
 	}
 

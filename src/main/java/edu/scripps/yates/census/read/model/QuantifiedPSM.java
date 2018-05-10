@@ -26,6 +26,7 @@ import edu.scripps.yates.utilities.maths.Maths;
 import edu.scripps.yates.utilities.model.enums.AggregationLevel;
 import edu.scripps.yates.utilities.proteomicsmodel.Amount;
 import edu.scripps.yates.utilities.util.StringPosition;
+import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
 
@@ -61,7 +62,7 @@ public class QuantifiedPSM implements GroupablePSM, PeptideSequenceInterface, Ha
 		scan = String.valueOf(scanNumber);
 		conditionsByLabels = new THashMap<QuantificationLabel, QuantCondition>();
 		if (labelsByConditions != null) {
-			for (QuantCondition condition : labelsByConditions.keySet()) {
+			for (final QuantCondition condition : labelsByConditions.keySet()) {
 				final QuantificationLabel quantificationLabel = labelsByConditions.get(condition);
 				conditionsByLabels.put(quantificationLabel, condition);
 			}
@@ -94,7 +95,7 @@ public class QuantifiedPSM implements GroupablePSM, PeptideSequenceInterface, Ha
 		if (map.containsKey(key)) {
 			map.get(key).add(value);
 		} else {
-			Set<String> set = new THashSet<String>();
+			final Set<String> set = new THashSet<String>();
 			set.add(value);
 			map.put(key, set);
 		}
@@ -197,7 +198,7 @@ public class QuantifiedPSM implements GroupablePSM, PeptideSequenceInterface, Ha
 
 	@Override
 	public List<GroupableProtein> getGroupableProteins() {
-		List<GroupableProtein> ret = new ArrayList<GroupableProtein>();
+		final List<GroupableProtein> ret = new ArrayList<GroupableProtein>();
 		ret.addAll(getQuantifiedProteins());
 		return ret;
 	}
@@ -206,23 +207,23 @@ public class QuantifiedPSM implements GroupablePSM, PeptideSequenceInterface, Ha
 	public double getMeanRatios(QuantCondition quantConditionNumerator, QuantCondition quantConditionDenominator) {
 
 		final Set<QuantRatio> ratioSet = getRatios();
-		List<Double> ratios = new ArrayList<Double>();
+		final TDoubleArrayList ratios = new TDoubleArrayList();
 
-		for (QuantRatio isoRatio : ratioSet) {
+		for (final QuantRatio isoRatio : ratioSet) {
 			ratios.add(isoRatio.getLog2Ratio(quantConditionNumerator, quantConditionDenominator));
 		}
-		return Maths.mean(ratios.toArray(new Double[0]));
+		return Maths.mean(ratios);
 	}
 
 	@Override
 	public double getSTDRatios(QuantCondition quantConditionNumerator, QuantCondition quantConditionDenominator) {
 
 		final Set<QuantRatio> ratioSet = getRatios();
-		List<Double> ratios = new ArrayList<Double>();
-		for (QuantRatio isoRatio : ratioSet) {
+		final TDoubleArrayList ratios = new TDoubleArrayList();
+		for (final QuantRatio isoRatio : ratioSet) {
 			ratios.add(isoRatio.getLog2Ratio(quantConditionNumerator, quantConditionDenominator));
 		}
-		return Maths.stddev(ratios.toArray(new Double[0]));
+		return Maths.stddev(ratios);
 	}
 
 	@Override
@@ -231,7 +232,7 @@ public class QuantifiedPSM implements GroupablePSM, PeptideSequenceInterface, Ha
 		if (quantifiedPeptide != null) {
 			if (recursive) {
 				quantifiedPeptide.addQuantifiedPSM(this, false);
-				for (QuantifiedProteinInterface protein : getQuantifiedProteins()) {
+				for (final QuantifiedProteinInterface protein : getQuantifiedProteins()) {
 					quantifiedPeptide.addQuantifiedProtein(protein, false);
 				}
 			}
@@ -271,7 +272,7 @@ public class QuantifiedPSM implements GroupablePSM, PeptideSequenceInterface, Ha
 	public void addRatio(QuantRatio ratio) {
 		// dont add it if it is already one ratio with the same value and
 		// description
-		for (QuantRatio ratio2 : ratios) {
+		for (final QuantRatio ratio2 : ratios) {
 			if (ratio2.getDescription().equals(ratio.getDescription())) {
 				if (Double.compare(ratio2.getValue(), ratio.getValue()) == 0) {
 					return;
@@ -327,7 +328,7 @@ public class QuantifiedPSM implements GroupablePSM, PeptideSequenceInterface, Ha
 	public Double getMaxPeak() {
 
 		double max = -Double.MAX_VALUE;
-		for (Amount amount : getAmounts()) {
+		for (final Amount amount : getAmounts()) {
 			if (Double.compare(amount.getValue(), max) > 0) {
 				max = amount.getValue();
 			}

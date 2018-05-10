@@ -40,6 +40,7 @@ import edu.scripps.yates.utilities.sequence.PositionInPeptide;
 import edu.scripps.yates.utilities.strings.StringUtils;
 import edu.scripps.yates.utilities.util.Pair;
 import edu.scripps.yates.utilities.util.StringPosition;
+import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
@@ -126,7 +127,7 @@ public class QuantUtils {
 	public static QuantRatio getAverageRatio(Set<QuantRatio> nonInfinityRatios, AggregationLevel aggregationLevel) {
 		QuantCondition cond1 = null;
 		QuantCondition cond2 = null;
-		final List<Double> ratioValues = new ArrayList<Double>();
+		final TDoubleArrayList ratioValues = new TDoubleArrayList();
 		if (nonInfinityRatios.size() == 1) {
 			return nonInfinityRatios.iterator().next();
 		}
@@ -145,8 +146,8 @@ public class QuantUtils {
 					continue;
 				}
 			}
-			final Double log2Ratio = quantRatio.getLog2Ratio(cond1, cond2);
-			if (log2Ratio != null && !Double.isInfinite(log2Ratio) && !Double.isNaN(log2Ratio)) {
+			final double log2Ratio = quantRatio.getLog2Ratio(cond1, cond2);
+			if (!Double.isInfinite(log2Ratio) && !Double.isNaN(log2Ratio)) {
 				ratioValues.add(log2Ratio);
 			}
 		}
@@ -155,9 +156,8 @@ public class QuantUtils {
 					"Peptide with no PSM ratios");
 			return ret;
 		}
-		final Double[] ratioValuesArray = ratioValues.toArray(new Double[0]);
-		final double mean = Maths.mean(ratioValuesArray);
-		final double stdev = Maths.stddev(ratioValuesArray);
+		final double mean = Maths.mean(ratioValues);
+		final double stdev = Maths.stddev(ratioValues);
 		String ratioDescription = nonInfinityRatios.iterator().next().getDescription();
 		if (ratioValues.size() > 1) {
 			ratioDescription = "Average of " + ratioDescription;

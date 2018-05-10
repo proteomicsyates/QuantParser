@@ -20,6 +20,7 @@ import edu.scripps.yates.census.read.model.IsoRatio;
 import edu.scripps.yates.census.read.model.IsobaricQuantifiedPSM;
 import edu.scripps.yates.census.read.model.IsobaricQuantifiedPeptide;
 import edu.scripps.yates.census.read.model.IsobaricQuantifiedProteinGroup;
+import edu.scripps.yates.census.read.model.QuantifiedPeptide;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
@@ -30,6 +31,7 @@ import edu.scripps.yates.utilities.grouping.GroupableProtein;
 import edu.scripps.yates.utilities.grouping.PAnalyzer;
 import edu.scripps.yates.utilities.grouping.ProteinGroup;
 import edu.scripps.yates.utilities.maths.Maths;
+import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
 
@@ -60,15 +62,15 @@ public class RawQuantValuesExporter {
 
 		parser.setDbIndex(dbIndex);
 		final Map<String, QuantifiedPSMInterface> psmMap = parser.getPSMMap();
-		Map<String, QuantValue> finalPeptideQuantValues = readFinalPeptideQuantValuesFromFile();
-		for (QuantifiedPSMInterface quantifiedPSM : psmMap.values()) {
+		final Map<String, QuantValue> finalPeptideQuantValues = readFinalPeptideQuantValuesFromFile();
+		for (final QuantifiedPSMInterface quantifiedPSM : psmMap.values()) {
 			if (quantifiedPSM instanceof IsobaricQuantifiedPSM) {
 				// one line per isobaric ratio
 				if (quantifiedPSM instanceof IsobaricQuantifiedPSM) {
-					IsobaricQuantifiedPSM isoPSM = (IsobaricQuantifiedPSM) quantifiedPSM;
+					final IsobaricQuantifiedPSM isoPSM = (IsobaricQuantifiedPSM) quantifiedPSM;
 					final Set<IsoRatio> ratios = isoPSM.getNonInfinityIsoRatios();
 					if (!ratios.isEmpty()) {
-						for (IsoRatio ratio : ratios) {
+						for (final IsoRatio ratio : ratios) {
 							printStaticQuantInfo(conditionNumerator, conditionDenominator, isoPSM,
 									finalPeptideQuantValues, dbIndex, bw);
 
@@ -145,16 +147,16 @@ public class RawQuantValuesExporter {
 
 		printProteinGroupHeader(bw);
 		final Map<String, QuantifiedProteinInterface> proteinMap = parser.getProteinMap();
-		PAnalyzer panalyzer = new PAnalyzer(false);
+		final PAnalyzer panalyzer = new PAnalyzer(false);
 		final Collection<QuantifiedProteinInterface> quantProteins = proteinMap.values();
-		Set<GroupableProtein> groupableProteins = new THashSet<GroupableProtein>();
-		for (GroupableProtein quantProtein : quantProteins) {
+		final Set<GroupableProtein> groupableProteins = new THashSet<GroupableProtein>();
+		for (final GroupableProtein quantProtein : quantProteins) {
 			groupableProteins.add(quantProtein);
 		}
 		final List<ProteinGroup> proteinGroups = panalyzer.run(groupableProteins);
 
-		Map<String, QuantValue> finalPeptideQuantValues = readFinalPeptideQuantValuesFromFile();
-		for (ProteinGroup proteinGroup : proteinGroups) {
+		final Map<String, QuantValue> finalPeptideQuantValues = readFinalPeptideQuantValuesFromFile();
+		for (final ProteinGroup proteinGroup : proteinGroups) {
 			printStaticQuantInfo(conditionNumerator, conditionDenominator,
 					new IsobaricQuantifiedProteinGroup(proteinGroup), finalPeptideQuantValues, dbIndex, bw);
 			bw.write("\n");
@@ -166,9 +168,9 @@ public class RawQuantValuesExporter {
 
 		printPeptideHeader(bw);
 		final Map<String, QuantifiedPeptideInterface> peptideMap = parser.getPeptideMap();
-		Map<String, QuantValue> finalPeptideQuantValues = readFinalPeptideQuantValuesFromFile();
-		for (String sequence : peptideMap.keySet()) {
-			QuantifiedPeptideInterface quantifiedPeptide = peptideMap.get(sequence);
+		final Map<String, QuantValue> finalPeptideQuantValues = readFinalPeptideQuantValuesFromFile();
+		for (final String sequence : peptideMap.keySet()) {
+			final QuantifiedPeptideInterface quantifiedPeptide = peptideMap.get(sequence);
 			if (quantifiedPeptide instanceof IsobaricQuantifiedPeptide) {
 				printStaticQuantInfo(conditionNumerator, conditionDenominator,
 						(IsobaricQuantifiedPeptide) quantifiedPeptide, finalPeptideQuantValues, dbIndex, bw);
@@ -208,11 +210,11 @@ public class RawQuantValuesExporter {
 		bw.write(quantifiedPSM.getPSMIdentifier() + TAB);
 
 		// Taxonomy
-		String peptide = FastaParser.cleanSequence(quantifiedPSM.getSequence());
+		final String peptide = FastaParser.cleanSequence(quantifiedPSM.getSequence());
 		final Set<IndexedProtein> proteinSet = dbIndex.getProteins(peptide);
-		List<IndexedProtein> proteins = new ArrayList<IndexedProtein>();
-		Set<String> accessions = new THashSet<String>();
-		for (IndexedProtein indexedProtein : proteinSet) {
+		final List<IndexedProtein> proteins = new ArrayList<IndexedProtein>();
+		final Set<String> accessions = new THashSet<String>();
+		for (final IndexedProtein indexedProtein : proteinSet) {
 			if (accessions.contains(indexedProtein.getAccession()))
 				continue;
 			accessions.add(indexedProtein.getAccession());
@@ -230,9 +232,9 @@ public class RawQuantValuesExporter {
 		});
 		boolean drome = false;
 		boolean drovi = false;
-		String DROME = "DROME";
-		String DROVI = "DROVI";
-		for (IndexedProtein indexedProtein : proteins) {
+		final String DROME = "DROME";
+		final String DROVI = "DROVI";
+		for (final IndexedProtein indexedProtein : proteins) {
 			final String fastaDefLine = indexedProtein.getFastaDefLine();
 			if (fastaDefLine.contains(DROME)) {
 				drome = true;
@@ -252,23 +254,23 @@ public class RawQuantValuesExporter {
 		bw.write(drome && drovi ? "1" : "0");
 		bw.write(TAB);
 		// taxonomy names
-		for (IndexedProtein indexedProtein : proteins) {
+		for (final IndexedProtein indexedProtein : proteins) {
 			bw.write(FastaParser.getOrganismNameFromFastaHeader(indexedProtein.getFastaDefLine(),
 					indexedProtein.getAccession()) + SEPARATOR);
 		}
 		bw.write(TAB);
 		// accessions
-		for (IndexedProtein indexedProtein : proteins) {
+		for (final IndexedProtein indexedProtein : proteins) {
 			bw.write(FastaParser.getACC(indexedProtein.getAccession()).getFirstelement() + SEPARATOR);
 		}
 		bw.write(TAB);
 		// protein descriptions
-		for (IndexedProtein indexedProtein : proteins) {
+		for (final IndexedProtein indexedProtein : proteins) {
 			bw.write(FastaParser.getDescription(indexedProtein.getFastaDefLine()) + SEPARATOR);
 		}
 		bw.write(TAB);
 		// gene name
-		for (IndexedProtein indexedProtein : proteins) {
+		for (final IndexedProtein indexedProtein : proteins) {
 			bw.write(FastaParser.getGeneFromFastaHeader(indexedProtein.getFastaDefLine()) + SEPARATOR);
 		}
 		bw.write(TAB);
@@ -357,8 +359,8 @@ public class RawQuantValuesExporter {
 		boolean dvdm = false;
 
 		final Set<String> fileNames = quantifiedPeptide.getRawFileNames();
-		List<String> fileNamesSorted = getSorted(fileNames);
-		for (String fileName : fileNamesSorted) {
+		final List<String> fileNamesSorted = getSorted(fileNames);
+		for (final String fileName : fileNamesSorted) {
 			if (fileName.contains("DmDv"))
 				dmdv = true;
 			if (fileName.contains("DvDm"))
@@ -375,11 +377,11 @@ public class RawQuantValuesExporter {
 		bw.write(TAB);
 
 		// Taxonomy
-		String peptide = FastaParser.cleanSequence(quantifiedPeptide.getSequence());
+		final String peptide = FastaParser.cleanSequence(quantifiedPeptide.getSequence());
 		final Set<IndexedProtein> proteinSet = dbIndex.getProteins(peptide);
-		List<IndexedProtein> proteins = new ArrayList<IndexedProtein>();
-		Set<String> accessions = new THashSet<String>();
-		for (IndexedProtein indexedProtein : proteinSet) {
+		final List<IndexedProtein> proteins = new ArrayList<IndexedProtein>();
+		final Set<String> accessions = new THashSet<String>();
+		for (final IndexedProtein indexedProtein : proteinSet) {
 			if (accessions.contains(indexedProtein.getAccession()))
 				continue;
 			accessions.add(indexedProtein.getAccession());
@@ -397,9 +399,9 @@ public class RawQuantValuesExporter {
 		});
 		boolean drome = false;
 		boolean drovi = false;
-		String DROME = "DROME";
-		String DROVI = "DROVI";
-		for (IndexedProtein indexedProtein : proteins) {
+		final String DROME = "DROME";
+		final String DROVI = "DROVI";
+		for (final IndexedProtein indexedProtein : proteins) {
 			final String fastaDefLine = indexedProtein.getFastaDefLine();
 			if (fastaDefLine.contains(DROME)) {
 				drome = true;
@@ -420,23 +422,23 @@ public class RawQuantValuesExporter {
 		bw.write(drome && drovi ? "1" : "0");
 		bw.write(TAB);
 		// taxonomy names
-		for (IndexedProtein indexedProtein : proteins) {
+		for (final IndexedProtein indexedProtein : proteins) {
 			bw.write(FastaParser.getOrganismNameFromFastaHeader(indexedProtein.getFastaDefLine(),
 					indexedProtein.getAccession()) + SEPARATOR);
 		}
 		bw.write(TAB);
 		// accessions
-		for (IndexedProtein indexedProtein : proteins) {
+		for (final IndexedProtein indexedProtein : proteins) {
 			bw.write(FastaParser.getACC(indexedProtein.getAccession()).getFirstelement() + SEPARATOR);
 		}
 		bw.write(TAB);
 		// protein descriptions
-		for (IndexedProtein indexedProtein : proteins) {
+		for (final IndexedProtein indexedProtein : proteins) {
 			bw.write(FastaParser.getDescription(indexedProtein.getFastaDefLine()) + SEPARATOR);
 		}
 		bw.write(TAB);
 		// gene name
-		for (IndexedProtein indexedProtein : proteins) {
+		for (final IndexedProtein indexedProtein : proteins) {
 			bw.write(FastaParser.getGeneFromFastaHeader(indexedProtein.getFastaDefLine()) + SEPARATOR);
 		}
 		bw.write(TAB);
@@ -521,7 +523,7 @@ public class RawQuantValuesExporter {
 	}
 
 	private List<String> getSorted(Set<String> fileNames) {
-		List<String> list = new ArrayList<String>();
+		final List<String> list = new ArrayList<String>();
 		list.addAll(fileNames);
 		Collections.sort(list);
 		return list;
@@ -534,8 +536,8 @@ public class RawQuantValuesExporter {
 		boolean dmdv = false;
 		boolean dvdm = false;
 		final Set<String> fileNames = quantifiedProteinGroup.getFileNames();
-		List<String> fileNamesSorted = getSorted(fileNames);
-		for (String fileName : fileNamesSorted) {
+		final List<String> fileNamesSorted = getSorted(fileNames);
+		for (final String fileName : fileNamesSorted) {
 			bw.write(fileName + ",");
 			if (fileName.contains("DmDv"))
 				dmdv = true;
@@ -563,9 +565,9 @@ public class RawQuantValuesExporter {
 
 		boolean drome = false;
 		boolean drovi = false;
-		String DROME = "DROME";
-		String DROVI = "DROVI";
-		for (String taxonomy : taxonomies) {
+		final String DROME = "DROME";
+		final String DROVI = "DROVI";
+		for (final String taxonomy : taxonomies) {
 			if (taxonomy.contains(DROME) || taxonomy.equalsIgnoreCase("Drosophila melanogaster")) {
 				drome = true;
 			} else if (taxonomy.contains(DROVI) || taxonomy.equalsIgnoreCase("Drosophila virilis")) {
@@ -585,26 +587,26 @@ public class RawQuantValuesExporter {
 		bw.write(drome && drovi ? "1" : "0");
 		bw.write(TAB);
 		// taxonomy names
-		for (String taxonomy : taxonomies) {
+		for (final String taxonomy : taxonomies) {
 			bw.write(taxonomy + SEPARATOR);
 		}
 		bw.write(TAB);
 		// num psms
 		bw.write(quantifiedProteinGroup.getQuantifiedPSMs().size() + TAB);
 		// num sequences
-		Map<String, QuantifiedPeptideInterface> peptides = IsobaricQuantifiedPeptide
+		final Map<String, QuantifiedPeptideInterface> peptides = QuantifiedPeptide
 				.getQuantifiedPeptides(quantifiedProteinGroup.getQuantifiedPSMs());
 		bw.write(peptides.size() + TAB);
 		// num unique peptides
 		int numUniquePeptides = 0;
-		for (String sequence : peptides.keySet()) {
+		for (final String sequence : peptides.keySet()) {
 			if (dbIndex.getProteins(FastaParser.cleanSequence(sequence)).size() == 1) {
 				numUniquePeptides++;
 			}
 		}
 		bw.write(numUniquePeptides + TAB);
 		// protein group member type
-		for (QuantifiedProteinInterface quantifiedProtein : quantifiedProteinGroup.getProteins()) {
+		for (final QuantifiedProteinInterface quantifiedProtein : quantifiedProteinGroup.getProteins()) {
 			bw.write(quantifiedProtein.getEvidence() + SEPARATOR);
 		}
 		bw.write(TAB);
@@ -613,12 +615,12 @@ public class RawQuantValuesExporter {
 		// max peak
 		bw.write(quantifiedProteinGroup.getMaxPeak() + TAB);
 
-		List<Double> finalQuantValues = new ArrayList<Double>();
-		List<Double> finalQuantWeigth = new ArrayList<Double>();
-		final Map<String, QuantifiedPeptideInterface> quantifiedPeptides = IsobaricQuantifiedPeptide
+		final TDoubleArrayList finalQuantValues = new TDoubleArrayList();
+		final TDoubleArrayList finalQuantWeigth = new TDoubleArrayList();
+		final Map<String, QuantifiedPeptideInterface> quantifiedPeptides = QuantifiedPeptide
 				.getQuantifiedPeptides(quantifiedProteinGroup.getQuantifiedPSMs());
 		int numQuantifiedPeptides = 0;
-		for (QuantifiedPeptideInterface quantPeptide : quantifiedPeptides.values()) {
+		for (final QuantifiedPeptideInterface quantPeptide : quantifiedPeptides.values()) {
 			if (finalPeptideQuantValues.containsKey(quantPeptide.getSequence())) {
 				numQuantifiedPeptides++;
 				final QuantValue quantValue = finalPeptideQuantValues.get(quantPeptide.getSequence());
@@ -631,13 +633,13 @@ public class RawQuantValuesExporter {
 		// num quant peptides
 		bw.write(numQuantifiedPeptides + TAB);
 		// final quant value mean
-		bw.write(Maths.mean(finalQuantValues.toArray(new Double[0])) + TAB);
+		bw.write(Maths.mean(finalQuantValues) + TAB);
 		// final quant value stdev
-		bw.write(Maths.stddev(finalQuantValues.toArray(new Double[0])) + TAB);
+		bw.write(Maths.stddev(finalQuantValues) + TAB);
 		// final quant weight mean
-		bw.write(Maths.mean(finalQuantWeigth.toArray(new Double[0])) + TAB);
+		bw.write(Maths.mean(finalQuantWeigth) + TAB);
 		// final weight value stdev
-		bw.write(Maths.stddev(finalQuantWeigth.toArray(new Double[0])) + TAB);
+		bw.write(Maths.stddev(finalQuantWeigth) + TAB);
 
 		// # isob ratios
 		bw.write(quantifiedProteinGroup.getNonInfinityIsoRatios().size() + TAB);
@@ -696,7 +698,7 @@ public class RawQuantValuesExporter {
 	}
 
 	private Map<String, QuantValue> readFinalPeptideQuantValuesFromFile() throws IOException {
-		Map<String, QuantValue> finalPeptideQuantValues = new THashMap<String, QuantValue>();
+		final Map<String, QuantValue> finalPeptideQuantValues = new THashMap<String, QuantValue>();
 		if (quixotFileResults != null && quixotFileResults.exists()) {
 			BufferedReader br = null;
 			try {
