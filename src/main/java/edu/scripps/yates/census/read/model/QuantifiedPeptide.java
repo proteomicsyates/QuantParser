@@ -27,6 +27,7 @@ import edu.scripps.yates.utilities.sequence.PositionInProtein;
 import edu.scripps.yates.utilities.sequence.ProteinSequenceUtils;
 import edu.scripps.yates.utilities.strings.StringUtils;
 import edu.scripps.yates.utilities.util.StringPosition;
+import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
 
@@ -310,8 +311,8 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 			final String aa = String.valueOf(c).toUpperCase();
 			if (!aas.contains(aa)) {
 				aas.add(aa);
-				final List<Integer> positionsInPeptideSequence = StringUtils.allPositionsOf(getSequence(), aa);
-				for (final int positionInPeptide : positionsInPeptideSequence) {
+				final TIntArrayList positionsInPeptideSequence = StringUtils.allPositionsOf(getSequence(), aa);
+				for (final int positionInPeptide : positionsInPeptideSequence.toArray()) {
 					final PositionInPeptide positionInPeptideObj = new PositionInPeptide(positionInPeptide,
 							getSequence());
 					final List<PositionInProtein> positionsInProtein = new ArrayList<PositionInProtein>();
@@ -334,9 +335,9 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 							}
 						}
 						if (proteinSequence != null) {
-							final List<Integer> positionsInProteinSequence = StringUtils.allPositionsOf(proteinSequence,
+							final TIntArrayList positionsInProteinSequence = StringUtils.allPositionsOf(proteinSequence,
 									getSequence());
-							for (final int positionInProteinSequence : positionsInProteinSequence) {
+							for (final int positionInProteinSequence : positionsInProteinSequence.toArray()) {
 								final int positionOfSiteInProtein = positionInProteinSequence + positionInPeptide - 1;
 								final PositionInProtein positionInProtein = new PositionInProtein(
 										positionOfSiteInProtein, acc);

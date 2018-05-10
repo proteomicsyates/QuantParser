@@ -44,6 +44,7 @@ import edu.scripps.yates.utilities.model.enums.AmountType;
 import edu.scripps.yates.utilities.proteomicsmodel.Amount;
 import edu.scripps.yates.utilities.remote.RemoteSSHFileReference;
 import edu.scripps.yates.utilities.strings.StringUtils;
+import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
 
@@ -980,7 +981,7 @@ public class CensusOutParser extends AbstractQuantParser {
 					int numSites = 0;
 					int quantifiedSitePositionInPeptide = -1;
 					for (final Character c : getQuantifiedAAs()) {
-						final List<Integer> allPositionsOf = StringUtils.allPositionsOf(quantifiedPSM.getSequence(), c);
+						final TIntArrayList allPositionsOf = StringUtils.allPositionsOf(quantifiedPSM.getSequence(), c);
 						numSites = +allPositionsOf.size();
 						if (allPositionsOf.size() == 1) {
 							quantifiedSitePositionInPeptide = allPositionsOf.get(0);

@@ -32,6 +32,7 @@ import edu.scripps.yates.utilities.fasta.FastaParser;
 import edu.scripps.yates.utilities.model.enums.AggregationLevel;
 import edu.scripps.yates.utilities.remote.RemoteSSHFileReference;
 import edu.scripps.yates.utilities.strings.StringUtils;
+import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.THashMap;
 
 public class SeparatedValuesParser extends AbstractQuantParser {
@@ -322,7 +323,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 					int numSites = 0;
 					int quantifiedSitePositionInPeptide = -1;
 					for (final Character c : getQuantifiedAAs()) {
-						final List<Integer> allPositionsOf = StringUtils.allPositionsOf(quantifiedPSM.getSequence(), c);
+						final TIntArrayList allPositionsOf = StringUtils.allPositionsOf(quantifiedPSM.getSequence(), c);
 						numSites = +allPositionsOf.size();
 						if (allPositionsOf.size() == 1) {
 							quantifiedSitePositionInPeptide = allPositionsOf.get(0);

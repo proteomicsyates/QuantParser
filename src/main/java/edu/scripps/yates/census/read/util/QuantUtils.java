@@ -40,6 +40,7 @@ import edu.scripps.yates.utilities.sequence.PositionInPeptide;
 import edu.scripps.yates.utilities.strings.StringUtils;
 import edu.scripps.yates.utilities.util.Pair;
 import edu.scripps.yates.utilities.util.StringPosition;
+import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
 
@@ -542,10 +543,10 @@ public class QuantUtils {
 		final Map<String, String> annotatedProteinSequence = uplr2.getAnnotatedProteinSequence(accession);
 		if (annotatedProteinSequence.containsKey(accession)) {
 			final String proteinSequence = annotatedProteinSequence.get(accession);
-			final List<Integer> positionsInProteinSequence = StringUtils.allPositionsOf(proteinSequence,
+			final TIntArrayList positionsInProteinSequence = StringUtils.allPositionsOf(proteinSequence,
 					peptide.getSequence());
 			if (!positionsInProteinSequence.isEmpty()) {
-				for (final Integer startingPosition : positionsInProteinSequence) {
+				for (final int startingPosition : positionsInProteinSequence.toArray()) {
 					final List<StringPosition> ptms = peptide.getPtms();
 					for (final StringPosition ptmPositionInPeptide : ptms) {
 						final int positionInPeptide = ptmPositionInPeptide.position;

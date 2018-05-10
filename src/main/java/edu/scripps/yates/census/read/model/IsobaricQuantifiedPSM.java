@@ -32,6 +32,7 @@ import edu.scripps.yates.utilities.model.factories.AmountEx;
 import edu.scripps.yates.utilities.proteomicsmodel.Amount;
 import edu.scripps.yates.utilities.strings.StringUtils;
 import edu.scripps.yates.utilities.util.StringPosition;
+import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.set.hash.THashSet;
@@ -91,7 +92,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 		this.labelsByConditions = labelsByConditions;
 		this.quantifiedSites = quantifiedSites;
 		conditionsByLabels = new THashMap<QuantificationLabel, QuantCondition>();
-		for (QuantCondition condition : labelsByConditions.keySet()) {
+		for (final QuantCondition condition : labelsByConditions.keySet()) {
 			final QuantificationLabel quantificationLabel = labelsByConditions.get(condition);
 			conditionsByLabels.put(quantificationLabel, condition);
 		}
@@ -113,7 +114,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	 */
 	@Override
 	public Set<String> getRawFileNames() {
-		Set<String> ret = new THashSet<String>();
+		final Set<String> ret = new THashSet<String>();
 		if (peptide != null) {
 			ret.add(peptide.getFile());
 		}
@@ -133,11 +134,11 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 		// the two labels, which means that cannot be distinguished
 		checkIons(serieYLight, serieYHeavy);
 		ratiosSerieY = new ArrayList<IsoRatio>();
-		if (this.quantifiedSites != null && !quantifiedSites.isEmpty()) {
+		if (quantifiedSites != null && !quantifiedSites.isEmpty()) {
 			// ratios are referring to a particular site
-			TIntObjectHashMap<Set<IsoRatio>> siteSpecificRatios = getSiteSpecificRatiosSeriesY(quantifiedSites);
-			for (Set<IsoRatio> isoRatios : siteSpecificRatios.valueCollection()) {
-				for (IsoRatio isoRatio : isoRatios) {
+			final TIntObjectHashMap<Set<IsoRatio>> siteSpecificRatios = getSiteSpecificRatiosSeriesY(quantifiedSites);
+			for (final Set<IsoRatio> isoRatios : siteSpecificRatios.valueCollection()) {
+				for (final IsoRatio isoRatio : isoRatios) {
 					ratiosSerieY.add(isoRatio);
 					addRatio(isoRatio);
 				}
@@ -145,7 +146,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 		} else {
 			// ratios are abundance of the peptide
 			ratiosSerieY = getRatiosFromSeries(serieYLight, serieYHeavy);
-			for (IsoRatio isoRatio : ratiosSerieY) {
+			for (final IsoRatio isoRatio : ratiosSerieY) {
 				addRatio(isoRatio);
 			}
 		}
@@ -158,11 +159,11 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 		// the two labels, which means that cannot be distinguished
 		checkIons(serieBLight, serieBHeavy);
 		ratiosSerieB = new ArrayList<IsoRatio>();
-		if (this.quantifiedSites != null && !quantifiedSites.isEmpty()) {
+		if (quantifiedSites != null && !quantifiedSites.isEmpty()) {
 			// ratios are referring to a particular site
-			TIntObjectHashMap<Set<IsoRatio>> siteSpecificRatios = getSiteSpecificRatiosSeriesB(quantifiedSites);
-			for (Set<IsoRatio> isoRatios : siteSpecificRatios.valueCollection()) {
-				for (IsoRatio isoRatio : isoRatios) {
+			final TIntObjectHashMap<Set<IsoRatio>> siteSpecificRatios = getSiteSpecificRatiosSeriesB(quantifiedSites);
+			for (final Set<IsoRatio> isoRatios : siteSpecificRatios.valueCollection()) {
+				for (final IsoRatio isoRatio : isoRatios) {
 					ratiosSerieB.add(isoRatio);
 					addRatio(isoRatio);
 				}
@@ -170,7 +171,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 		} else {
 			// ratios are abundance of the peptide
 			ratiosSerieB = getRatiosFromSeries(serieBLight, serieBHeavy);
-			for (IsoRatio isoRatio : ratiosSerieB) {
+			for (final IsoRatio isoRatio : ratiosSerieB) {
 				addRatio(isoRatio);
 			}
 		}
@@ -181,17 +182,17 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 
 	public void addSpectrumToIonsMaps(String spectrumKey, Map<String, Set<String>> spectrumToIonsMap,
 			Set<String> ionKeys) {
-		for (IsoRatio ratio : ratiosSerieY) {
+		for (final IsoRatio ratio : ratiosSerieY) {
 			ratios.add(ratio);
-			String ionKey = KeyUtils.getIonKey(ratio, peptide, true);
+			final String ionKey = KeyUtils.getIonKey(ratio, peptide, true);
 			if (ionKeys.contains(ionKey)) {
 				continue;
 			}
 			AbstractQuantParser.addToMap(spectrumKey, spectrumToIonsMap, ionKey);
 		}
-		for (IsoRatio ratio : ratiosSerieB) {
+		for (final IsoRatio ratio : ratiosSerieB) {
 			ratios.add(ratio);
-			String ionKey = KeyUtils.getIonKey(ratio, peptide, true);
+			final String ionKey = KeyUtils.getIonKey(ratio, peptide, true);
 			if (ionKeys.contains(ionKey)) {
 				continue;
 			}
@@ -201,11 +202,11 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 
 	private void createIonAmounts() {
 		final Set<QuantCondition> conditions = getIonsByCondition().keySet();
-		for (QuantCondition condition : conditions) {
+		for (final QuantCondition condition : conditions) {
 			final Set<Ion> ions = getIonsByCondition().get(condition);
 			if (ions != null) {
-				for (Ion ion : ions) {
-					AmountEx amount = new AmountEx(ion.getIntensity(),
+				for (final Ion ion : ions) {
+					final AmountEx amount = new AmountEx(ion.getIntensity(),
 							edu.scripps.yates.utilities.model.enums.AmountType.INTENSITY, condition);
 					// singleton or not
 					final boolean singleton = ion.isSingleton();
@@ -447,7 +448,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 
 	private List<IsoRatio> getRatiosFromSeries(IonSerie serier, IonSerie series) {
 
-		List<IsoRatio> ret = new ArrayList<IsoRatio>();
+		final List<IsoRatio> ret = new ArrayList<IsoRatio>();
 		if (series != null) {
 			int max = serier.getMaxNumberIon();
 			if (series.getMaxNumberIon() > max)
@@ -459,7 +460,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 				// ignore the ions in ionExclusion
 				boolean excludeThisIon = false;
 				if (ionExclusions != null) {
-					for (IonExclusion ionExlusion : ionExclusions) {
+					for (final IonExclusion ionExlusion : ionExclusions) {
 						if (ionExlusion.getIonNumber() == ionNumber) {
 							if (ionExlusion.getIonSerieType() == serier.getIonSerieType()) {
 								excludeThisIon = true;
@@ -503,8 +504,8 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	 */
 	@Override
 	public Set<IsoRatio> getIsoRatios() {
-		Set<IsoRatio> isoRatios = new THashSet<IsoRatio>();
-		for (QuantRatio ratio : getRatios()) {
+		final Set<IsoRatio> isoRatios = new THashSet<IsoRatio>();
+		for (final QuantRatio ratio : getRatios()) {
 			if (ratio instanceof IsoRatio) {
 				isoRatios.add((IsoRatio) ratio);
 			}
@@ -517,8 +518,8 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	 */
 	@Override
 	public Set<IsoRatio> getNonInfinityIsoRatios() {
-		Set<IsoRatio> ret = new THashSet<IsoRatio>();
-		for (IsoRatio isoRatio : getIsoRatios()) {
+		final Set<IsoRatio> ret = new THashSet<IsoRatio>();
+		for (final IsoRatio isoRatio : getIsoRatios()) {
 			final Double log2Ratio = isoRatio.getLog2Ratio(isoRatio.getLabel1(), isoRatio.getLabel2());
 			if (Double.isNaN(log2Ratio) || Double.isInfinite(log2Ratio)
 					|| Double.compare(log2Ratio, Double.MAX_VALUE) == 0
@@ -535,7 +536,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	 */
 	@Override
 	public Map<QuantificationLabel, Set<Ion>> getSingletonIonsByLabel() {
-		Map<QuantificationLabel, Set<Ion>> ret = new THashMap<QuantificationLabel, Set<Ion>>();
+		final Map<QuantificationLabel, Set<Ion>> ret = new THashMap<QuantificationLabel, Set<Ion>>();
 		final Map<QuantificationLabel, Set<Ion>> singletonIons = getSingletonIons(serieBHeavy);
 		// if (!singletonIons.isEmpty())
 		ret.putAll(singletonIons);
@@ -559,7 +560,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	 */
 	@Override
 	public Map<QuantificationLabel, Set<Ion>> getIonsByLabel() {
-		Map<QuantificationLabel, Set<Ion>> ret = new THashMap<QuantificationLabel, Set<Ion>>();
+		final Map<QuantificationLabel, Set<Ion>> ret = new THashMap<QuantificationLabel, Set<Ion>>();
 		final Map<QuantificationLabel, Set<Ion>> singletonIons = getIons(serieBHeavy);
 		if (!singletonIons.isEmpty())
 			addToMapByLabel(ret, singletonIons);
@@ -581,12 +582,12 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 
 	private void addToMapByLabel(Map<QuantificationLabel, Set<Ion>> receiver,
 			Map<QuantificationLabel, Set<Ion>> donor) {
-		for (QuantificationLabel label : donor.keySet()) {
+		for (final QuantificationLabel label : donor.keySet()) {
 			final Set<Ion> ions = donor.get(label);
 			if (receiver.containsKey(label)) {
 				receiver.get(label).addAll(ions);
 			} else {
-				Set<Ion> set = new THashSet<Ion>();
+				final Set<Ion> set = new THashSet<Ion>();
 				set.addAll(ions);
 				receiver.put(label, set);
 			}
@@ -595,13 +596,13 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	}
 
 	private void addToMapByCondition(Map<QuantCondition, Set<Ion>> receiver, Map<QuantificationLabel, Set<Ion>> donor) {
-		for (QuantificationLabel label : donor.keySet()) {
+		for (final QuantificationLabel label : donor.keySet()) {
 			final QuantCondition condition = conditionsByLabels.get(label);
 			final Set<Ion> ions = donor.get(label);
 			if (receiver.containsKey(condition)) {
 				receiver.get(condition).addAll(ions);
 			} else {
-				Set<Ion> set = new THashSet<Ion>();
+				final Set<Ion> set = new THashSet<Ion>();
 				set.addAll(ions);
 				receiver.put(condition, set);
 			}
@@ -614,7 +615,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	 */
 	@Override
 	public Map<QuantificationLabel, Set<Ion>> getSingletonIons(IonSerie serie) {
-		Map<QuantificationLabel, Set<Ion>> ret = new THashMap<QuantificationLabel, Set<Ion>>();
+		final Map<QuantificationLabel, Set<Ion>> ret = new THashMap<QuantificationLabel, Set<Ion>>();
 		final Set<Ion> singletonIons = serie.getSingletonIons();
 		// if (!singletonIons.isEmpty()) {
 		ret.put(serie.getNonNullLabel(), singletonIons);
@@ -624,7 +625,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 
 	@Override
 	public Map<QuantificationLabel, Set<Ion>> getIons(IonSerie serie) {
-		Map<QuantificationLabel, Set<Ion>> ret = new THashMap<QuantificationLabel, Set<Ion>>();
+		final Map<QuantificationLabel, Set<Ion>> ret = new THashMap<QuantificationLabel, Set<Ion>>();
 		if (serie != null) {
 			final Set<Ion> ions = serie.getNonNullIons();
 			if (!ions.isEmpty()) {
@@ -636,7 +637,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 
 	@Override
 	public Set<Ion> getIonsByLabel(QuantificationLabel label) {
-		Set<Ion> ret = new THashSet<Ion>();
+		final Set<Ion> ret = new THashSet<Ion>();
 		final Set<Ion> ions = getIonsByLabel().get(label);
 		if (ions != null && !ions.isEmpty()) {
 			ret.addAll(ions);
@@ -646,8 +647,8 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 
 	@Override
 	public Set<Ion> getSingletonIonsByLabel(QuantificationLabel label) {
-		Set<Ion> list = new THashSet<Ion>();
-		Set<Ion> singletonIons = getSingletonIonsByLabel().get(label);
+		final Set<Ion> list = new THashSet<Ion>();
+		final Set<Ion> singletonIons = getSingletonIonsByLabel().get(label);
 		if (singletonIons != null && !singletonIons.isEmpty()) {
 			list.addAll(singletonIons);
 		}
@@ -700,7 +701,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 
 	@Override
 	public List<GroupableProtein> getGroupableProteins() {
-		List<GroupableProtein> ret = new ArrayList<GroupableProtein>();
+		final List<GroupableProtein> ret = new ArrayList<GroupableProtein>();
 		ret.addAll(getQuantifiedProteins());
 		return ret;
 	}
@@ -709,8 +710,8 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	public Double getMaxPeak() {
 		double max = -Double.MAX_VALUE;
 		final Map<QuantificationLabel, Set<Ion>> ionsBylabel = getIonsByLabel();
-		for (Set<Ion> ions : ionsBylabel.values()) {
-			for (Ion ion : ions) {
+		for (final Set<Ion> ions : ionsBylabel.values()) {
+			for (final Ion ion : ions) {
 				if (ion.getIntensity() > max)
 					max = ion.getIntensity();
 			}
@@ -721,7 +722,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	public double getMaxPeakInRatio() {
 		double max = -Long.MAX_VALUE;
 		final Set<IsoRatio> ratios = getIsoRatios();
-		for (IsoRatio ratio : ratios) {
+		for (final IsoRatio ratio : ratios) {
 			if (ratio.getMaxIntensity() > max) {
 				max = ratio.getMaxIntensity();
 			}
@@ -733,9 +734,9 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	public double getMeanRatios(QuantCondition quantConditionNumerator, QuantCondition quantConditionDenominator) {
 
 		final Set<IsoRatio> isobaricRatios = getNonInfinityIsoRatios();
-		List<Double> ratios = new ArrayList<Double>();
+		final List<Double> ratios = new ArrayList<Double>();
 
-		for (IsoRatio isoRatio : isobaricRatios) {
+		for (final IsoRatio isoRatio : isobaricRatios) {
 			ratios.add(isoRatio.getLog2Ratio(quantConditionNumerator, quantConditionDenominator));
 		}
 		return Maths.mean(ratios.toArray(new Double[0]));
@@ -745,8 +746,8 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	public double getSTDRatios(QuantCondition quantConditionNumerator, QuantCondition quantConditionDenominator) {
 
 		final Set<IsoRatio> isobaricRatios = getNonInfinityIsoRatios();
-		List<Double> ratios = new ArrayList<Double>();
-		for (IsoRatio isoRatio : isobaricRatios) {
+		final List<Double> ratios = new ArrayList<Double>();
+		for (final IsoRatio isoRatio : isobaricRatios) {
 			ratios.add(isoRatio.getLog2Ratio(quantConditionNumerator, quantConditionDenominator));
 		}
 		return Maths.stddev(ratios.toArray(new Double[0]));
@@ -754,7 +755,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 
 	@Override
 	public Map<QuantCondition, Set<Ion>> getSingletonIonsByCondition() {
-		Map<QuantCondition, Set<Ion>> ret = new THashMap<QuantCondition, Set<Ion>>();
+		final Map<QuantCondition, Set<Ion>> ret = new THashMap<QuantCondition, Set<Ion>>();
 		final Map<QuantificationLabel, Set<Ion>> singletonIons = getSingletonIons(serieBHeavy);
 		// if (!singletonIons.isEmpty())
 		addToMapByCondition(ret, singletonIons);
@@ -778,7 +779,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 
 	@Override
 	public Map<QuantCondition, Set<Ion>> getIonsByCondition() {
-		Map<QuantCondition, Set<Ion>> ret = new THashMap<QuantCondition, Set<Ion>>();
+		final Map<QuantCondition, Set<Ion>> ret = new THashMap<QuantCondition, Set<Ion>>();
 		final Map<QuantificationLabel, Set<Ion>> singletonIons = getIons(serieBHeavy);
 		if (!singletonIons.isEmpty()) {
 			addToMapByCondition(ret, singletonIons);
@@ -803,7 +804,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 		if (replicateName == null || getFileNames().contains(replicateName)) {
 			return getIonsByCondition();
 		}
-		Map<QuantCondition, Set<Ion>> ret = new THashMap<QuantCondition, Set<Ion>>();
+		final Map<QuantCondition, Set<Ion>> ret = new THashMap<QuantCondition, Set<Ion>>();
 		return ret;
 	}
 
@@ -813,7 +814,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 		this.quantifiedPeptide = quantifiedPeptide;
 		if (recursive) {
 			quantifiedPeptide.addQuantifiedPSM(this, false);
-			for (QuantifiedProteinInterface protein : getQuantifiedProteins()) {
+			for (final QuantifiedProteinInterface protein : getQuantifiedProteins()) {
 				quantifiedPeptide.addQuantifiedProtein(protein, false);
 			}
 		}
@@ -841,21 +842,21 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	 */
 	@Override
 	public IonCountRatio getIonCountRatio(QuantCondition cond1, QuantCondition cond2) {
-		String conditionKey = cond1.getName() + cond2.getName();
+		final String conditionKey = cond1.getName() + cond2.getName();
 		if (countRatiosByConditionKey.containsKey(conditionKey)) {
 			return countRatiosByConditionKey.get(conditionKey);
 		} else {
-			Set<Ion> ions1 = getIonsByCondition().get(cond1);
+			final Set<Ion> ions1 = getIonsByCondition().get(cond1);
 			int numIons1 = 0;
 			if (ions1 != null) {
 				numIons1 = ions1.size();
 			}
-			Set<Ion> ions2 = getIonsByCondition().get(cond2);
+			final Set<Ion> ions2 = getIonsByCondition().get(cond2);
 			int numIons2 = 0;
 			if (ions2 != null) {
 				numIons2 = ions2.size();
 			}
-			IonCountRatio ratio = new IonCountRatio(AggregationLevel.PSM);
+			final IonCountRatio ratio = new IonCountRatio(AggregationLevel.PSM);
 			ratio.addIonCount(cond1, numIons1);
 			ratio.addIonCount(cond2, numIons2);
 			countRatiosByConditionKey.put(conditionKey, ratio);
@@ -866,17 +867,17 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	@Override
 	public IonCountRatio getIonCountRatio(QuantCondition cond1, QuantCondition cond2, String replicateName) {
 
-		Set<Ion> ions1 = getIonsByCondition(replicateName).get(cond1);
+		final Set<Ion> ions1 = getIonsByCondition(replicateName).get(cond1);
 		int numIons1 = 0;
 		if (ions1 != null) {
 			numIons1 = ions1.size();
 		}
-		Set<Ion> ions2 = getIonsByCondition(replicateName).get(cond2);
+		final Set<Ion> ions2 = getIonsByCondition(replicateName).get(cond2);
 		int numIons2 = 0;
 		if (ions2 != null) {
 			numIons2 = ions2.size();
 		}
-		IonCountRatio ratio = new IonCountRatio(AggregationLevel.PSM);
+		final IonCountRatio ratio = new IonCountRatio(AggregationLevel.PSM);
 		ratio.addIonCount(cond1, numIons1);
 		ratio.addIonCount(cond2, numIons2);
 
@@ -974,22 +975,22 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	}
 
 	public TIntObjectHashMap<Set<IsoRatio>> getSiteSpecificRatiosSeriesY(Set<Character> aas) {
-		String sequence = getSequence();
-		TIntObjectHashMap<Set<IsoRatio>> ret = new TIntObjectHashMap<Set<IsoRatio>>();
+		final String sequence = getSequence();
+		final TIntObjectHashMap<Set<IsoRatio>> ret = new TIntObjectHashMap<Set<IsoRatio>>();
 		// series Y, the positions are the opposite as the ion numbers
-		List<IsoRatio> ratiosFromSeries = getRatiosFromSeries(serieYLight, serieYHeavy);
-		TIntObjectHashMap<IsoRatio> isoRatiosByPosition = new TIntObjectHashMap<IsoRatio>();
+		final List<IsoRatio> ratiosFromSeries = getRatiosFromSeries(serieYLight, serieYHeavy);
+		final TIntObjectHashMap<IsoRatio> isoRatiosByPosition = new TIntObjectHashMap<IsoRatio>();
 
-		for (IsoRatio isoRatio : ratiosFromSeries) {
+		for (final IsoRatio isoRatio : ratiosFromSeries) {
 			isoRatiosByPosition.put(isoRatio.getNumIon(), isoRatio);
 		}
 		for (int position = 1; position <= sequence.length(); position++) {
 			if (isoRatiosByPosition.containsKey(position)) {
-				IsoRatio isoRatio = isoRatiosByPosition.get(position);
-				int sequencePosition = sequence.length() - position + 1;
+				final IsoRatio isoRatio = isoRatiosByPosition.get(position);
+				final int sequencePosition = sequence.length() - position + 1;
 				// go from there to the start of the sequence seeing how many aa
 				// are from aas Set
-				List<Integer> tmpPositions = new ArrayList<Integer>();
+				final List<Integer> tmpPositions = new ArrayList<Integer>();
 				for (int j = sequencePosition; j <= sequence.length(); j++) {
 					if (aas.contains(sequence.charAt(j - 1))) {
 						tmpPositions.add(j);
@@ -997,14 +998,14 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 				}
 				// only if num==1 we have a valid ratio
 				if (tmpPositions.size() == 1) {
-					Integer quantifiedPosition = tmpPositions.get(0);
-					Character quantifiedAA = sequence.charAt(quantifiedPosition - 1);
+					final Integer quantifiedPosition = tmpPositions.get(0);
+					final Character quantifiedAA = sequence.charAt(quantifiedPosition - 1);
 					isoRatio.setQuantifiedAA(quantifiedAA);
 					isoRatio.setQuantifiedSitePositionInPeptide(quantifiedPosition);
 					if (ret.containsKey(quantifiedPosition)) {
 						ret.get(quantifiedPosition).add(isoRatio);
 					} else {
-						Set<IsoRatio> set = new THashSet<IsoRatio>();
+						final Set<IsoRatio> set = new THashSet<IsoRatio>();
 						set.add(isoRatio);
 						ret.put(quantifiedPosition, set);
 					}
@@ -1012,15 +1013,15 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 						&& isoRatio.getLog2Ratio(serieBLight.getLabel(), serieBHeavy.getLabel()).isInfinite()) {
 					// also, if the ratio is infinite, it doesn't matters
 					// I will assign the ratio to all positions
-					for (Integer quantifiedPosition : tmpPositions) {
-						Character quantifiedAA = sequence.charAt(quantifiedPosition - 1);
-						IsoRatio clonedIsoRatio = cloneIsoRatio(isoRatio);
+					for (final Integer quantifiedPosition : tmpPositions) {
+						final Character quantifiedAA = sequence.charAt(quantifiedPosition - 1);
+						final IsoRatio clonedIsoRatio = cloneIsoRatio(isoRatio);
 						clonedIsoRatio.setQuantifiedAA(quantifiedAA);
 						clonedIsoRatio.setQuantifiedSitePositionInPeptide(quantifiedPosition);
 						if (ret.containsKey(quantifiedPosition)) {
 							ret.get(quantifiedPosition).add(clonedIsoRatio);
 						} else {
-							Set<IsoRatio> set = new THashSet<IsoRatio>();
+							final Set<IsoRatio> set = new THashSet<IsoRatio>();
 							set.add(clonedIsoRatio);
 							ret.put(quantifiedPosition, set);
 						}
@@ -1032,22 +1033,22 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	}
 
 	public TIntObjectHashMap<Set<IsoRatio>> getSiteSpecificRatiosSeriesB(Set<Character> aas) {
-		String sequence = getSequence();
-		TIntObjectHashMap<Set<IsoRatio>> ret = new TIntObjectHashMap<Set<IsoRatio>>();
+		final String sequence = getSequence();
+		final TIntObjectHashMap<Set<IsoRatio>> ret = new TIntObjectHashMap<Set<IsoRatio>>();
 		// series B, the positions are the same as the ion numbers
-		List<IsoRatio> ratiosFromSeries = getRatiosFromSeries(serieBLight, serieBHeavy);
-		TIntObjectHashMap<IsoRatio> isoRatiosByPosition = new TIntObjectHashMap<IsoRatio>();
+		final List<IsoRatio> ratiosFromSeries = getRatiosFromSeries(serieBLight, serieBHeavy);
+		final TIntObjectHashMap<IsoRatio> isoRatiosByPosition = new TIntObjectHashMap<IsoRatio>();
 
-		for (IsoRatio isoRatio : ratiosFromSeries) {
+		for (final IsoRatio isoRatio : ratiosFromSeries) {
 			isoRatiosByPosition.put(isoRatio.getNumIon(), isoRatio);
 		}
 		for (int position = 1; position <= sequence.length(); position++) {
 
 			if (isoRatiosByPosition.containsKey(position)) {
-				IsoRatio isoRatio = isoRatiosByPosition.get(position);
+				final IsoRatio isoRatio = isoRatiosByPosition.get(position);
 				// go from there to the start of the sequence seeing how many aa
 				// are from aas Set
-				List<Integer> tmpPositions = new ArrayList<Integer>();
+				final List<Integer> tmpPositions = new ArrayList<Integer>();
 				for (int j = position; j >= 1; j--) {
 					if (aas.contains(sequence.charAt(j - 1))) {
 						tmpPositions.add(j);
@@ -1055,14 +1056,14 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 				}
 				// only if num==1 we have a valid ratio
 				if (tmpPositions.size() == 1) {
-					Integer quantifiedPosition = tmpPositions.get(0);
-					Character quantifiedAA = sequence.charAt(quantifiedPosition - 1);
+					final Integer quantifiedPosition = tmpPositions.get(0);
+					final Character quantifiedAA = sequence.charAt(quantifiedPosition - 1);
 					isoRatio.setQuantifiedAA(quantifiedAA);
 					isoRatio.setQuantifiedSitePositionInPeptide(quantifiedPosition);
 					if (ret.containsKey(quantifiedPosition)) {
 						ret.get(quantifiedPosition).add(isoRatio);
 					} else {
-						Set<IsoRatio> set = new THashSet<IsoRatio>();
+						final Set<IsoRatio> set = new THashSet<IsoRatio>();
 						set.add(isoRatio);
 						ret.put(quantifiedPosition, set);
 					}
@@ -1070,15 +1071,15 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 						&& isoRatio.getLog2Ratio(serieBLight.getLabel(), serieBHeavy.getLabel()).isInfinite()) {
 					// also, if the ratio is infinite, it doesn't matters
 					// I will assign the ratio to all positions
-					for (Integer quantifiedPosition : tmpPositions) {
-						Character quantifiedAA = sequence.charAt(quantifiedPosition - 1);
-						IsoRatio clonedIsoRatio = cloneIsoRatio(isoRatio);
+					for (final Integer quantifiedPosition : tmpPositions) {
+						final Character quantifiedAA = sequence.charAt(quantifiedPosition - 1);
+						final IsoRatio clonedIsoRatio = cloneIsoRatio(isoRatio);
 						clonedIsoRatio.setQuantifiedAA(quantifiedAA);
 						clonedIsoRatio.setQuantifiedSitePositionInPeptide(quantifiedPosition);
 						if (ret.containsKey(quantifiedPosition)) {
 							ret.get(quantifiedPosition).add(clonedIsoRatio);
 						} else {
-							Set<IsoRatio> set = new THashSet<IsoRatio>();
+							final Set<IsoRatio> set = new THashSet<IsoRatio>();
 							set.add(clonedIsoRatio);
 							ret.put(quantifiedPosition, set);
 						}
@@ -1090,7 +1091,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	}
 
 	private IsoRatio cloneIsoRatio(IsoRatio isoRatio) {
-		IsoRatio clonedRatio = new IsoRatio(isoRatio.getIon(isoRatio.getLabel1()), isoRatio.getLabel1(),
+		final IsoRatio clonedRatio = new IsoRatio(isoRatio.getIon(isoRatio.getLabel1()), isoRatio.getLabel1(),
 				isoRatio.getQuantCondition1(), isoRatio.getIon(isoRatio.getLabel2()), isoRatio.getLabel2(),
 				isoRatio.getQuantCondition2(), isoRatio.getNumIon(), isoRatio.getIonSerieType(),
 				isoRatio.getAggregationLevel());
@@ -1098,26 +1099,26 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	}
 
 	public TIntObjectHashMap<Set<IsoRatio>> getSiteSpecificRatios(Set<Character> aas) {
-		TIntObjectHashMap<Set<IsoRatio>> ret = new TIntObjectHashMap<Set<IsoRatio>>();
-		TIntObjectHashMap<Set<IsoRatio>> siteSpecificRatiosSeriesB = getSiteSpecificRatiosSeriesB(aas);
-		for (int position : siteSpecificRatiosSeriesB.keys()) {
-			Set<IsoRatio> isoRatios = siteSpecificRatiosSeriesB.get(position);
+		final TIntObjectHashMap<Set<IsoRatio>> ret = new TIntObjectHashMap<Set<IsoRatio>>();
+		final TIntObjectHashMap<Set<IsoRatio>> siteSpecificRatiosSeriesB = getSiteSpecificRatiosSeriesB(aas);
+		for (final int position : siteSpecificRatiosSeriesB.keys()) {
+			final Set<IsoRatio> isoRatios = siteSpecificRatiosSeriesB.get(position);
 			if (ret.containsKey(position)) {
 				ret.get(position).addAll(isoRatios);
 			} else {
-				Set<IsoRatio> set = new THashSet<IsoRatio>();
+				final Set<IsoRatio> set = new THashSet<IsoRatio>();
 				set.addAll(isoRatios);
 				ret.put(position, set);
 			}
 
 		}
-		TIntObjectHashMap<Set<IsoRatio>> siteSpecificRatiosSeriesY = getSiteSpecificRatiosSeriesY(aas);
-		for (int position : siteSpecificRatiosSeriesY.keys()) {
-			Set<IsoRatio> isoRatios = siteSpecificRatiosSeriesY.get(position);
+		final TIntObjectHashMap<Set<IsoRatio>> siteSpecificRatiosSeriesY = getSiteSpecificRatiosSeriesY(aas);
+		for (final int position : siteSpecificRatiosSeriesY.keys()) {
+			final Set<IsoRatio> isoRatios = siteSpecificRatiosSeriesY.get(position);
 			if (ret.containsKey(position)) {
 				ret.get(position).addAll(isoRatios);
 			} else {
-				Set<IsoRatio> set = new THashSet<IsoRatio>();
+				final Set<IsoRatio> set = new THashSet<IsoRatio>();
 				set.addAll(isoRatios);
 				ret.put(position, set);
 			}
@@ -1128,11 +1129,11 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	}
 
 	private TIntObjectHashMap<IsoRatio> getIsoRatiosSortedByIonNumber(IonSerieType serie) {
-		TIntObjectHashMap<IsoRatio> ret = new TIntObjectHashMap<IsoRatio>();
+		final TIntObjectHashMap<IsoRatio> ret = new TIntObjectHashMap<IsoRatio>();
 
-		for (QuantRatio ratio : getRatios()) {
+		for (final QuantRatio ratio : getRatios()) {
 			if (ratio instanceof IsoRatio) {
-				IsoRatio isoRatio = (IsoRatio) ratio;
+				final IsoRatio isoRatio = (IsoRatio) ratio;
 				if (isoRatio.getIonSerieType() == serie) {
 					ret.put(isoRatio.getNumIon(), isoRatio);
 				}
@@ -1145,15 +1146,15 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 
 	@Override
 	public Map<QuantCondition, Set<Ion>> getIonsByConditionForSites(String replicateName, char[] quantifiedAAs) {
-		Map<QuantCondition, Set<Ion>> ret = new THashMap<QuantCondition, Set<Ion>>();
-		Map<QuantCondition, Set<Ion>> ionsByCondition2 = getIonsByCondition(replicateName);
-		List<Integer> quantifiedPositions = StringUtils.getPositions(getSequence(), quantifiedAAs);
+		final Map<QuantCondition, Set<Ion>> ret = new THashMap<QuantCondition, Set<Ion>>();
+		final Map<QuantCondition, Set<Ion>> ionsByCondition2 = getIonsByCondition(replicateName);
+		final TIntArrayList quantifiedPositions = StringUtils.getPositions(getSequence(), quantifiedAAs);
 		if (ionsByCondition2 != null) {
-			for (QuantCondition condition : ionsByCondition2.keySet()) {
-				Set<Ion> ions = ionsByCondition2.get(condition);
-				for (Ion ion : ions) {
-					int ionNumber = ion.getIonNumber();
-					List<Integer> quantPositions = null;
+			for (final QuantCondition condition : ionsByCondition2.keySet()) {
+				final Set<Ion> ions = ionsByCondition2.get(condition);
+				for (final Ion ion : ions) {
+					final int ionNumber = ion.getIonNumber();
+					TIntArrayList quantPositions = null;
 					switch (ion.getIonSerieType()) {
 					case B:
 						quantPositions = quantifiedPositions;
@@ -1174,7 +1175,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 						if (ret.containsKey(condition)) {
 							ret.get(condition).add(ion);
 						} else {
-							Set<Ion> set = new THashSet<Ion>();
+							final Set<Ion> set = new THashSet<Ion>();
 							set.add(ion);
 							ret.put(condition, set);
 						}
@@ -1190,15 +1191,15 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	@Override
 	public Map<QuantCondition, Set<Ion>> getIonsByConditionForSites(String replicateName, char[] quantifiedAAs,
 			int positionInPeptide) {
-		Map<QuantCondition, Set<Ion>> ret = new THashMap<QuantCondition, Set<Ion>>();
-		Map<QuantCondition, Set<Ion>> ionsByCondition2 = getIonsByCondition(replicateName);
-		List<Integer> quantifiedPositions = StringUtils.getPositions(getSequence(), quantifiedAAs);
+		final Map<QuantCondition, Set<Ion>> ret = new THashMap<QuantCondition, Set<Ion>>();
+		final Map<QuantCondition, Set<Ion>> ionsByCondition2 = getIonsByCondition(replicateName);
+		final TIntArrayList quantifiedPositions = StringUtils.getPositions(getSequence(), quantifiedAAs);
 		if (ionsByCondition2 != null) {
-			for (QuantCondition condition : ionsByCondition2.keySet()) {
-				Set<Ion> ions = ionsByCondition2.get(condition);
-				for (Ion ion : ions) {
-					int ionNumber = ion.getIonNumber();
-					List<Integer> quantPositions = null;
+			for (final QuantCondition condition : ionsByCondition2.keySet()) {
+				final Set<Ion> ions = ionsByCondition2.get(condition);
+				for (final Ion ion : ions) {
+					final int ionNumber = ion.getIonNumber();
+					TIntArrayList quantPositions = null;
 					int quantifiedPosition = -1;
 					switch (ion.getIonSerieType()) {
 					case B:
@@ -1227,7 +1228,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 							if (ret.containsKey(condition)) {
 								ret.get(condition).add(ion);
 							} else {
-								Set<Ion> set = new THashSet<Ion>();
+								final Set<Ion> set = new THashSet<Ion>();
 								set.add(ion);
 								ret.put(condition, set);
 							}
@@ -1241,9 +1242,9 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 		return ret;
 	}
 
-	private List<Integer> reversePositions(List<Integer> quantifiedPositions, int length) {
-		List<Integer> ret = new ArrayList<Integer>();
-		for (Integer quantifiedPosition : quantifiedPositions) {
+	private TIntArrayList reversePositions(TIntArrayList quantifiedPositions, int length) {
+		final TIntArrayList ret = new TIntArrayList();
+		for (final int quantifiedPosition : quantifiedPositions.toArray()) {
 			ret.add(length - quantifiedPosition + 1);
 		}
 		return ret;
@@ -1253,9 +1254,9 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 		return length - quantifiedPosition + 1;
 	}
 
-	private int getNumberOfNumbersEqualOrLessThanValue(List<Integer> numberlist, int number) {
+	private int getNumberOfNumbersEqualOrLessThanValue(TIntArrayList numberlist, int number) {
 		int ret = 0;
-		for (Integer integer : numberlist) {
+		for (final int integer : numberlist.toArray()) {
 			if (integer <= number) {
 				ret++;
 			}
