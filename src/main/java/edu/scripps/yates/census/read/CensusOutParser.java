@@ -179,7 +179,7 @@ public class CensusOutParser extends AbstractQuantParser {
 		log.info("Processing quant file...");
 
 		try {
-			final int numDecoy = 0;
+			int numDecoy = 0;
 			boolean someValidFile = false;
 			for (final RemoteSSHFileReference remoteFileRetriever : remoteFileRetrievers) {
 				final Map<QuantCondition, QuantificationLabel> labelsByConditions = labelsByConditionsByFile
@@ -250,9 +250,10 @@ public class CensusOutParser extends AbstractQuantParser {
 								}
 								itWasPeptides = false;
 								final QuantifiedProteinInterface quantifiedProtein = processProteinLine(line,
-										pLineHeaderList, conditionsByLabels, ratioDescriptors, numDecoy);
+										pLineHeaderList, conditionsByLabels, ratioDescriptors);
 								proteinGroup.add(quantifiedProtein);
 							} catch (final DiscardProteinException e) {
+								numDecoy++;
 								continue;
 							} catch (final IllegalArgumentException e) {
 								log.error(e);
@@ -1081,8 +1082,8 @@ public class CensusOutParser extends AbstractQuantParser {
 	}
 
 	private QuantifiedProteinInterface processProteinLine(String line, List<String> pLineHeaderList,
-			Map<QuantificationLabel, QuantCondition> conditionsByLabels, List<RatioDescriptor> ratioDescriptors,
-			int numDecoy) throws DiscardProteinException {
+			Map<QuantificationLabel, QuantCondition> conditionsByLabels, List<RatioDescriptor> ratioDescriptors)
+			throws DiscardProteinException {
 		// new protein
 		final MyHashMap<String, String> mapValues = getMapFromPLine(pLineHeaderList, line);
 		final String proteinACC = mapValues.get(LOCUS);
@@ -1102,7 +1103,6 @@ public class CensusOutParser extends AbstractQuantParser {
 			final Matcher matcher = decoyPattern.matcher(proteinACC);
 			if (matcher.find()) {
 				quantifiedProtein = null;
-				numDecoy++;
 				throw new DiscardProteinException("Protein " + proteinACC + " is DECOY.");
 			}
 		}
