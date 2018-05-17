@@ -1,5 +1,6 @@
 package edu.scripps.yates.census.read;
 
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,12 +38,12 @@ public class StatisticsOnProteinLevel {
 	private List<ProteinGroup> proteinGroups;
 	private PanalyzerStats groupingStats;
 
-	public StatisticsOnProteinLevel(CensusChroParser census) {
+	public StatisticsOnProteinLevel(CensusChroParser census) throws IOException {
 		this.census = census;
 		process();
 	}
 
-	private void process() {
+	private void process() throws IOException {
 		log.info("Getting statistics from data...");
 
 		// Set<String> peptideKeys = new THashSet<String>();
@@ -64,11 +65,11 @@ public class StatisticsOnProteinLevel {
 		// .getProteinToPeptidesMap().keySet();
 		log.info("Iterating over " + census.getPSMMap().size() + " quantified psms");
 		int count = 0;
-		for (QuantifiedPSMInterface quantifiedPSM : census.getPSMMap().values()) {
+		for (final QuantifiedPSMInterface quantifiedPSM : census.getPSMMap().values()) {
 			if (count++ % 500 == 0) {
 				log.info(df.format(Double.valueOf(count) * 100 / census.getPSMMap().size()) + " % of PSMs...");
 			}
-			Set<String> taxonomies = getTaxonomies(quantifiedPSM);
+			final Set<String> taxonomies = getTaxonomies(quantifiedPSM);
 			allTaxonomies.addAll(taxonomies);
 			if (!quantifiedPSM.getRatios().isEmpty()) {
 				addProteinsFromPSM(quantifiedPSM, proteinsContainingRatios);
@@ -80,12 +81,12 @@ public class StatisticsOnProteinLevel {
 				// both
 				addProteinsFromPSM(quantifiedPSM, proteinsInBothSpecies);
 			} else if (taxonomies.size() == 1) {
-				String taxonomy = taxonomies.iterator().next();
+				final String taxonomy = taxonomies.iterator().next();
 				// just in taxonomy
 				if (proteinsInOneSpecie.containsKey(taxonomy)) {
 					addProteinsFromPSM(quantifiedPSM, proteinsInOneSpecie.get(taxonomy));
 				} else {
-					Map<String, QuantifiedProteinInterface> map = new THashMap<String, QuantifiedProteinInterface>();
+					final Map<String, QuantifiedProteinInterface> map = new THashMap<String, QuantifiedProteinInterface>();
 					addProteinsFromPSM(quantifiedPSM, map);
 					proteinsInOneSpecie.put(taxonomy, map);
 				}
@@ -94,22 +95,22 @@ public class StatisticsOnProteinLevel {
 			}
 
 		}
-		int numProteinsWithNoRatiosBefore = proteinsNotContainingRatios.size();
+		final int numProteinsWithNoRatiosBefore = proteinsNotContainingRatios.size();
 		log.info("Consolidating " + numProteinsWithNoRatiosBefore + " proteins with no ratios...");
 		count = 0;
 		final Iterator<String> iterator = proteinsNotContainingRatios.keySet().iterator();
-		int total = proteinsNotContainingRatios.size();
-		Set<String> keysForDeletion = new THashSet<String>();
+		final int total = proteinsNotContainingRatios.size();
+		final Set<String> keysForDeletion = new THashSet<String>();
 		while (iterator.hasNext()) {
 			if (count++ % 100 == 0) {
 				log.info(df.format(Double.valueOf(count) * 100 / total) + " % of proteins with no ratios...");
 			}
-			String proteinKey = iterator.next();
+			final String proteinKey = iterator.next();
 			if (proteinsContainingRatios.containsKey(proteinKey)) {
 				keysForDeletion.add(proteinKey);
 			}
 		}
-		for (String proteinKey : keysForDeletion) {
+		for (final String proteinKey : keysForDeletion) {
 			proteinsNotContainingRatios.remove(proteinKey);
 		}
 
@@ -118,7 +119,7 @@ public class StatisticsOnProteinLevel {
 
 		log.info(census.getProteinMap().size() + " representative proteins quantified");
 		log.info("Proteins in both species: " + proteinsInBothSpecies.size());
-		for (String taxonomy : proteinsInOneSpecie.keySet()) {
+		for (final String taxonomy : proteinsInOneSpecie.keySet()) {
 			log.info("Proteins just in " + taxonomy + ": " + proteinsInOneSpecie.get(taxonomy).size());
 		}
 		log.info(proteinsNotContainingRatios.size() + " proteins with no ratios");
@@ -130,8 +131,8 @@ public class StatisticsOnProteinLevel {
 	private Set<String> getTaxonomies(QuantifiedPSMInterface quantifiedPSM) {
 
 		final Set<String> taxonomies = quantifiedPSM.getTaxonomies();
-		Set<String> ret = new THashSet<String>();
-		for (String taxonomy : taxonomies) {
+		final Set<String> ret = new THashSet<String>();
+		for (final String taxonomy : taxonomies) {
 			final UniprotOrganism uniprotOrganism = UniprotSpeciesCodeMap.getInstance().get(taxonomy);
 			if (uniprotOrganism != null) {
 				ret.add(uniprotOrganism.getCode());
@@ -154,7 +155,7 @@ public class StatisticsOnProteinLevel {
 	private void addProteinsFromPSM(QuantifiedPSMInterface psm, Map<String, QuantifiedProteinInterface> map) {
 		final Set<QuantifiedProteinInterface> quantifiedProteins = psm.getQuantifiedProteins();
 
-		for (QuantifiedProteinInterface quantifiedProtein : quantifiedProteins) {
+		for (final QuantifiedProteinInterface quantifiedProtein : quantifiedProteins) {
 			map.put(quantifiedProtein.getKey(), quantifiedProtein);
 		}
 
@@ -188,20 +189,21 @@ public class StatisticsOnProteinLevel {
 	 * or heavy) for each species.
 	 *
 	 * @return
+	 * @throws IOException
 	 */
-	public String printProteinQuantificationTableBySpecies() {
-		String separator = "\t\t\t";
-		StringBuilder sb = new StringBuilder();
-		StringBuilder allspecies = new StringBuilder();
-		StringBuilder allLabels = new StringBuilder();
+	public String printProteinQuantificationTableBySpecies() throws IOException {
+		final String separator = "\t\t\t";
+		final StringBuilder sb = new StringBuilder();
+		final StringBuilder allspecies = new StringBuilder();
+		final StringBuilder allLabels = new StringBuilder();
 
 		final Set<String> species = getTaxonomies();
-		List<String> sortedSpecies = new ArrayList<String>();
+		final List<String> sortedSpecies = new ArrayList<String>();
 		sortedSpecies.addAll(species);
 		Collections.sort(sortedSpecies);
 		sb.append(separator);
 
-		for (String specie : sortedSpecies) {
+		for (final String specie : sortedSpecies) {
 			sb.append(specie + separator);
 			if (!"".equals(allspecies.toString()))
 				allspecies.append("+");
@@ -215,11 +217,11 @@ public class StatisticsOnProteinLevel {
 				allLabels.append("+");
 			allLabels.append(label);
 			sb.append(label + separator);
-			for (String specie : sortedSpecies) {
+			for (final String specie : sortedSpecies) {
 				final Set<String> proteinKeys = proteinsInOneSpecie.get(specie).keySet();
 				int proteinsInSpecieWithLabel = 0;
 				if (proteinKeys != null) {
-					for (String proteinKey : proteinKeys) {
+					for (final String proteinKey : proteinKeys) {
 						final QuantifiedProteinInterface quantifiedProtein = census.getProteinMap().get(proteinKey);
 						if (quantifiedProtein != null && CensusChroUtil.containsAnyIon(quantifiedProtein, label)
 								&& !CensusChroUtil.containsAnyIonWithAnyOtherLabelThan(quantifiedProtein, label)) {
@@ -231,8 +233,8 @@ public class StatisticsOnProteinLevel {
 			}
 			// proteins in both species
 			int proteinsInBothSpecieWithLabel = 0;
-			for (String proteinKey : proteinsInBothSpecies.keySet()) {
-				QuantifiedProteinInterface quantifiedProtein = census.getProteinMap().get(proteinKey);
+			for (final String proteinKey : proteinsInBothSpecies.keySet()) {
+				final QuantifiedProteinInterface quantifiedProtein = census.getProteinMap().get(proteinKey);
 				if (quantifiedProtein != null && CensusChroUtil.containsAnyIon(quantifiedProtein, label)
 						&& !CensusChroUtil.containsAnyIonWithAnyOtherLabelThan(quantifiedProtein, label)) {
 					proteinsInBothSpecieWithLabel++;
@@ -242,15 +244,15 @@ public class StatisticsOnProteinLevel {
 		}
 		sb.append(allLabels.toString() + separator);
 		// all labels and one species
-		for (String specie : sortedSpecies) {
+		for (final String specie : sortedSpecies) {
 			final Set<String> proteinKeys = proteinsInOneSpecie.get(specie).keySet();
 			int numProteinsWithAllLabels = 0;
 			if (proteinKeys != null) {
-				for (String proteinKey : proteinKeys) {
-					QuantifiedProteinInterface quantifiedProtein = census.getProteinMap().get(proteinKey);
+				for (final String proteinKey : proteinKeys) {
+					final QuantifiedProteinInterface quantifiedProtein = census.getProteinMap().get(proteinKey);
 					if (quantifiedProtein != null) {
 						boolean found = true;
-						for (QuantificationLabel label : QuantificationLabel.values()) {
+						for (final QuantificationLabel label : QuantificationLabel.values()) {
 							if (!CensusChroUtil.containsAnyIon(quantifiedProtein, label)) {
 								found = false;
 								break;
@@ -266,11 +268,11 @@ public class StatisticsOnProteinLevel {
 		}
 		// both labels and both species
 		int numProteinsWithAllLabels = 0;
-		for (String proteinKey : proteinsInBothSpecies.keySet()) {
-			QuantifiedProteinInterface quantifiedProtein = census.getProteinMap().get(proteinKey);
+		for (final String proteinKey : proteinsInBothSpecies.keySet()) {
+			final QuantifiedProteinInterface quantifiedProtein = census.getProteinMap().get(proteinKey);
 			if (quantifiedProtein != null) {
 				boolean found = true;
-				for (QuantificationLabel label : QuantificationLabel.values()) {
+				for (final QuantificationLabel label : QuantificationLabel.values()) {
 					if (!CensusChroUtil.containsAnyIon(quantifiedProtein, label)) {
 						found = false;
 						break;
@@ -285,10 +287,10 @@ public class StatisticsOnProteinLevel {
 		return sb.toString();
 	}
 
-	public List<ProteinGroup> getProteinGroups() {
+	public List<ProteinGroup> getProteinGroups() throws IOException {
 		if (proteinGroups == null) {
-			PAnalyzer pa = new PAnalyzer(false);
-			List<GroupableProtein> set = new ArrayList<GroupableProtein>();
+			final PAnalyzer pa = new PAnalyzer(false);
+			final List<GroupableProtein> set = new ArrayList<GroupableProtein>();
 			set.addAll(census.getProteinMap().values());
 			proteinGroups = pa.run(set);
 			groupingStats = pa.getStats();
@@ -298,8 +300,9 @@ public class StatisticsOnProteinLevel {
 
 	/**
 	 * @return the groupingStats
+	 * @throws IOException
 	 */
-	public PanalyzerStats getGroupingStats() {
+	public PanalyzerStats getGroupingStats() throws IOException {
 		if (groupingStats == null) {
 			getProteinGroups();
 		}
@@ -327,8 +330,8 @@ public class StatisticsOnProteinLevel {
 		return proteinsNotContainingRatios;
 	}
 
-	public String printFullReport() {
-		StringBuilder sb = new StringBuilder();
+	public String printFullReport() throws IOException {
+		final StringBuilder sb = new StringBuilder();
 		sb.append(printProteinQuantificationTableBySpecies() + "\n");
 		sb.append(getProteinsContainingRatios().size() + " proteins containing at least one ratio in one peptide\n");
 		sb.append(getProteinsNotContainingRatios().size() + " proteins not containing ratios in their peptides\n");

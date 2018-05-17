@@ -2,6 +2,7 @@ package edu.scripps.yates.census.read;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -312,9 +313,10 @@ public abstract class AbstractQuantParser implements QuantParser {
 
 	/**
 	 * @return the proteinMap @
+	 * @throws IOException
 	 */
 	@Override
-	public Map<String, Set<String>> getProteinToPeptidesMap() {
+	public Map<String, Set<String>> getProteinToPeptidesMap() throws IOException {
 		if (!processed) {
 			startProcess();
 		}
@@ -323,9 +325,10 @@ public abstract class AbstractQuantParser implements QuantParser {
 
 	/**
 	 * @return the peptideMap @
+	 * @throws IOException
 	 */
 	@Override
-	public Map<String, Set<String>> getPeptideToSpectraMap() {
+	public Map<String, Set<String>> getPeptideToSpectraMap() throws IOException {
 		if (!processed) {
 			startProcess();
 		}
@@ -336,9 +339,10 @@ public abstract class AbstractQuantParser implements QuantParser {
 	 * Gets the Protein by Protein key.
 	 *
 	 * @return the proteinMap @
+	 * @throws IOException
 	 */
 	@Override
-	public final Map<String, QuantifiedProteinInterface> getProteinMap() {
+	public final Map<String, QuantifiedProteinInterface> getProteinMap() throws IOException {
 		if (!processed) {
 			startProcess();
 		}
@@ -346,7 +350,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 	}
 
 	@Override
-	public final Map<String, QuantifiedPSMInterface> getPSMMap() {
+	public final Map<String, QuantifiedPSMInterface> getPSMMap() throws IOException {
 		if (!processed) {
 			startProcess();
 		}
@@ -363,7 +367,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 	}
 
 	@Override
-	public Set<String> getTaxonomies() {
+	public Set<String> getTaxonomies() throws IOException {
 		if (!processed) {
 			startProcess();
 		}
@@ -372,16 +376,17 @@ public abstract class AbstractQuantParser implements QuantParser {
 
 	/**
 	 * @return the peptideMap @
+	 * @throws IOException
 	 */
 	@Override
-	public Map<String, QuantifiedPeptideInterface> getPeptideMap() {
+	public Map<String, QuantifiedPeptideInterface> getPeptideMap() throws IOException {
 		if (!processed) {
 			startProcess();
 		}
 		return localPeptideMap;
 	}
 
-	private void startProcess() {
+	private void startProcess() throws IOException {
 		if (clearStaticMapsBeforeReading) {
 			// clear information in static maps
 			StaticQuantMaps.clearInfo();
@@ -396,7 +401,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 		mergeProteinsWithSecondaryAccessionsInParser();
 	}
 
-	protected abstract void process();
+	protected abstract void process() throws IOException;
 
 	public static void addToMap(String key, Map<String, Set<String>> map, String value) {
 		if (map.containsKey(key)) {
@@ -434,9 +439,10 @@ public abstract class AbstractQuantParser implements QuantParser {
 	 * that are actually from uniprot.
 	 *
 	 * @return @
+	 * @throws IOException
 	 */
 	@Override
-	public Set<String> getUniprotAccSet() {
+	public Set<String> getUniprotAccSet() throws IOException {
 		final Set<String> ret = new THashSet<String>();
 		final Set<String> keySet = getProteinMap().keySet();
 		for (final String acc : keySet) {
@@ -498,7 +504,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 		this.uniprotVersion = uniprotVersion;
 	}
 
-	private void mergeProteinsWithSecondaryAccessionsInParser() {
+	private void mergeProteinsWithSecondaryAccessionsInParser() throws IOException {
 		if (uplr == null) {
 			return;
 		}

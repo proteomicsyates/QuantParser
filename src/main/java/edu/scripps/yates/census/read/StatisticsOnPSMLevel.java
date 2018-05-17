@@ -1,5 +1,6 @@
 package edu.scripps.yates.census.read;
 
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,7 +31,7 @@ public class StatisticsOnPSMLevel {
 	private final QuantificationLabel labelDenominator;
 
 	public StatisticsOnPSMLevel(CensusChroParser census, QuantificationLabel labelNumerator,
-			QuantificationLabel labelDenominator, boolean printPeptideTotal) {
+			QuantificationLabel labelDenominator, boolean printPeptideTotal) throws IOException {
 		this.census = census;
 		this.printPeptideTotal = printPeptideTotal;
 		this.labelDenominator = labelDenominator;
@@ -38,48 +39,48 @@ public class StatisticsOnPSMLevel {
 		process();
 	}
 
-	private void process() {
+	private void process() throws IOException {
 		psmTableString = new StringBuilder();
 		log.info("Getting statistics from data...");
 		// columnns
 		psmTableString.append("Pep seq" + SEPARATOR + "PSM id" + SEPARATOR);
-		List<String> taxonomyList = new ArrayList<String>();
+		final List<String> taxonomyList = new ArrayList<String>();
 		taxonomyList.addAll(census.getTaxonomies());
 		Collections.sort(taxonomyList);
-		for (String taxonomy : taxonomyList) {
+		for (final String taxonomy : taxonomyList) {
 			psmTableString.append("Id on " + taxonomy + SEPARATOR);
 		}
-		for (QuantificationLabel label : QuantificationLabel.values()) {
+		for (final QuantificationLabel label : QuantificationLabel.values()) {
 			psmTableString.append("# ions labeled as " + label + SEPARATOR);
 		}
 		psmTableString.append("Avg ratio" + SEPARATOR);
 		psmTableString.append("# ratios" + SEPARATOR);
 		psmTableString.append("\n");
 
-		List<edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface> sortedPSMs = getSortedPsms(
+		final List<edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface> sortedPSMs = getSortedPsms(
 				census.getPSMMap());
 		log.info("Iterating over " + sortedPSMs.size() + " quantified psms");
 		int count = 0;
 		String currentPeptideSequence = null;
 		int peptideNumRatios = 0;
 		int psmNumber = 0;
-		Map<QuantificationLabel, Integer> peptideIonsLabeled = new THashMap<QuantificationLabel, Integer>();
-		Map<String, Boolean> peptideIdentifiedBySpecie = new THashMap<String, Boolean>();
-		List<Double> peptideRatios = new ArrayList<Double>();
-		for (QuantifiedPSMInterface quantifiedPSM : sortedPSMs) {
+		final Map<QuantificationLabel, Integer> peptideIonsLabeled = new THashMap<QuantificationLabel, Integer>();
+		final Map<String, Boolean> peptideIdentifiedBySpecie = new THashMap<String, Boolean>();
+		final List<Double> peptideRatios = new ArrayList<Double>();
+		for (final QuantifiedPSMInterface quantifiedPSM : sortedPSMs) {
 			final String seq = quantifiedPSM.getFullSequence();
 			if (currentPeptideSequence != null && !seq.equals(currentPeptideSequence) && printPeptideTotal) {
 				// print PEPTIDE data
 				psmTableString.append(currentPeptideSequence + SEPARATOR);
 				psmTableString.append(psmNumber + SEPARATOR);
-				for (String taxonomy : taxonomyList) {
+				for (final String taxonomy : taxonomyList) {
 					if (peptideIdentifiedBySpecie.containsKey(taxonomy) && peptideIdentifiedBySpecie.get(taxonomy)) {
 						psmTableString.append(YES + SEPARATOR);
 					} else {
 						psmTableString.append(NO + SEPARATOR);
 					}
 				}
-				for (QuantificationLabel label : QuantificationLabel.values()) {
+				for (final QuantificationLabel label : QuantificationLabel.values()) {
 					if (peptideIonsLabeled.containsKey(label)) {
 						psmTableString.append(peptideIonsLabeled.get(label) + SEPARATOR);
 					} else {
@@ -88,10 +89,10 @@ public class StatisticsOnPSMLevel {
 				}
 				if (!peptideRatios.isEmpty()) {
 					double sumOfAvgRatios = 0.0;
-					for (Double avratio : peptideRatios) {
+					for (final Double avratio : peptideRatios) {
 						sumOfAvgRatios += avratio;
 					}
-					double avgOfAvgRatios = sumOfAvgRatios / peptideRatios.size();
+					final double avgOfAvgRatios = sumOfAvgRatios / peptideRatios.size();
 					psmTableString.append(avgOfAvgRatios + SEPARATOR);
 				} else {
 					psmTableString.append("-" + SEPARATOR);
@@ -107,7 +108,7 @@ public class StatisticsOnPSMLevel {
 				psmNumber = 0;
 			}
 			currentPeptideSequence = seq;
-			String psmID = KeyUtils.getSpectrumKey(quantifiedPSM, true);
+			final String psmID = KeyUtils.getSpectrumKey(quantifiedPSM, true);
 			if (count++ % 500 == 0) {
 				log.info(df.format(Double.valueOf(count) * 100 / census.getPSMMap().size()) + " % of PSMs...");
 			}
@@ -119,7 +120,7 @@ public class StatisticsOnPSMLevel {
 			// PSM ID
 			psmTableString.append(psmID + SEPARATOR);
 			// taxonomies
-			for (String taxonomy : taxonomyList) {
+			for (final String taxonomy : taxonomyList) {
 				if (quantifiedPSM.getTaxonomies().contains(taxonomy)) {
 					psmTableString.append(YES + SEPARATOR);
 					peptideIdentifiedBySpecie.put(taxonomy, true);
@@ -128,9 +129,9 @@ public class StatisticsOnPSMLevel {
 				}
 			}
 			// labeled
-			for (QuantificationLabel label : QuantificationLabel.values()) {
+			for (final QuantificationLabel label : QuantificationLabel.values()) {
 				if (quantifiedPSM instanceof IsobaricQuantifiedPSM) {
-					IsobaricQuantifiedPSM isoPsm = (IsobaricQuantifiedPSM) quantifiedPSM;
+					final IsobaricQuantifiedPSM isoPsm = (IsobaricQuantifiedPSM) quantifiedPSM;
 					final int numLabeledIons = isoPsm.getSingletonIonsByLabel(label).size();
 					psmTableString.append(numLabeledIons + SEPARATOR);
 					if (peptideIonsLabeled.containsKey(label)) {
@@ -145,7 +146,7 @@ public class StatisticsOnPSMLevel {
 			if (!quantifiedPSM.getRatios().isEmpty()) {
 				double sum = 0.0;
 				int valid = 0;
-				for (QuantRatio ratio : quantifiedPSM.getRatios()) {
+				for (final QuantRatio ratio : quantifiedPSM.getRatios()) {
 					if (!Maths.isMaxOrMinValue(ratio.getLog2Ratio(labelNumerator, labelDenominator))
 							&& !Double.isNaN(ratio.getLog2Ratio(labelNumerator, labelDenominator))) {
 						sum += ratio.getLog2Ratio(labelNumerator, labelDenominator);
@@ -178,8 +179,8 @@ public class StatisticsOnPSMLevel {
 
 			@Override
 			public int compare(QuantifiedPSMInterface o1, QuantifiedPSMInterface o2) {
-				String seq1 = o1.getFullSequence();
-				String seq2 = o2.getFullSequence();
+				final String seq1 = o1.getFullSequence();
+				final String seq2 = o2.getFullSequence();
 				return seq1.compareTo(seq2);
 			}
 

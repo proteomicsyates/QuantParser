@@ -37,6 +37,7 @@ import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface
 import edu.scripps.yates.census.read.util.MyHashMap;
 import edu.scripps.yates.census.read.util.QuantUtils;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
+import edu.scripps.yates.dbindex.DBIndexStoreException;
 import edu.scripps.yates.dbindex.IndexedProtein;
 import edu.scripps.yates.dbindex.util.PeptideNotFoundInDBIndexException;
 import edu.scripps.yates.utilities.model.enums.AggregationLevel;
@@ -1001,6 +1002,11 @@ public class CensusOutParser extends AbstractQuantParser {
 
 		} catch (final NullPointerException e) {
 			// e.printStackTrace();
+			log.warn(e);
+			log.warn("Error reading line '" + line + "' from file. Skipping it...");
+		} catch (final DBIndexStoreException e) {
+
+			e.printStackTrace();
 			log.warn(e);
 			log.warn("Error reading line '" + line + "' from file. Skipping it...");
 		}

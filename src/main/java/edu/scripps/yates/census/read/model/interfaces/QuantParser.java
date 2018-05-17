@@ -2,6 +2,7 @@ package edu.scripps.yates.census.read.model.interfaces;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,25 +29,25 @@ public interface QuantParser {
 			Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelL,
 			QuantificationLabel labelM, QuantificationLabel labelH);
 
-	Map<String, QuantifiedPeptideInterface> getPeptideMap();
+	Map<String, QuantifiedPeptideInterface> getPeptideMap() throws IOException;
 
-	Set<String> getTaxonomies();
+	Set<String> getTaxonomies() throws IOException;
 
 	void setDbIndex(DBIndexInterface dbIndex);
 
-	Map<String, QuantifiedPSMInterface> getPSMMap();
+	Map<String, QuantifiedPSMInterface> getPSMMap() throws IOException;
 
-	Map<String, QuantifiedProteinInterface> getProteinMap();
+	Map<String, QuantifiedProteinInterface> getProteinMap() throws IOException;
 
-	Map<String, Set<String>> getPeptideToSpectraMap();
+	Map<String, Set<String>> getPeptideToSpectraMap() throws IOException;
 
-	Map<String, Set<String>> getProteinToPeptidesMap();
+	Map<String, Set<String>> getProteinToPeptidesMap() throws IOException;
 
-	List<RemoteSSHFileReference> getRemoteFileRetrievers();
+	List<RemoteSSHFileReference> getRemoteFileRetrievers() throws IOException;
 
 	void setDecoyPattern(String patternString) throws PatternSyntaxException;
 
-	Set<String> getUniprotAccSet();
+	Set<String> getUniprotAccSet() throws IOException;
 
 	void setIgnoreNotFoundPeptidesInDB(boolean ignoreNotFoundPeptidesInDB);
 

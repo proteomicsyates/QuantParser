@@ -2,6 +2,7 @@ package edu.scripps.yates.census.read;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -82,9 +83,10 @@ public abstract class AbstractIsobaricQuantParser extends AbstractQuantParser im
 	 * Gets the set of spectrum to ions map
 	 *
 	 * @return the spectrumMap
+	 * @throws IOException
 	 */
 	@Override
-	public Map<String, Set<String>> getSpectrumToIonsMap() {
+	public Map<String, Set<String>> getSpectrumToIonsMap() throws IOException {
 		if (!processed)
 			process();
 		return spectrumToIonsMap;
@@ -124,6 +126,6 @@ public abstract class AbstractIsobaricQuantParser extends AbstractQuantParser im
 	}
 
 	@Override
-	protected abstract void process();
+	protected abstract void process() throws IOException;
 
 }

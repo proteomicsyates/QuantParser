@@ -31,6 +31,7 @@ import edu.scripps.yates.census.read.model.StaticQuantMaps;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
+import edu.scripps.yates.dbindex.DBIndexStoreException;
 import edu.scripps.yates.dbindex.IndexedProtein;
 import edu.scripps.yates.dbindex.util.PeptideNotFoundInDBIndexException;
 import edu.scripps.yates.utilities.fasta.FastaParser;
@@ -123,7 +124,7 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 	 */
 
 	@Override
-	public void process() {
+	public void process() throws IOException {
 		processed = false;
 		log.info("reading " + remoteFileRetrievers.size() + " census chro file(s) from parser " + hashCode() + "...");
 
@@ -320,8 +321,10 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 			if (!super.ignoreNotFoundPeptidesInDB) {
 				throw e;
 			}
-		} catch (final IOException e) {
+		} catch (final DBIndexStoreException e) {
 			e.printStackTrace();
+			log.error(e.getMessage());
+			throw new IOException(e);
 		} finally
 
 		{

@@ -307,6 +307,7 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 
 		final Map<PositionInPeptide, List<PositionInProtein>> ret = new THashMap<PositionInPeptide, List<PositionInProtein>>();
 		final Set<String> aas = new HashSet<String>();
+		aas.clear();
 		for (final char c : quantifiedAAs) {
 			final String aa = String.valueOf(c).toUpperCase();
 			if (!aas.contains(aa)) {

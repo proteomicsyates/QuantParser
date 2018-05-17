@@ -26,6 +26,7 @@ import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
+import edu.scripps.yates.dbindex.DBIndexStoreException;
 import edu.scripps.yates.dbindex.IndexedProtein;
 import edu.scripps.yates.dbindex.util.PeptideNotFoundInDBIndexException;
 import edu.scripps.yates.utilities.fasta.FastaParser;
@@ -123,134 +124,130 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 	}
 
 	@Override
-	protected void process() {
+	protected void process() throws IOException {
 		processed = false;
 		log.info("Processing file...");
 
-		try {
-			final int numDecoy = 0;
-			boolean someValidFile = false;
-			for (final RemoteSSHFileReference remoteFileRetriever : remoteFileRetrievers) {
-				final Map<QuantCondition, QuantificationLabel> labelsByConditions = labelsByConditionsByFile
-						.get(remoteFileRetriever);
-				final Map<QuantificationLabel, QuantCondition> conditionsByLabels = new THashMap<QuantificationLabel, QuantCondition>();
-				for (final QuantCondition cond : labelsByConditions.keySet()) {
-					conditionsByLabels.put(labelsByConditions.get(cond), cond);
-				}
-
-				final QuantificationLabel labelNumerator = ratioDescriptorsByFile.get(remoteFileRetriever).get(0)
-						.getLabel1();
-				final QuantificationLabel labelDenominator = ratioDescriptorsByFile.get(remoteFileRetriever).get(0)
-						.getLabel2();
-
-				final String experimentKey = FilenameUtils
-						.getBaseName(remoteFileRetriever.getOutputFile().getAbsolutePath());
-				log.info(experimentKey);
-				// get all the Quantified PSMs first
-				// Set<QuantifiedPSMInterface> psms = new
-				// HashSet<QuantifiedPSMInterface>();
-				final File remoteFile = remoteFileRetriever.getRemoteFile();
-				if (remoteFile == null || !remoteFile.exists())
-					continue;
-				log.info("Reading " + remoteFile.getAbsolutePath());
-				someValidFile = true;
-				BufferedReader br = null;
-				try {
-					br = new BufferedReader(new FileReader(remoteFile));
-
-					String line;
-
-					int numLine = 0;
-					while ((line = br.readLine()) != null) {
-						numLine++;
-						if (line.contains(separator)) {
-							String psmID = null;
-							String seq = null;
-							Double ratio = null;
-							Double ratioWeigth = null;
-							String proteinAcc = null;
-							final String[] split = line.split(separator);
-							if (split.length > PSM_ID_COL) {
-								psmID = split[PSM_ID_COL];
-							}
-							if (split.length > SEQ_COL) {
-								seq = split[SEQ_COL];
-							}
-							if (split.length > RATIO_COL && !"".equals(split[RATIO_COL])) {
-								try {
-									ratio = Double.valueOf(split[RATIO_COL]);
-								} catch (final NumberFormatException e) {
-									e.printStackTrace();
-									throw new IllegalArgumentException("Error in line:" + numLine + ", col:" + RATIO_COL
-											+ 1 + "\t" + e.getMessage());
-								}
-							}
-							if (split.length > RATIO_WEIGHT_COL && !"".equals(split[RATIO_WEIGHT_COL])) {
-								try {
-									ratioWeigth = Double.valueOf(split[RATIO_WEIGHT_COL]);
-								} catch (final NumberFormatException e) {
-									e.printStackTrace();
-									throw new IllegalArgumentException("Error in line:" + numLine + ", col:"
-											+ RATIO_WEIGHT_COL + 1 + "\t" + e.getMessage());
-								}
-							}
-							if (split.length > PROTEIN_ACC_COL) {
-								proteinAcc = split[PROTEIN_ACC_COL];
-							}
-							processPSMLine(psmID, seq, ratio, ratioWeigth, proteinAcc, conditionsByLabels,
-									labelsByConditions, labelNumerator, labelDenominator, experimentKey,
-									remoteFileRetriever);
-						}
-
-					}
-
-					br.close();
-
-				} catch (final PeptideNotFoundInDBIndexException e) {
-					if (!super.ignoreNotFoundPeptidesInDB) {
-						throw e;
-					}
-				} catch (final Exception e) {
-					e.printStackTrace();
-				} finally {
-					if (br != null) {
-						br.close();
-					}
-				}
-
-				log.info("(" + experimentKey + ") " + localPsmMap.size() + " PSMs from this parser. "
-						+ StaticQuantMaps.psmMap.size() + " PSMs in the system");
-				log.info("(" + experimentKey + ") " + localProteinMap.size() + " Proteins from this parser. "
-						+ StaticQuantMaps.proteinMap.size() + " Proteins in the system");
-				log.info("(" + experimentKey + ") " + localPeptideMap.size() + " Peptides from this parser. "
-						+ StaticQuantMaps.peptideMap.size() + " Peptides in the system");
-				if (decoyPattern != null) {
-					log.info(numDecoy + " decoy Proteins were discarded  in " + experimentKey);
-				}
-
+		final int numDecoy = 0;
+		boolean someValidFile = false;
+		for (final RemoteSSHFileReference remoteFileRetriever : remoteFileRetrievers) {
+			final Map<QuantCondition, QuantificationLabel> labelsByConditions = labelsByConditionsByFile
+					.get(remoteFileRetriever);
+			final Map<QuantificationLabel, QuantCondition> conditionsByLabels = new THashMap<QuantificationLabel, QuantCondition>();
+			for (final QuantCondition cond : labelsByConditions.keySet()) {
+				conditionsByLabels.put(labelsByConditions.get(cond), cond);
 			}
-			if (!someValidFile)
-				throw new IllegalArgumentException("some error occurred while reading the files");
 
-			processed = true;
-		} catch (final IOException e) {
-			e.printStackTrace();
-		} finally {
-			// if (processed) {
-			// // to create the peptides at the end
-			// peptideMap.clear();
-			// peptideMap.putAll(
-			// QuantifiedPeptide.getQuantifiedPeptides(getPSMMap().values(),
-			// distinguishModifiedPeptides));
-			// }
+			final QuantificationLabel labelNumerator = ratioDescriptorsByFile.get(remoteFileRetriever).get(0)
+					.getLabel1();
+			final QuantificationLabel labelDenominator = ratioDescriptorsByFile.get(remoteFileRetriever).get(0)
+					.getLabel2();
+
+			final String experimentKey = FilenameUtils
+					.getBaseName(remoteFileRetriever.getOutputFile().getAbsolutePath());
+			log.info(experimentKey);
+			// get all the Quantified PSMs first
+			// Set<QuantifiedPSMInterface> psms = new
+			// HashSet<QuantifiedPSMInterface>();
+			final File remoteFile = remoteFileRetriever.getRemoteFile();
+			if (remoteFile == null || !remoteFile.exists())
+				continue;
+			log.info("Reading " + remoteFile.getAbsolutePath());
+			someValidFile = true;
+			BufferedReader br = null;
+			try {
+				br = new BufferedReader(new FileReader(remoteFile));
+
+				String line;
+
+				int numLine = 0;
+				while ((line = br.readLine()) != null) {
+					numLine++;
+					if (line.contains(separator)) {
+						String psmID = null;
+						String seq = null;
+						Double ratio = null;
+						Double ratioWeigth = null;
+						String proteinAcc = null;
+						final String[] split = line.split(separator);
+						if (split.length > PSM_ID_COL) {
+							psmID = split[PSM_ID_COL];
+						}
+						if (split.length > SEQ_COL) {
+							seq = split[SEQ_COL];
+						}
+						if (split.length > RATIO_COL && !"".equals(split[RATIO_COL])) {
+							try {
+								ratio = Double.valueOf(split[RATIO_COL]);
+							} catch (final NumberFormatException e) {
+								e.printStackTrace();
+								throw new IllegalArgumentException(
+										"Error in line:" + numLine + ", col:" + RATIO_COL + 1 + "\t" + e.getMessage());
+							}
+						}
+						if (split.length > RATIO_WEIGHT_COL && !"".equals(split[RATIO_WEIGHT_COL])) {
+							try {
+								ratioWeigth = Double.valueOf(split[RATIO_WEIGHT_COL]);
+							} catch (final NumberFormatException e) {
+								e.printStackTrace();
+								throw new IllegalArgumentException("Error in line:" + numLine + ", col:"
+										+ RATIO_WEIGHT_COL + 1 + "\t" + e.getMessage());
+							}
+						}
+						if (split.length > PROTEIN_ACC_COL) {
+							proteinAcc = split[PROTEIN_ACC_COL];
+						}
+						processPSMLine(psmID, seq, ratio, ratioWeigth, proteinAcc, conditionsByLabels,
+								labelsByConditions, labelNumerator, labelDenominator, experimentKey,
+								remoteFileRetriever);
+					}
+
+				}
+
+				br.close();
+
+			} catch (final PeptideNotFoundInDBIndexException e) {
+				if (!super.ignoreNotFoundPeptidesInDB) {
+					throw e;
+				}
+			} catch (final IOException e) {
+				e.printStackTrace();
+				log.error(e.getMessage());
+				throw e;
+			} catch (final DBIndexStoreException e) {
+
+				e.printStackTrace();
+				log.error(e.getMessage());
+				throw new IOException(e);
+			} finally {
+				if (br != null) {
+					br.close();
+				}
+			}
+
+			log.info("(" + experimentKey + ") " + localPsmMap.size() + " PSMs from this parser. "
+					+ StaticQuantMaps.psmMap.size() + " PSMs in the system");
+			log.info("(" + experimentKey + ") " + localProteinMap.size() + " Proteins from this parser. "
+					+ StaticQuantMaps.proteinMap.size() + " Proteins in the system");
+			log.info("(" + experimentKey + ") " + localPeptideMap.size() + " Peptides from this parser. "
+					+ StaticQuantMaps.peptideMap.size() + " Peptides in the system");
+			if (decoyPattern != null) {
+				log.info(numDecoy + " decoy Proteins were discarded  in " + experimentKey);
+			}
+
 		}
+		if (!someValidFile)
+			throw new IllegalArgumentException("some error occurred while reading the files");
+
+		processed = true;
+
 	}
 
 	private void processPSMLine(String psmId, String sequence, Double ratioValue, Double ratioWeigth, String proteinACC,
 			Map<QuantificationLabel, QuantCondition> conditionsByLabels,
 			Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelNumerator,
 			QuantificationLabel labelDenominator, String experimentKey, RemoteSSHFileReference remoteFileRetriever)
-			throws IOException {
+			throws IOException, DBIndexStoreException {
 
 		// new psm
 
