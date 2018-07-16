@@ -681,7 +681,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	}
 
 	@Override
-	public String getPSMIdentifier() {
+	public String getIdentifier() {
 		if (peptide != null) {
 			return KeyUtils.getSpectrumKey(peptide, true);
 		} else {

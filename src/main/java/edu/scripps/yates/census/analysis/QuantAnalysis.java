@@ -38,7 +38,7 @@ import edu.scripps.yates.census.read.util.QuantUtils;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
 import edu.scripps.yates.dbindex.DBIndexInterface;
 import edu.scripps.yates.dbindex.model.DBIndexSearchParams;
-import edu.scripps.yates.utilities.grouping.GroupablePSM;
+import edu.scripps.yates.utilities.grouping.GroupablePeptide;
 import edu.scripps.yates.utilities.grouping.GroupableProtein;
 import edu.scripps.yates.utilities.grouping.PAnalyzer;
 import edu.scripps.yates.utilities.grouping.ProteinGroup;
@@ -1358,8 +1358,8 @@ public class QuantAnalysis implements PropertyChangeListener {
 		for (ProteinGroup proteinGroup : proteinGroups) {
 			final String groupKey = KeyUtils.getGroupKey(proteinGroup);
 			Set<String> set = new THashSet<String>();
-			final List<GroupablePSM> psMs = proteinGroup.getPSMs();
-			for (GroupablePSM groupablePSM : psMs) {
+			final List<GroupablePeptide> psMs = proteinGroup.getPSMs();
+			for (GroupablePeptide groupablePSM : psMs) {
 				if (groupablePSM instanceof QuantifiedPSMInterface) {
 					QuantifiedPSMInterface psm = (QuantifiedPSMInterface) groupablePSM;
 					final String peptideKey = KeyUtils.getSequenceKey(psm, true);

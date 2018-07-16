@@ -19,7 +19,7 @@ import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface
 import edu.scripps.yates.census.read.util.QuantUtils;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
 import edu.scripps.yates.utilities.fasta.FastaParser;
-import edu.scripps.yates.utilities.grouping.GroupablePSM;
+import edu.scripps.yates.utilities.grouping.GroupablePeptide;
 import edu.scripps.yates.utilities.grouping.GroupableProtein;
 import edu.scripps.yates.utilities.grouping.PeptideRelation;
 import edu.scripps.yates.utilities.maths.Maths;
@@ -30,7 +30,7 @@ import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
 
-public class QuantifiedPSM implements GroupablePSM, PeptideSequenceInterface, HasRatios, QuantifiedPSMInterface {
+public class QuantifiedPSM implements GroupablePeptide, PeptideSequenceInterface, HasRatios, QuantifiedPSMInterface {
 	private static final Logger log = Logger.getLogger(QuantifiedPSM.class);
 	private final Set<QuantifiedProteinInterface> quantifiedProteins = new THashSet<QuantifiedProteinInterface>();
 	private final Set<edu.scripps.yates.census.read.util.QuantificationLabel> labels = new THashSet<QuantificationLabel>();
@@ -84,7 +84,7 @@ public class QuantifiedPSM implements GroupablePSM, PeptideSequenceInterface, Ha
 	@Override
 	public String getKey() {
 		if (key == null) {
-			key = getPSMIdentifier();
+			key = getIdentifier();
 		}
 		return key;
 	}
@@ -181,7 +181,7 @@ public class QuantifiedPSM implements GroupablePSM, PeptideSequenceInterface, Ha
 	}
 
 	@Override
-	public String getPSMIdentifier() {
+	public String getIdentifier() {
 		return KeyUtils.getSpectrumKey(this, true);
 	}
 

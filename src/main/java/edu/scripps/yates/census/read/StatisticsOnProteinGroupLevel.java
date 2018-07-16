@@ -21,7 +21,7 @@ import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
 import edu.scripps.yates.census.read.util.CensusChroUtil;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
-import edu.scripps.yates.utilities.grouping.GroupablePSM;
+import edu.scripps.yates.utilities.grouping.GroupablePeptide;
 import edu.scripps.yates.utilities.grouping.GroupableProtein;
 import edu.scripps.yates.utilities.grouping.PAnalyzer;
 import edu.scripps.yates.utilities.grouping.PanalyzerStats;
@@ -520,7 +520,7 @@ public class StatisticsOnProteinGroupLevel {
 	}
 
 	private void printPSMInfo(StringBuilder psmTableString, ProteinGroup proteinGroup) throws IOException {
-		final List<GroupablePSM> psMs = proteinGroup.getPSMs();
+		final List<GroupablePeptide> psMs = proteinGroup.getPSMs();
 		sortedPsmsBySequence(psMs);
 		final boolean printPeptideTotal = true;
 		int count = 0;
@@ -530,7 +530,7 @@ public class StatisticsOnProteinGroupLevel {
 		final Map<QuantificationLabel, Integer> peptideIonsLabeled = new THashMap<QuantificationLabel, Integer>();
 		final Map<String, Boolean> peptideIdentifiedBySpecie = new THashMap<String, Boolean>();
 		final List<Double> peptideRatios = new ArrayList<Double>();
-		for (final GroupablePSM groupablePSM : psMs) {
+		for (final GroupablePeptide groupablePSM : psMs) {
 			final QuantifiedPSMInterface quantifiedPSM = (QuantifiedPSMInterface) groupablePSM;
 			final String seq = quantifiedPSM.getFullSequence();
 
@@ -644,12 +644,12 @@ public class StatisticsOnProteinGroupLevel {
 
 	}
 
-	private void sortedPsmsBySequence(List<GroupablePSM> psms) {
+	private void sortedPsmsBySequence(List<GroupablePeptide> psms) {
 
-		Collections.sort(psms, new Comparator<GroupablePSM>() {
+		Collections.sort(psms, new Comparator<GroupablePeptide>() {
 
 			@Override
-			public int compare(GroupablePSM o1, GroupablePSM o2) {
+			public int compare(GroupablePeptide o1, GroupablePeptide o2) {
 				final String seq1 = o1.getSequence();
 				final String seq2 = o2.getSequence();
 				return seq1.compareTo(seq2);

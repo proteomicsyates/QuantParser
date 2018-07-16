@@ -836,7 +836,7 @@ public class CensusOutParser extends AbstractQuantParser {
 						try {
 							final String stringValue = mapValues.get(PEAK_AREA + suffix);
 							if (isSkipNonResolvedPeaks() && differentValuesOfPeakArea.contains(stringValue)) {
-								log.warn("PSM '" + quantifiedPSM.getPSMIdentifier()
+								log.warn("PSM '" + quantifiedPSM.getIdentifier()
 										+ "' contains not resolved quantitation values (Repeated peak area '"
 										+ stringValue + "'). Skipping it...");
 								// removing it from local and static maps

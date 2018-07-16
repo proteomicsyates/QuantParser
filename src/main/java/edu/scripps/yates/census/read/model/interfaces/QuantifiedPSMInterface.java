@@ -2,7 +2,7 @@ package edu.scripps.yates.census.read.model.interfaces;
 
 import java.util.Set;
 
-import edu.scripps.yates.utilities.grouping.GroupablePSM;
+import edu.scripps.yates.utilities.grouping.GroupablePeptide;
 import edu.scripps.yates.utilities.proteomicsmodel.HasAmounts;
 
 /**
@@ -12,7 +12,7 @@ import edu.scripps.yates.utilities.proteomicsmodel.HasAmounts;
  *
  */
 public interface QuantifiedPSMInterface
-		extends HasKey, PeptideSequenceInterface, GroupablePSM, HasRatios, HasAmounts, QuantifiedItem {
+		extends HasKey, PeptideSequenceInterface, GroupablePeptide, HasRatios, HasAmounts, QuantifiedItem {
 
 	public void setQuantifiedPeptide(QuantifiedPeptideInterface quantifiedPeptide, boolean recursive);
 

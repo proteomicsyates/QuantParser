@@ -211,7 +211,7 @@ public class RawQuantValuesExporter {
 		// scan #
 		bw.write(quantifiedPSM.getScan() + TAB);
 		// psmID
-		bw.write(quantifiedPSM.getPSMIdentifier() + TAB);
+		bw.write(quantifiedPSM.getIdentifier() + TAB);
 
 		// Taxonomy
 		final String peptide = FastaParser.cleanSequence(quantifiedPSM.getSequence());

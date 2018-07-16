@@ -16,7 +16,7 @@ import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface
 import edu.scripps.yates.census.read.util.QuantUtils;
 import edu.scripps.yates.census.read.util.QuantifiedPSMCollectionObserver;
 import edu.scripps.yates.utilities.fasta.FastaParser;
-import edu.scripps.yates.utilities.grouping.GroupablePSM;
+import edu.scripps.yates.utilities.grouping.GroupablePeptide;
 import edu.scripps.yates.utilities.grouping.ProteinEvidence;
 import edu.scripps.yates.utilities.grouping.ProteinGroup;
 import edu.scripps.yates.utilities.model.enums.AggregationLevel;
@@ -135,8 +135,8 @@ public class QuantifiedProtein extends AbstractContainsQuantifiedPSMs implements
 	}
 
 	@Override
-	public List<GroupablePSM> getGroupablePSMs() {
-		final List<GroupablePSM> list = new ArrayList<GroupablePSM>();
+	public List<GroupablePeptide> getGroupablePeptides() {
+		final List<GroupablePeptide> list = new ArrayList<GroupablePeptide>();
 		list.addAll(getQuantifiedPSMs());
 		return list;
 	}
