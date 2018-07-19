@@ -93,6 +93,10 @@ public class CensusRatio implements QuantRatio {
 			nonLogValue = Math.pow(2, ratioValue);
 		} else {
 			nonLogValue = ratioValue;
+			if (isLogValue != null && !isLogValue && nonLogValue < 0) {
+				throw new IllegalArgumentException(nonLogValue
+						+ " ratio is negative and it is suppose to be non logged ratio!! Maybe you should check the ratio values and transform them into non logged ones.");
+			}
 		}
 		if (stdValue != null) {
 			ratioScore = new RatioScore(stdValue, "Standard deviation of ratios", "Standard deviation", null);
