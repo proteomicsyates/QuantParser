@@ -163,7 +163,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 				int numLine = 0;
 				while ((line = br.readLine()) != null) {
 					numLine++;
-					if (line.contains(separator)) {
+					if (numLine > 1 && line.contains(separator)) {
 						String psmID = null;
 						String seq = null;
 						Double ratio = null;
@@ -196,6 +196,9 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 						}
 						if (split.length > PROTEIN_ACC_COL) {
 							proteinAcc = split[PROTEIN_ACC_COL];
+						}
+						if (proteinAcc == null) {
+							log.info("asdf");
 						}
 						processPSMLine(psmID, seq, ratio, ratioWeigth, proteinAcc, conditionsByLabels,
 								labelsByConditions, labelNumerator, labelDenominator, experimentKey,
@@ -243,7 +246,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 
 	}
 
-	private void processPSMLine(String psmId, String sequence, Double ratioValue, Double ratioWeigth, String proteinACC,
+	private void processPSMLine(String psmId, String sequence, Double nonLogRatioValue, Double ratioWeigth, String proteinACC,
 			Map<QuantificationLabel, QuantCondition> conditionsByLabels,
 			Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelNumerator,
 			QuantificationLabel labelDenominator, String experimentKey, RemoteSSHFileReference remoteFileRetriever)
@@ -292,12 +295,12 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 		}
 		// PSM regular ratio
 		// add PSM ratios from census out
-		if (ratioValue != null) {
+		if (nonLogRatioValue != null) {
 			try {
-				final CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
+				final CensusRatio ratio = new CensusRatio(nonLogRatioValue, false, conditionsByLabels, labelNumerator,
 						labelDenominator, AggregationLevel.PSM, RATIO);
 				// set singleton
-				if (ratioValue == 0 || Double.compare(Double.POSITIVE_INFINITY, ratioValue) == 0) {
+				if (nonLogRatioValue == 0 || Double.compare(Double.POSITIVE_INFINITY, nonLogRatioValue) == 0) {
 					if (quantifiedPSM instanceof QuantifiedPSM) {
 						((QuantifiedPSM) quantifiedPSM).setSingleton(true);
 					}
@@ -415,6 +418,10 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 			// add to protein-experiment map
 			addToMap(experimentKey, experimentToProteinsMap, proteinKey);
 
+		}
+		if (proteinACC == null && dbIndex == null) {
+			throw new IllegalArgumentException("Protein missing for peptide  " + quantifiedPeptide.getFullSequence()
+					+ " (" + psmId + "). Either provide a protein column or a Fasta file");
 		}
 	}
 }
