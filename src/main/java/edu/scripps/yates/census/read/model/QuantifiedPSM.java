@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -406,4 +407,10 @@ public class QuantifiedPSM implements GroupablePeptide, PeptideSequenceInterface
 	public boolean isQuantified() {
 		return true;
 	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(getKey());
+	}
+
 }

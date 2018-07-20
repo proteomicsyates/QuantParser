@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -365,5 +366,10 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractContainsQuantifie
 	@Override
 	public boolean isQuantified() {
 		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(getKey());
 	}
 }

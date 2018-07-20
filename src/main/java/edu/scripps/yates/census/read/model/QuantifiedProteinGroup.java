@@ -4,11 +4,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import edu.scripps.yates.census.analysis.QuantCondition;
 import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
+import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
 import edu.scripps.yates.census.read.util.QuantUtils;
 import edu.scripps.yates.utilities.fasta.FastaParser;
 import edu.scripps.yates.utilities.grouping.GroupableProtein;
@@ -18,10 +20,11 @@ import gnu.trove.set.hash.THashSet;
 
 public class QuantifiedProteinGroup extends AbstractContainsQuantifiedPSMs {
 	private static final String SEPARATOR = " ## ";
-	private final Set<IsobaricQuantifiedProtein> proteins = new THashSet<IsobaricQuantifiedProtein>();
+	protected final Set<QuantifiedProteinInterface> proteins = new THashSet<QuantifiedProteinInterface>();
+	private StringBuilder accessionString;
 
 	public QuantifiedProteinGroup(ProteinGroup proteinGroup) {
-		for (GroupableProtein groupableProtein : proteinGroup) {
+		for (final GroupableProtein groupableProtein : proteinGroup) {
 			if (groupableProtein instanceof IsobaricQuantifiedProtein) {
 				proteins.add((IsobaricQuantifiedProtein) groupableProtein);
 			}
@@ -35,8 +38,8 @@ public class QuantifiedProteinGroup extends AbstractContainsQuantifiedPSMs {
 
 	@Override
 	public Set<QuantifiedPSMInterface> getQuantifiedPSMs() {
-		Set<QuantifiedPSMInterface> ret = new THashSet<QuantifiedPSMInterface>();
-		for (IsobaricQuantifiedProtein quantifiedProtein : getProteins()) {
+		final Set<QuantifiedPSMInterface> ret = new THashSet<QuantifiedPSMInterface>();
+		for (final QuantifiedProteinInterface quantifiedProtein : getProteins()) {
 			ret.addAll(quantifiedProtein.getQuantifiedPSMs());
 		}
 
@@ -44,18 +47,20 @@ public class QuantifiedProteinGroup extends AbstractContainsQuantifiedPSMs {
 	}
 
 	public String getAccessionString() {
-		StringBuilder sb = new StringBuilder();
-		for (IsobaricQuantifiedProtein quantifiedProtein : getProteins()) {
-			if (!"".equals(sb.toString()))
-				sb.append(SEPARATOR);
-			sb.append(quantifiedProtein.getAccession());
+		if (accessionString == null) {
+			accessionString = new StringBuilder();
+			for (final QuantifiedProteinInterface quantifiedProtein : getProteins()) {
+				if (!"".equals(accessionString.toString()))
+					accessionString.append(SEPARATOR);
+				accessionString.append(quantifiedProtein.getAccession());
+			}
 		}
-		return sb.toString();
+		return accessionString.toString();
 	}
 
 	public String getDescriptionString() {
-		StringBuilder sb = new StringBuilder();
-		for (IsobaricQuantifiedProtein quantifiedProtein : getProteins()) {
+		final StringBuilder sb = new StringBuilder();
+		for (final QuantifiedProteinInterface quantifiedProtein : getProteins()) {
 			if (!"".equals(sb.toString()))
 				sb.append(SEPARATOR);
 			sb.append(quantifiedProtein.getDescription());
@@ -64,8 +69,8 @@ public class QuantifiedProteinGroup extends AbstractContainsQuantifiedPSMs {
 	}
 
 	public List<String> getTaxonomies() {
-		List<String> ret = new ArrayList<String>();
-		for (IsobaricQuantifiedProtein quantifiedProtein : getProteins()) {
+		final List<String> ret = new ArrayList<String>();
+		for (final QuantifiedProteinInterface quantifiedProtein : getProteins()) {
 			ret.addAll(quantifiedProtein.getTaxonomies());
 		}
 		return ret;
@@ -77,13 +82,13 @@ public class QuantifiedProteinGroup extends AbstractContainsQuantifiedPSMs {
 	 *
 	 * @return the proteins
 	 */
-	public List<IsobaricQuantifiedProtein> getProteins() {
-		List<IsobaricQuantifiedProtein> ret = new ArrayList<IsobaricQuantifiedProtein>();
+	public List<QuantifiedProteinInterface> getProteins() {
+		final List<QuantifiedProteinInterface> ret = new ArrayList<QuantifiedProteinInterface>();
 		ret.addAll(proteins);
-		Collections.sort(ret, new Comparator<IsobaricQuantifiedProtein>() {
+		Collections.sort(ret, new Comparator<QuantifiedProteinInterface>() {
 
 			@Override
-			public int compare(IsobaricQuantifiedProtein o1, IsobaricQuantifiedProtein o2) {
+			public int compare(QuantifiedProteinInterface o1, QuantifiedProteinInterface o2) {
 				final String accession1 = o1.getAccession();
 				final String accession2 = o2.getAccession();
 				return accession1.compareTo(accession2);
@@ -93,8 +98,8 @@ public class QuantifiedProteinGroup extends AbstractContainsQuantifiedPSMs {
 	}
 
 	public String getGeneNameString() {
-		StringBuilder sb = new StringBuilder();
-		for (IsobaricQuantifiedProtein quantifiedProtein : getProteins()) {
+		final StringBuilder sb = new StringBuilder();
+		for (final QuantifiedProteinInterface quantifiedProtein : getProteins()) {
 			if (!"".equals(sb.toString()))
 				sb.append(SEPARATOR);
 			String geneFromFastaHeader = FastaParser.getGeneFromFastaHeader(quantifiedProtein.getAccession());
@@ -107,8 +112,8 @@ public class QuantifiedProteinGroup extends AbstractContainsQuantifiedPSMs {
 	}
 
 	public Set<String> getFileNames() {
-		Set<String> ret = new THashSet<String>();
-		for (IsobaricQuantifiedProtein quantprotein : proteins) {
+		final Set<String> ret = new THashSet<String>();
+		for (final QuantifiedProteinInterface quantprotein : proteins) {
 			ret.addAll(quantprotein.getFileNames());
 		}
 		return ret;
@@ -130,4 +135,8 @@ public class QuantifiedProteinGroup extends AbstractContainsQuantifiedPSMs {
 		return QuantUtils.getAverageRatio(QuantUtils.getNonInfinityRatios(getRatios()), AggregationLevel.PROTEINGROUP);
 	}
 
+	@Override
+	public int hashCode() {
+		return Objects.hash(getAccessionString());
+	}
 }

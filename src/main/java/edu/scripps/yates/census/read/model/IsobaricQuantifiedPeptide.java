@@ -1,6 +1,7 @@
 package edu.scripps.yates.census.read.model;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import edu.scripps.yates.census.analysis.QuantCondition;
@@ -383,4 +384,8 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements Quan
 		return getIonCountRatio(quantConditionNumerator, quantConditionDenominator);
 	}
 
+	@Override
+	public int hashCode() {
+		return Objects.hash(getKey());
+	}
 }

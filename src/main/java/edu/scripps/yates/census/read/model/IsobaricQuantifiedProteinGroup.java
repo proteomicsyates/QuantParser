@@ -1,17 +1,16 @@
 package edu.scripps.yates.census.read.model;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import edu.scripps.yates.census.analysis.QuantCondition;
 import edu.scripps.yates.census.read.model.interfaces.HasIsoRatios;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
+import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
-import edu.scripps.yates.utilities.fasta.FastaParser;
 import edu.scripps.yates.utilities.grouping.ProteinGroup;
 import edu.scripps.yates.utilities.maths.Maths;
 import edu.scripps.yates.utilities.model.enums.AggregationLevel;
@@ -21,10 +20,10 @@ import gnu.trove.set.hash.THashSet;
 
 public class IsobaricQuantifiedProteinGroup extends QuantifiedProteinGroup implements HasIsoRatios {
 	private static final String SEPARATOR = " ## ";
-	private final Set<IsobaricQuantifiedProtein> proteins = new THashSet<IsobaricQuantifiedProtein>();
 	private Set<IsoRatio> ratios;
 	private final Map<String, IonCountRatio> countRatiosByConditionKey = new THashMap<String, IonCountRatio>();
 	private Map<QuantCondition, Set<Ion>> ionsByConditions;
+	private StringBuilder accessionString;
 
 	public IsobaricQuantifiedProteinGroup(ProteinGroup proteinGroup) {
 		super(proteinGroup);
@@ -37,7 +36,7 @@ public class IsobaricQuantifiedProteinGroup extends QuantifiedProteinGroup imple
 
 	public Set<IsobaricQuantifiedPSM> getIsobaricQuantifiedPSMs() {
 		final Set<IsobaricQuantifiedPSM> ret = new THashSet<IsobaricQuantifiedPSM>();
-		for (final IsobaricQuantifiedProtein quantifiedProtein : getProteins()) {
+		for (final IsobaricQuantifiedProtein quantifiedProtein : getIsobaricQuantifiedProteins()) {
 			final Set<QuantifiedPSMInterface> quantifiedPSMs = quantifiedProtein.getQuantifiedPSMs();
 			for (final QuantifiedPSMInterface quantifiedPSMInterface : quantifiedPSMs) {
 				if (quantifiedPSMInterface instanceof IsobaricQuantifiedPSM) {
@@ -48,80 +47,20 @@ public class IsobaricQuantifiedProteinGroup extends QuantifiedProteinGroup imple
 		return ret;
 	}
 
-	@Override
-	public String getAccessionString() {
-		final StringBuilder sb = new StringBuilder();
-		for (final IsobaricQuantifiedProtein quantifiedProtein : getProteins()) {
-			if (!"".equals(sb.toString()))
-				sb.append(SEPARATOR);
-			sb.append(quantifiedProtein.getAccession());
-		}
-		return sb.toString();
-	}
-
-	@Override
-	public String getDescriptionString() {
-		final StringBuilder sb = new StringBuilder();
-		for (final IsobaricQuantifiedProtein quantifiedProtein : getProteins()) {
-			if (!"".equals(sb.toString()))
-				sb.append(SEPARATOR);
-			sb.append(quantifiedProtein.getDescription());
-		}
-		return sb.toString();
-	}
-
-	@Override
-	public List<String> getTaxonomies() {
-		final List<String> ret = new ArrayList<String>();
-		for (final IsobaricQuantifiedProtein quantifiedProtein : getProteins()) {
-			ret.addAll(quantifiedProtein.getTaxonomies());
-		}
-		return ret;
-	}
-
 	/**
 	 * NOTE THAT THIS RETURNED LIST IS NOT VALID FOR ADDING NEW PROTEINS TO THE
 	 * GROUP
 	 *
 	 * @return the proteins
 	 */
-	@Override
-	public List<IsobaricQuantifiedProtein> getProteins() {
+	public List<IsobaricQuantifiedProtein> getIsobaricQuantifiedProteins() {
 		final List<IsobaricQuantifiedProtein> ret = new ArrayList<IsobaricQuantifiedProtein>();
-		ret.addAll(proteins);
-		Collections.sort(ret, new Comparator<IsobaricQuantifiedProtein>() {
-
-			@Override
-			public int compare(IsobaricQuantifiedProtein o1, IsobaricQuantifiedProtein o2) {
-				final String accession1 = o1.getAccession();
-				final String accession2 = o2.getAccession();
-				return accession1.compareTo(accession2);
+		for (final QuantifiedProteinInterface protein : getProteins()) {
+			if (protein instanceof IsobaricQuantifiedProtein) {
+				ret.add((IsobaricQuantifiedProtein) protein);
 			}
-		});
-		return ret;
-	}
-
-	@Override
-	public String getGeneNameString() {
-		final StringBuilder sb = new StringBuilder();
-		for (final IsobaricQuantifiedProtein quantifiedProtein : getProteins()) {
-			if (!"".equals(sb.toString()))
-				sb.append(SEPARATOR);
-			String geneFromFastaHeader = FastaParser.getGeneFromFastaHeader(quantifiedProtein.getAccession());
-			if (geneFromFastaHeader == null) {
-				geneFromFastaHeader = FastaParser.getGeneFromFastaHeader(quantifiedProtein.getDescription());
-			}
-			sb.append(geneFromFastaHeader);
 		}
-		return sb.toString();
-	}
 
-	@Override
-	public Set<String> getFileNames() {
-		final Set<String> ret = new THashSet<String>();
-		for (final IsobaricQuantifiedProtein quantprotein : proteins) {
-			ret.addAll(quantprotein.getFileNames());
-		}
 		return ret;
 	}
 
@@ -456,5 +395,10 @@ public class IsobaricQuantifiedProteinGroup extends QuantifiedProteinGroup imple
 		}
 
 		return ret;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(getAccessionString());
 	}
 }
