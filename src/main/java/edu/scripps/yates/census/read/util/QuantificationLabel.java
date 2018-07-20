@@ -30,7 +30,7 @@ public enum QuantificationLabel {
 		if (labelName.equalsIgnoreCase("m"))
 			return MEDIUM;
 		final QuantificationLabel[] values = values();
-		for (QuantificationLabel quantificationLabel : values) {
+		for (final QuantificationLabel quantificationLabel : values) {
 			if (quantificationLabel.name().equalsIgnoreCase(labelName))
 				return quantificationLabel;
 
@@ -80,13 +80,33 @@ public enum QuantificationLabel {
 	}
 
 	public static String getValuesString() {
-		StringBuilder sb = new StringBuilder();
-		for (QuantificationLabel label : values()) {
+		final StringBuilder sb = new StringBuilder();
+		for (final QuantificationLabel label : values()) {
 			if (!"".equals(sb.toString())) {
 				sb.append(",");
 			}
 			sb.append(label.name());
 		}
 		return sb.toString();
+	}
+
+	public static boolean isTMT(QuantificationLabel label) {
+		if (label != null) {
+			if (label == QuantificationLabel.TMT_6PLEX_126 || label == QuantificationLabel.TMT_6PLEX_127
+					|| label == QuantificationLabel.TMT_6PLEX_128 || label == QuantificationLabel.TMT_6PLEX_129
+					|| label == QuantificationLabel.TMT_6PLEX_130 || label == QuantificationLabel.TMT_6PLEX_131) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static boolean isN15(QuantificationLabel label) {
+		if (label != null) {
+			if (label == QuantificationLabel.N14 || label == QuantificationLabel.N15) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

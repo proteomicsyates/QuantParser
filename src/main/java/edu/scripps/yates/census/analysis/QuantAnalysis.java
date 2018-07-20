@@ -27,6 +27,7 @@ import edu.scripps.yates.census.read.model.IsoRatio;
 import edu.scripps.yates.census.read.model.IsobaricQuantifiedPSM;
 import edu.scripps.yates.census.read.model.IsobaricQuantifiedPeptide;
 import edu.scripps.yates.census.read.model.QuantifiedPSM;
+import edu.scripps.yates.census.read.model.QuantifiedPeptide;
 import edu.scripps.yates.census.read.model.interfaces.IsobaricQuantParser;
 import edu.scripps.yates.census.read.model.interfaces.QuantParser;
 import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
@@ -160,14 +161,14 @@ public class QuantAnalysis implements PropertyChangeListener {
 	}
 
 	private File createWorkingFolder(String workingPath, ANALYSIS_LEVEL_OUTCOME outcome) {
-		File folder = new File(workingPath + File.separator + QUANT_FOLDER + File.separator + outcome.name());
+		final File folder = new File(workingPath + File.separator + QUANT_FOLDER + File.separator + outcome.name());
 		if (!folder.exists())
 			folder.mkdirs();
 		return folder;
 	}
 
 	public static File createWorkingFolder(File workingFolder, ANALYSIS_LEVEL_OUTCOME outcome) {
-		File folder = new File(
+		final File folder = new File(
 				workingFolder.getAbsolutePath() + File.separator + QUANT_FOLDER + File.separator + outcome.name());
 		if (!folder.exists())
 			folder.mkdirs();
@@ -218,7 +219,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 			writeFiles();
 		}
 
-		SanXotInterfaze sanxot = new SanXotInterfaze(fileMappingResults, quantParameters);
+		final SanXotInterfaze sanxot = new SanXotInterfaze(fileMappingResults, quantParameters);
 
 		if (keepExperimentsSeparated != null) {
 			sanxot.setKeepExperimentsSeparated(keepExperimentsSeparated);
@@ -228,9 +229,9 @@ public class QuantAnalysis implements PropertyChangeListener {
 		try {
 			sanxot.analyze();
 			result = sanxot.getResult();
-		} catch (InterruptedException e) {
+		} catch (final InterruptedException e) {
 			e.printStackTrace();
-		} catch (ExecutionException e) {
+		} catch (final ExecutionException e) {
 			e.printStackTrace();
 		}
 	}
@@ -286,13 +287,13 @@ public class QuantAnalysis implements PropertyChangeListener {
 	 * experiments and replicates for its further use.
 	 */
 	private void readExperimentAndReplicateNames() {
-		for (QuantExperiment exp : quantExperiments) {
+		for (final QuantExperiment exp : quantExperiments) {
 			final String experimentName = exp.getName();
 			if (!replicateAndExperimentNames.containsKey(experimentName)) {
 				replicateAndExperimentNames.put(experimentName, new ArrayList<String>());
 			}
-			for (QuantReplicate rep : exp.getReplicates()) {
-				String replicateName = rep.getName();
+			for (final QuantReplicate rep : exp.getReplicates()) {
+				final String replicateName = rep.getName();
 				replicateAndExperimentNames.get(experimentName).add(replicateName);
 			}
 		}
@@ -301,14 +302,14 @@ public class QuantAnalysis implements PropertyChangeListener {
 	private void assignDBIndexToRuns() {
 		if (dbIndex != null) {
 			log.info("Setting index to all replicates in the analysis");
-			for (QuantExperiment quantExperiment : quantExperiments) {
+			for (final QuantExperiment quantExperiment : quantExperiments) {
 				final List<QuantReplicate> replicates = quantExperiment.getReplicates();
-				for (QuantReplicate quantReplicate : replicates) {
+				for (final QuantReplicate quantReplicate : replicates) {
 					final QuantParser parser = quantReplicate.getParser();
 
 					if (parser instanceof IsobaricQuantParser) {
 						// by default, remove B1 and Y1
-						Set<IonExclusion> ionExclusions = new THashSet<IonExclusion>();
+						final Set<IonExclusion> ionExclusions = new THashSet<IonExclusion>();
 						ionExclusions.add(new IonExclusion(IonSerieType.B, 1));
 						ionExclusions.add(new IonExclusion(IonSerieType.Y, 1));
 						((IsobaricQuantParser) parser).addIonExclusions(ionExclusions);
@@ -321,17 +322,17 @@ public class QuantAnalysis implements PropertyChangeListener {
 
 	private void writeDataFile() throws IOException {
 
-		FileWriter dataFileWriter = new FileWriter(
+		final FileWriter dataFileWriter = new FileWriter(
 				getWorkingPath().getAbsolutePath() + File.separator + FileMappingResults.DATA_FILE);
 		dataFileWriter.write("#id\tX\tVcal" + NL);
 		int numPSMsDiscarded = 0;
 		try {
-			for (QuantExperiment exp : quantExperiments) {
+			for (final QuantExperiment exp : quantExperiments) {
 				String expName = "";
 				if (quantExperiments.size() > 1) {
 					expName = exp.getName();
 				}
-				for (QuantReplicate rep : exp.getReplicates()) {
+				for (final QuantReplicate rep : exp.getReplicates()) {
 					String repName = "";
 					if (exp.getReplicates().size() > 1) {
 						repName = rep.getName();
@@ -345,7 +346,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 					}
 					final QuantParser parser = rep.getParser();
 					final Collection<QuantifiedPSMInterface> quantifiedPSMs = parser.getPSMMap().values();
-					for (QuantifiedPSMInterface quantifiedPSM : quantifiedPSMs) {
+					for (final QuantifiedPSMInterface quantifiedPSM : quantifiedPSMs) {
 						if (ignorePTMs && quantifiedPSM.containsPTMs()) {
 							continue;
 						}
@@ -365,11 +366,11 @@ public class QuantAnalysis implements PropertyChangeListener {
 							continue;
 						}
 						if (quantifiedPSM instanceof IsobaricQuantifiedPSM) {
-							for (QuantRatio ratio : nonInfinityRatios) {
+							for (final QuantRatio ratio : nonInfinityRatios) {
 								ratioValue = ratio.getLog2Ratio(condition1, condition2);
 								if (ratio instanceof IsoRatio) {
 
-									IsoRatio isoRatio = (IsoRatio) ratio;
+									final IsoRatio isoRatio = (IsoRatio) ratio;
 									key = KeyUtils.getIonKey(isoRatio,
 											((IsobaricQuantifiedPSM) quantifiedPSM).getPeptide(), true) + expRepKey;
 
@@ -404,9 +405,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 							case iTRAQ:
 								fittingWeight = quantifiedPSM.getMaxPeak();
 								break;
-							case TMT:
-								fittingWeight = quantifiedPSM.getMaxPeak();
-								break;
+
 							case SILAC:
 								// fittingWeight =
 								// QuantUtil.getRegressionFactor(quantifiedPSM.getAmounts());
@@ -484,20 +483,20 @@ public class QuantAnalysis implements PropertyChangeListener {
 			try {
 				// writeProteinExperimentToProteinMap();
 				writeProteinGroupExperimentToProteinGroupMap();
-			} catch (IllegalArgumentException e) {
+			} catch (final IllegalArgumentException e) {
 				log.info(e.getMessage());
 				// "There is not more than 1 experiment"
 				// do nothing and perform the last step: proteinToAll
 			}
 
-		} catch (IllegalArgumentException e) {
+		} catch (final IllegalArgumentException e) {
 			log.info(e.getMessage());
 			// "There is not any experiment with some replicates"
 			try {
 				// writeProteinExperimentToProteinMap();
 				writeProteinGroupExperimentReplicateToProteinGroupExperimentMap();
 				writeProteinGroupExperimentToProteinGroupMap();
-			} catch (IllegalArgumentException e2) {
+			} catch (final IllegalArgumentException e2) {
 				log.info(e2.getMessage());
 				// "There is not more than 1 experiment"
 				// do nothing and perform the last step: proteinToAll
@@ -518,18 +517,18 @@ public class QuantAnalysis implements PropertyChangeListener {
 			writePeptideExperimentReplicateToPeptideExperimentMap();
 			try {
 				writePeptideExperimentToPeptideMap();
-			} catch (IllegalArgumentException e) {
+			} catch (final IllegalArgumentException e) {
 				log.info(e.getMessage());
 				// "There is not more than 1 experiment"
 				// do nothing and perform the last step: proteinToAll
 			}
 
-		} catch (IllegalArgumentException e) {
+		} catch (final IllegalArgumentException e) {
 			log.info(e.getMessage());
 			// "There is not any experiment with some replicates"
 			try {
 				writePeptideExperimentToPeptideMap();
-			} catch (IllegalArgumentException e2) {
+			} catch (final IllegalArgumentException e2) {
 				log.info(e2.getMessage());
 				// "There is not more than 1 experiment"
 				// do nothing and perform the last step: proteinToAll
@@ -550,18 +549,18 @@ public class QuantAnalysis implements PropertyChangeListener {
 			writePeptideExperimentReplicateToPeptideExperimentMap();
 			try {
 				writePeptideExperimentToPeptideMap();
-			} catch (IllegalArgumentException e) {
+			} catch (final IllegalArgumentException e) {
 				log.info(e.getMessage());
 				// "There is not more than 1 experiment"
 				// do nothing and perform the last step: proteinToAll
 			}
 
-		} catch (IllegalArgumentException e) {
+		} catch (final IllegalArgumentException e) {
 			log.info(e.getMessage());
 			// "There is not any experiment with some replicates"
 			try {
 				writePeptideExperimentToPeptideMap();
-			} catch (IllegalArgumentException e2) {
+			} catch (final IllegalArgumentException e2) {
 				log.info(e2.getMessage());
 				// "There is not more than 1 experiment"
 				// do nothing and perform the last step: proteinToAll
@@ -584,18 +583,18 @@ public class QuantAnalysis implements PropertyChangeListener {
 			writeProteinExperimentReplicateToProteinExperimentMap();
 			try {
 				writeProteinExperimentToProteinMap();
-			} catch (IllegalArgumentException e) {
+			} catch (final IllegalArgumentException e) {
 				log.info(e.getMessage());
 				// "There is not more than 1 experiment"
 				// do nothing and perform the last step: proteinToAll
 			}
 
-		} catch (IllegalArgumentException e) {
+		} catch (final IllegalArgumentException e) {
 			log.info(e.getMessage());
 			// "There is not any experiment with some replicates"
 			try {
 				writeProteinExperimentToProteinMap();
-			} catch (IllegalArgumentException e2) {
+			} catch (final IllegalArgumentException e2) {
 				log.info(e2.getMessage());
 				// "There is not more than 1 experiment"
 				// do nothing and perform the last step: proteinToAll
@@ -612,18 +611,18 @@ public class QuantAnalysis implements PropertyChangeListener {
 			writePeptideExperimentReplicateToPeptideExperimentMap();
 			try {
 				writePeptideExperimentToPeptideMap();
-			} catch (IllegalArgumentException e) {
+			} catch (final IllegalArgumentException e) {
 				log.info(e.getMessage());
 				// "There is not more than 1 experiment"
 				// do nothing and perform the last step: proteinToAll
 			}
 
-		} catch (IllegalArgumentException e) {
+		} catch (final IllegalArgumentException e) {
 			log.info(e.getMessage());
 			// "There is not any experiment with some replicates"
 			try {
 				writePeptideExperimentToPeptideMap();
-			} catch (IllegalArgumentException e2) {
+			} catch (final IllegalArgumentException e2) {
 				log.info(e2.getMessage());
 				// "There is not more than 1 experiment"
 				// do nothing and perform the last step: proteinToAll
@@ -640,26 +639,26 @@ public class QuantAnalysis implements PropertyChangeListener {
 	 * @throws IOException
 	 */
 	private void writeProteinToAllMap() throws IOException {
-		FileWriter writer = new FileWriter(
+		final FileWriter writer = new FileWriter(
 				getWorkingPath().getAbsolutePath() + File.separator + FileMappingResults.PROTEIN_TO_ALL_6);
-		Map<String, Set<String>> map = new THashMap<String, Set<String>>();
-		String all = "all";
-		for (QuantExperiment exp : quantExperiments) {
-			for (QuantReplicate rep : exp.getReplicates()) {
+		final Map<String, Set<String>> map = new THashMap<String, Set<String>>();
+		final String all = "all";
+		for (final QuantExperiment exp : quantExperiments) {
+			for (final QuantReplicate rep : exp.getReplicates()) {
 				final QuantParser parser = rep.getParser();
 				final Map<String, QuantifiedProteinInterface> quantifiedProteinMap = parser.getProteinMap();
-				for (String proteinKey : quantifiedProteinMap.keySet()) {
+				for (final String proteinKey : quantifiedProteinMap.keySet()) {
 					if (map.containsKey(all)) {
 						map.get(all).add(proteinKey);
 					} else {
-						Set<String> set = new THashSet<String>();
+						final Set<String> set = new THashSet<String>();
 						set.add(proteinKey);
 						map.put(all, set);
 					}
 				}
 			}
 		}
-		String header = "all" + "\t" + "acc" + "\t" + "all --> protein";
+		final String header = "all" + "\t" + "acc" + "\t" + "all --> protein";
 		writeMapToFile(header, map, writer);
 	}
 
@@ -680,21 +679,21 @@ public class QuantAnalysis implements PropertyChangeListener {
 				getWorkingPath().getAbsolutePath() + File.separator + FileMappingResults.PEPTIDE_TO_PROTEIN_CLUSTER_5);
 
 		// create the clusters according to the parameter
-		Set<ProteinCluster> proteinClusters = new THashSet<ProteinCluster>();
-		for (Set<String> proteinAccs : forcedProteinClusters) {
-			List<String> proteinAccList = new ArrayList<String>();
+		final Set<ProteinCluster> proteinClusters = new THashSet<ProteinCluster>();
+		for (final Set<String> proteinAccs : forcedProteinClusters) {
+			final List<String> proteinAccList = new ArrayList<String>();
 			proteinAccList.addAll(proteinAccs);
 			Collections.sort(proteinAccList);
-			StringBuilder proteinClusterKey = new StringBuilder();
-			for (String proteinAcc : proteinAccList) {
+			final StringBuilder proteinClusterKey = new StringBuilder();
+			for (final String proteinAcc : proteinAccList) {
 				proteinClusterKey.append(proteinAcc + ":");
 			}
-			ProteinCluster cluster = new ProteinCluster();
+			final ProteinCluster cluster = new ProteinCluster();
 			cluster.setProteinClusterKey(proteinClusterKey.toString());
 			proteinClusters.add(cluster);
-			for (String proteinACC : proteinAccs) {
-				for (QuantExperiment exp : quantExperiments) {
-					for (QuantReplicate rep : exp.getReplicates()) {
+			for (final String proteinACC : proteinAccs) {
+				for (final QuantExperiment exp : quantExperiments) {
+					for (final QuantReplicate rep : exp.getReplicates()) {
 						final QuantParser parser = rep.getParser();
 						final Map<String, QuantifiedProteinInterface> proteinMap = parser.getProteinMap();
 						if (proteinMap.containsKey(proteinACC)) {
@@ -709,24 +708,24 @@ public class QuantAnalysis implements PropertyChangeListener {
 		if (!overrideFilesIfExists && file.exists()) {
 			return proteinClusters;
 		}
-		Map<String, Set<String>> map = new THashMap<String, Set<String>>();
+		final Map<String, Set<String>> map = new THashMap<String, Set<String>>();
 
-		for (ProteinCluster proteinCluster : proteinClusters) {
-			String proteinClusterKey = proteinCluster.getProteinClusterKey();
+		for (final ProteinCluster proteinCluster : proteinClusters) {
+			final String proteinClusterKey = proteinCluster.getProteinClusterKey();
 			final Set<QuantifiedPeptideInterface> quantifiedPeptides = proteinCluster.getPeptideSet();
-			for (QuantifiedPeptideInterface quantifiedPeptide : quantifiedPeptides) {
+			for (final QuantifiedPeptideInterface quantifiedPeptide : quantifiedPeptides) {
 				final String peptideKey = quantifiedPeptide.getKey();
 				if (map.containsKey(proteinClusterKey)) {
 					map.get(proteinClusterKey).add(peptideKey);
 				} else {
-					Set<String> set = new THashSet<String>();
+					final Set<String> set = new THashSet<String>();
 					set.add(peptideKey);
 					map.put(proteinClusterKey, set);
 				}
 			}
 		}
-		FileWriter writer = new FileWriter(file);
-		String header = "pep" + "\t" + "proteinCluster" + "\t" + "proteinCluster --> peptide";
+		final FileWriter writer = new FileWriter(file);
+		final String header = "pep" + "\t" + "proteinCluster" + "\t" + "proteinCluster --> peptide";
 		writeMapToFile(header, map, writer);
 		return proteinClusters;
 	}
@@ -751,18 +750,18 @@ public class QuantAnalysis implements PropertyChangeListener {
 		final File file = new File(
 				getWorkingPath().getAbsolutePath() + File.separator + FileMappingResults.PEPTIDE_TO_PROTEIN_CLUSTER_5);
 
-		List<QuantifiedPSMInterface> quantPSMs = new ArrayList<QuantifiedPSMInterface>();
-		Map<String, Set<String>> map = new THashMap<String, Set<String>>();
-		for (QuantExperiment exp : quantExperiments) {
+		final List<QuantifiedPSMInterface> quantPSMs = new ArrayList<QuantifiedPSMInterface>();
+		final Map<String, Set<String>> map = new THashMap<String, Set<String>>();
+		for (final QuantExperiment exp : quantExperiments) {
 
-			for (QuantReplicate rep : exp.getReplicates()) {
+			for (final QuantReplicate rep : exp.getReplicates()) {
 
 				final QuantParser parser = rep.getParser();
 				// in this case, get all proteins and construct protein groups.
 				// Then, asign in the map to peptides
 				final Map<String, QuantifiedPSMInterface> psmMap = parser.getPSMMap();
 
-				for (QuantifiedPSMInterface quantPSM : psmMap.values()) {
+				for (final QuantifiedPSMInterface quantPSM : psmMap.values()) {
 					quantPSMs.add(quantPSM);
 				}
 
@@ -770,32 +769,31 @@ public class QuantAnalysis implements PropertyChangeListener {
 		}
 
 		// create the peptides from all PSMs.
-		final Map<String, QuantifiedPeptideInterface> peptideMap = IsobaricQuantifiedPeptide
-				.getQuantifiedPeptides(quantPSMs);
+		final Map<String, QuantifiedPeptideInterface> peptideMap = QuantifiedPeptide.getQuantifiedPeptides(quantPSMs);
 
 		final Set<ProteinCluster> proteinClusters = ProteinClusterUtils.getProteinClusters(peptideMap,
 				minAlignmentScore, minPercentajeOfsmilirarity, minConsecutiveLength);
 		if (!overrideFilesIfExists && file.exists()) {
 			return proteinClusters;
 		}
-		FileWriter writer = new FileWriter(file);
-		for (ProteinCluster proteinCluster : proteinClusters) {
-			String proteinClusterKey = proteinCluster.getProteinClusterKey();
+		final FileWriter writer = new FileWriter(file);
+		for (final ProteinCluster proteinCluster : proteinClusters) {
+			final String proteinClusterKey = proteinCluster.getProteinClusterKey();
 
 			final Set<QuantifiedPeptideInterface> quantifiedPeptides = proteinCluster.getPeptideSet();
-			for (QuantifiedPeptideInterface quantifiedPeptide : quantifiedPeptides) {
+			for (final QuantifiedPeptideInterface quantifiedPeptide : quantifiedPeptides) {
 				final String peptideKey = quantifiedPeptide.getKey();
 				if (map.containsKey(proteinClusterKey)) {
 					map.get(proteinClusterKey).add(peptideKey);
 				} else {
-					Set<String> set = new THashSet<String>();
+					final Set<String> set = new THashSet<String>();
 					set.add(peptideKey);
 					map.put(proteinClusterKey, set);
 				}
 			}
 		}
 
-		String header = "pep" + "\t" + "proteinCluster" + "\t" + "proteinCluster --> peptide";
+		final String header = "pep" + "\t" + "proteinCluster" + "\t" + "proteinCluster --> peptide";
 		writeMapToFile(header, map, writer);
 		return proteinClusters;
 	}
@@ -813,25 +811,25 @@ public class QuantAnalysis implements PropertyChangeListener {
 		if (!overrideFilesIfExists && file.exists()) {
 			return;
 		}
-		FileWriter writer = new FileWriter(file);
-		Map<String, Set<String>> map = new THashMap<String, Set<String>>();
-		String all = "all";
-		for (QuantExperiment exp : quantExperiments) {
-			for (QuantReplicate rep : exp.getReplicates()) {
+		final FileWriter writer = new FileWriter(file);
+		final Map<String, Set<String>> map = new THashMap<String, Set<String>>();
+		final String all = "all";
+		for (final QuantExperiment exp : quantExperiments) {
+			for (final QuantReplicate rep : exp.getReplicates()) {
 				final QuantParser parser = rep.getParser();
 				final Map<String, Set<String>> peptideToSpectraMap2 = parser.getPeptideToSpectraMap();
-				for (String peptideKey : peptideToSpectraMap2.keySet()) {
+				for (final String peptideKey : peptideToSpectraMap2.keySet()) {
 					if (map.containsKey(all)) {
 						map.get(all).add(peptideKey);
 					} else {
-						Set<String> set = new THashSet<String>();
+						final Set<String> set = new THashSet<String>();
 						set.add(peptideKey);
 						map.put(all, set);
 					}
 				}
 			}
 		}
-		String header = "all" + "\t" + "sequence+charge" + "\t" + "all --> peptide";
+		final String header = "all" + "\t" + "sequence+charge" + "\t" + "all --> peptide";
 		writeMapToFile(header, map, writer);
 	}
 
@@ -853,34 +851,34 @@ public class QuantAnalysis implements PropertyChangeListener {
 		if (!overrideFilesIfExists && file.exists()) {
 			return;
 		}
-		FileWriter writer = new FileWriter(file);
-		String all = "all";
-		List<GroupableProtein> groupableProteins = new ArrayList<GroupableProtein>();
-		Map<String, Set<String>> map = new THashMap<String, Set<String>>();
-		for (QuantExperiment exp : quantExperiments) {
+		final FileWriter writer = new FileWriter(file);
+		final String all = "all";
+		final List<GroupableProtein> groupableProteins = new ArrayList<GroupableProtein>();
+		final Map<String, Set<String>> map = new THashMap<String, Set<String>>();
+		for (final QuantExperiment exp : quantExperiments) {
 
-			for (QuantReplicate rep : exp.getReplicates()) {
+			for (final QuantReplicate rep : exp.getReplicates()) {
 
 				final QuantParser parser = rep.getParser();
 				// in this case, get all proteins and construct protein groups.
 				// Then, asign in the map to peptides
 				final Map<String, QuantifiedProteinInterface> proteinMap = parser.getProteinMap();
 
-				for (QuantifiedProteinInterface quantProtein : proteinMap.values()) {
+				for (final QuantifiedProteinInterface quantProtein : proteinMap.values()) {
 					groupableProteins.add(quantProtein);
 				}
 
 			}
 		}
 
-		Set<String> set = new THashSet<String>();
-		for (ProteinCluster proteinCluster : proteinClusters) {
-			String proteinClusterKey = proteinCluster.getProteinClusterKey();
+		final Set<String> set = new THashSet<String>();
+		for (final ProteinCluster proteinCluster : proteinClusters) {
+			final String proteinClusterKey = proteinCluster.getProteinClusterKey();
 			set.add(proteinClusterKey);
 		}
 
 		map.put(all, set);
-		String header = "all" + "\t" + "proteinCluster" + "\t" + "all --> proteinCluster";
+		final String header = "all" + "\t" + "proteinCluster" + "\t" + "all --> proteinCluster";
 		writeMapToFile(header, map, writer);
 
 	}
@@ -891,28 +889,28 @@ public class QuantAnalysis implements PropertyChangeListener {
 		if (!overrideFilesIfExists && file.exists()) {
 			return;
 		}
-		FileWriter writer = new FileWriter(file);
-		Map<String, Set<String>> map = new THashMap<String, Set<String>>();
-		String all = "all";
-		for (QuantExperiment exp : quantExperiments) {
-			for (QuantReplicate rep : exp.getReplicates()) {
+		final FileWriter writer = new FileWriter(file);
+		final Map<String, Set<String>> map = new THashMap<String, Set<String>>();
+		final String all = "all";
+		for (final QuantExperiment exp : quantExperiments) {
+			for (final QuantReplicate rep : exp.getReplicates()) {
 				final QuantParser parser = rep.getParser();
-				List<GroupableProtein> groupableProteins = new ArrayList<GroupableProtein>();
+				final List<GroupableProtein> groupableProteins = new ArrayList<GroupableProtein>();
 				groupableProteins.addAll(parser.getProteinMap().values());
 				final List<ProteinGroup> proteinGroups = getProteinGroups(groupableProteins);
-				for (ProteinGroup proteinGroup : proteinGroups) {
-					String proteinKey = KeyUtils.getGroupKey(proteinGroup);
+				for (final ProteinGroup proteinGroup : proteinGroups) {
+					final String proteinKey = KeyUtils.getGroupKey(proteinGroup);
 					if (map.containsKey(all)) {
 						map.get(all).add(proteinKey);
 					} else {
-						Set<String> set = new THashSet<String>();
+						final Set<String> set = new THashSet<String>();
 						set.add(proteinKey);
 						map.put(all, set);
 					}
 				}
 			}
 		}
-		String header = "all" + "\t" + "acc" + "\t" + "all --> protein";
+		final String header = "all" + "\t" + "acc" + "\t" + "all --> protein";
 		writeMapToFile(header, map, writer);
 	}
 
@@ -933,29 +931,29 @@ public class QuantAnalysis implements PropertyChangeListener {
 		if (!overrideFilesIfExists && file.exists()) {
 			return;
 		}
-		FileWriter writer = new FileWriter(file);
-		Map<String, Set<String>> map = new THashMap<String, Set<String>>();
+		final FileWriter writer = new FileWriter(file);
+		final Map<String, Set<String>> map = new THashMap<String, Set<String>>();
 
-		for (QuantExperiment exp : quantExperiments) {
+		for (final QuantExperiment exp : quantExperiments) {
 			String expName = "";
 			if (quantExperiments.size() > 1) {
 				expName = exp.getName();
 			}
-			for (QuantReplicate rep : exp.getReplicates()) {
+			for (final QuantReplicate rep : exp.getReplicates()) {
 				final QuantParser parser = rep.getParser();
 				final Map<String, QuantifiedProteinInterface> quantifiedProteinMap = parser.getProteinMap();
-				for (String proteinKey : quantifiedProteinMap.keySet()) {
+				for (final String proteinKey : quantifiedProteinMap.keySet()) {
 					if (map.containsKey(proteinKey)) {
 						map.get(proteinKey).add(proteinKey + "_" + expName);
 					} else {
-						Set<String> set = new THashSet<String>();
+						final Set<String> set = new THashSet<String>();
 						set.add(proteinKey + "_" + expName);
 						map.put(proteinKey, set);
 					}
 				}
 			}
 		}
-		String header = "acc" + "\t" + "acc+experiment" + "\t" + "protein --> protein-experiment";
+		final String header = "acc" + "\t" + "acc+experiment" + "\t" + "protein --> protein-experiment";
 		writeMapToFile(header, map, writer);
 
 	}
@@ -977,28 +975,28 @@ public class QuantAnalysis implements PropertyChangeListener {
 		if (!overrideFilesIfExists && file.exists()) {
 			return;
 		}
-		FileWriter writer = new FileWriter(file);
-		Map<String, Set<String>> map = new THashMap<String, Set<String>>();
+		final FileWriter writer = new FileWriter(file);
+		final Map<String, Set<String>> map = new THashMap<String, Set<String>>();
 
-		for (QuantExperiment exp : quantExperiments) {
+		for (final QuantExperiment exp : quantExperiments) {
 			String expName = "";
 			if (quantExperiments.size() > 1) {
 				expName = exp.getName();
 			}
-			for (QuantReplicate rep : exp.getReplicates()) {
+			for (final QuantReplicate rep : exp.getReplicates()) {
 				final QuantParser parser = rep.getParser();
-				for (String peptideKey : parser.getPeptideToSpectraMap().keySet()) {
+				for (final String peptideKey : parser.getPeptideToSpectraMap().keySet()) {
 					if (map.containsKey(peptideKey)) {
 						map.get(peptideKey).add(peptideKey + "_" + expName);
 					} else {
-						Set<String> set = new THashSet<String>();
+						final Set<String> set = new THashSet<String>();
 						set.add(peptideKey + "_" + expName);
 						map.put(peptideKey, set);
 					}
 				}
 			}
 		}
-		String header = "sequence+charge" + "\t" + "sequence+charge+experiment" + "\t"
+		final String header = "sequence+charge" + "\t" + "sequence+charge+experiment" + "\t"
 				+ "peptide --> peptide-experiment";
 		writeMapToFile(header, map, writer);
 
@@ -1013,32 +1011,32 @@ public class QuantAnalysis implements PropertyChangeListener {
 		if (!overrideFilesIfExists && file.exists()) {
 			return;
 		}
-		FileWriter writer = new FileWriter(file);
-		Map<String, Set<String>> map = new THashMap<String, Set<String>>();
+		final FileWriter writer = new FileWriter(file);
+		final Map<String, Set<String>> map = new THashMap<String, Set<String>>();
 
-		for (QuantExperiment exp : quantExperiments) {
+		for (final QuantExperiment exp : quantExperiments) {
 			String expName = "";
 			if (quantExperiments.size() > 1) {
 				expName = exp.getName();
 			}
-			for (QuantReplicate rep : exp.getReplicates()) {
+			for (final QuantReplicate rep : exp.getReplicates()) {
 				final QuantParser parser = rep.getParser();
-				List<GroupableProtein> groupableProteins = new ArrayList<GroupableProtein>();
+				final List<GroupableProtein> groupableProteins = new ArrayList<GroupableProtein>();
 				groupableProteins.addAll(parser.getProteinMap().values());
 				final List<ProteinGroup> proteinGroups = getProteinGroups(groupableProteins);
-				for (ProteinGroup proteinGroup : proteinGroups) {
-					String proteinGroupKey = KeyUtils.getGroupKey(proteinGroup);
+				for (final ProteinGroup proteinGroup : proteinGroups) {
+					final String proteinGroupKey = KeyUtils.getGroupKey(proteinGroup);
 					if (map.containsKey(proteinGroupKey)) {
 						map.get(proteinGroupKey).add(proteinGroupKey + "_" + expName);
 					} else {
-						Set<String> set = new THashSet<String>();
+						final Set<String> set = new THashSet<String>();
 						set.add(proteinGroupKey + "_" + expName);
 						map.put(proteinGroupKey, set);
 					}
 				}
 			}
 		}
-		String header = "acc" + "\t" + "acc+experiment" + "\t" + "proteinGroup --> proteinGroup-experiment";
+		final String header = "acc" + "\t" + "acc+experiment" + "\t" + "proteinGroup --> proteinGroup-experiment";
 		writeMapToFile(header, map, writer);
 
 	}
@@ -1056,7 +1054,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 	private void writeProteinExperimentReplicateToProteinExperimentMap() throws IOException {
 
 		boolean someReplicates = false;
-		for (QuantExperiment exp : quantExperiments) {
+		for (final QuantExperiment exp : quantExperiments) {
 			if (exp.getReplicates().size() > 1)
 				someReplicates = true;
 		}
@@ -1068,15 +1066,15 @@ public class QuantAnalysis implements PropertyChangeListener {
 		if (!overrideFilesIfExists && file.exists()) {
 			return;
 		}
-		FileWriter writer = new FileWriter(file);
-		Map<String, Set<String>> map = new THashMap<String, Set<String>>();
+		final FileWriter writer = new FileWriter(file);
+		final Map<String, Set<String>> map = new THashMap<String, Set<String>>();
 
-		for (QuantExperiment exp : quantExperiments) {
+		for (final QuantExperiment exp : quantExperiments) {
 			String expName = "";
 			if (quantExperiments.size() > 1) {
 				expName = exp.getName();
 			}
-			for (QuantReplicate rep : exp.getReplicates()) {
+			for (final QuantReplicate rep : exp.getReplicates()) {
 				String repName = "";
 				if (exp.getReplicates().size() > 1) {
 					repName = rep.getName();
@@ -1090,11 +1088,11 @@ public class QuantAnalysis implements PropertyChangeListener {
 				}
 				final QuantParser parser = rep.getParser();
 				final Map<String, QuantifiedProteinInterface> quantifiedProteinMap = parser.getProteinMap();
-				for (String proteinKey : quantifiedProteinMap.keySet()) {
+				for (final String proteinKey : quantifiedProteinMap.keySet()) {
 					if (map.containsKey(proteinKey + "_" + expName)) {
 						map.get(proteinKey + "_" + expName).add(proteinKey + expRepKey);
 					} else {
-						Set<String> set = new THashSet<String>();
+						final Set<String> set = new THashSet<String>();
 						set.add(proteinKey + expRepKey);
 						map.put(proteinKey + "_" + expName, set);
 					}
@@ -1102,7 +1100,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 
 			}
 		}
-		String header = "acc+experiment" + "\t" + "acc+replicate+experiment" + "\t"
+		final String header = "acc+experiment" + "\t" + "acc+replicate+experiment" + "\t"
 				+ "protein-experiment --> protein-replicate-experiment";
 		writeMapToFile(header, map, writer);
 
@@ -1121,7 +1119,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 	private void writePeptideExperimentReplicateToPeptideExperimentMap() throws IOException {
 
 		boolean someReplicates = false;
-		for (QuantExperiment exp : quantExperiments) {
+		for (final QuantExperiment exp : quantExperiments) {
 			if (exp.getReplicates().size() > 1)
 				someReplicates = true;
 		}
@@ -1133,15 +1131,15 @@ public class QuantAnalysis implements PropertyChangeListener {
 		if (!overrideFilesIfExists && file.exists()) {
 			return;
 		}
-		FileWriter writer = new FileWriter(file);
-		Map<String, Set<String>> map = new THashMap<String, Set<String>>();
+		final FileWriter writer = new FileWriter(file);
+		final Map<String, Set<String>> map = new THashMap<String, Set<String>>();
 
-		for (QuantExperiment exp : quantExperiments) {
+		for (final QuantExperiment exp : quantExperiments) {
 			String expName = "";
 			if (quantExperiments.size() > 1) {
 				expName = exp.getName();
 			}
-			for (QuantReplicate rep : exp.getReplicates()) {
+			for (final QuantReplicate rep : exp.getReplicates()) {
 				String repName = "";
 				if (exp.getReplicates().size() > 1) {
 					repName = rep.getName();
@@ -1154,18 +1152,18 @@ public class QuantAnalysis implements PropertyChangeListener {
 					expRepKey += "_" + expName;
 				}
 				final QuantParser parser = rep.getParser();
-				for (String peptideKey : parser.getPeptideToSpectraMap().keySet()) {
+				for (final String peptideKey : parser.getPeptideToSpectraMap().keySet()) {
 					if (map.containsKey(peptideKey + "_" + expName)) {
 						map.get(peptideKey + "_" + expName).add(peptideKey + expRepKey);
 					} else {
-						Set<String> set = new THashSet<String>();
+						final Set<String> set = new THashSet<String>();
 						set.add(peptideKey + expRepKey);
 						map.put(peptideKey + "_" + expName, set);
 					}
 				}
 			}
 		}
-		String header = "sequence+charge+experiment" + "\t" + "sequence+charge+replicate+experiment" + "\t"
+		final String header = "sequence+charge+experiment" + "\t" + "sequence+charge+replicate+experiment" + "\t"
 				+ "peptide-replicate-experiment --> peptide-experiment";
 		writeMapToFile(header, map, writer);
 
@@ -1174,7 +1172,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 	private void writeProteinGroupExperimentReplicateToProteinGroupExperimentMap() throws IOException {
 
 		boolean someReplicates = false;
-		for (QuantExperiment exp : quantExperiments) {
+		for (final QuantExperiment exp : quantExperiments) {
 			if (exp.getReplicates().size() > 1)
 				someReplicates = true;
 		}
@@ -1186,15 +1184,15 @@ public class QuantAnalysis implements PropertyChangeListener {
 		if (!overrideFilesIfExists && file.exists()) {
 			return;
 		}
-		FileWriter writer = new FileWriter(file);
-		Map<String, Set<String>> map = new THashMap<String, Set<String>>();
+		final FileWriter writer = new FileWriter(file);
+		final Map<String, Set<String>> map = new THashMap<String, Set<String>>();
 
-		for (QuantExperiment exp : quantExperiments) {
+		for (final QuantExperiment exp : quantExperiments) {
 			String expName = "";
 			if (quantExperiments.size() > 1) {
 				expName = exp.getName();
 			}
-			for (QuantReplicate rep : exp.getReplicates()) {
+			for (final QuantReplicate rep : exp.getReplicates()) {
 				String repName = "";
 				if (exp.getReplicates().size() > 1) {
 					repName = rep.getName();
@@ -1207,15 +1205,15 @@ public class QuantAnalysis implements PropertyChangeListener {
 					expRepKey += "_" + expName;
 				}
 				final QuantParser parser = rep.getParser();
-				List<GroupableProtein> groupableProteins = new ArrayList<GroupableProtein>();
+				final List<GroupableProtein> groupableProteins = new ArrayList<GroupableProtein>();
 				groupableProteins.addAll(parser.getProteinMap().values());
 				final List<ProteinGroup> proteinGroups = getProteinGroups(groupableProteins);
-				for (ProteinGroup proteinGroup : proteinGroups) {
+				for (final ProteinGroup proteinGroup : proteinGroups) {
 					final String proteinGroupKey = KeyUtils.getGroupKey(proteinGroup);
 					if (map.containsKey(proteinGroupKey + "_" + expName)) {
 						map.get(proteinGroupKey + "_" + expName).add(proteinGroupKey + expRepKey);
 					} else {
-						Set<String> set = new THashSet<String>();
+						final Set<String> set = new THashSet<String>();
 						set.add(proteinGroupKey + expRepKey);
 						map.put(proteinGroupKey + "_" + expName, set);
 					}
@@ -1223,7 +1221,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 
 			}
 		}
-		String header = "acc+experiment" + "\t" + "acc+replicate+experiment" + "\t"
+		final String header = "acc+experiment" + "\t" + "acc+replicate+experiment" + "\t"
 				+ "proteinGroup-experiment --> proteinGroup-replicate-experiment";
 		writeMapToFile(header, map, writer);
 
@@ -1245,15 +1243,15 @@ public class QuantAnalysis implements PropertyChangeListener {
 		if (!overrideFilesIfExists && file.exists()) {
 			return;
 		}
-		FileWriter writer = new FileWriter(file);
-		Map<String, Set<String>> map = new THashMap<String, Set<String>>();
+		final FileWriter writer = new FileWriter(file);
+		final Map<String, Set<String>> map = new THashMap<String, Set<String>>();
 
-		for (QuantExperiment exp : quantExperiments) {
+		for (final QuantExperiment exp : quantExperiments) {
 			String expName = "";
 			if (quantExperiments.size() > 1) {
 				expName = exp.getName();
 			}
-			for (QuantReplicate rep : exp.getReplicates()) {
+			for (final QuantReplicate rep : exp.getReplicates()) {
 				String repName = "";
 				if (exp.getReplicates().size() > 1) {
 					repName = rep.getName();
@@ -1268,7 +1266,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 				final QuantParser parser = rep.getParser();
 				// in this case, get all proteins and construct protein groups.
 				// Then, asign in the map to peptides
-				List<GroupableProtein> groupableProteins = new ArrayList<GroupableProtein>();
+				final List<GroupableProtein> groupableProteins = new ArrayList<GroupableProtein>();
 				groupableProteins.addAll(parser.getProteinMap().values());
 				final List<ProteinGroup> proteinGroups = getProteinGroups(groupableProteins);
 				final Map<String, Set<String>> proteinGroupToPeptideMap2 = getProteinGroupToPeptideMap(proteinGroups);
@@ -1276,7 +1274,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 				mergeMaps(map, proteinGroupToPeptideMap2, expRepKey, expRepKey);
 			}
 		}
-		String header = "acc+replicate+experiment" + "\t" + "sequence+charge+replicate+experiment" + "\t"
+		final String header = "acc+replicate+experiment" + "\t" + "sequence+charge+replicate+experiment" + "\t"
 				+ "proteinGroup-replicate-experiment --> peptide-replicate-experiment";
 		writeMapToFile(header, map, writer);
 
@@ -1298,15 +1296,15 @@ public class QuantAnalysis implements PropertyChangeListener {
 		if (!overrideFilesIfExists && file.exists()) {
 			return;
 		}
-		FileWriter writer = new FileWriter(file);
-		Map<String, Set<String>> map = new THashMap<String, Set<String>>();
+		final FileWriter writer = new FileWriter(file);
+		final Map<String, Set<String>> map = new THashMap<String, Set<String>>();
 
-		for (QuantExperiment exp : quantExperiments) {
+		for (final QuantExperiment exp : quantExperiments) {
 			String expName = "";
 			if (quantExperiments.size() > 1) {
 				expName = exp.getName();
 			}
-			for (QuantReplicate rep : exp.getReplicates()) {
+			for (final QuantReplicate rep : exp.getReplicates()) {
 				String repName = "";
 				if (exp.getReplicates().size() > 1) {
 					repName = rep.getName();
@@ -1323,13 +1321,13 @@ public class QuantAnalysis implements PropertyChangeListener {
 				// Then, asign in the map to peptides
 				final Map<String, QuantifiedProteinInterface> proteinMap = parser.getProteinMap();
 				final Map<String, Set<String>> map2 = new THashMap<String, Set<String>>();
-				for (String proteinKey : proteinMap.keySet()) {
+				for (final String proteinKey : proteinMap.keySet()) {
 					final QuantifiedProteinInterface quantifiedProtein = proteinMap.get(proteinKey);
 					if (quantifiedProtein.isDiscarded()) {
 						continue;
 					}
 					final Set<QuantifiedPSMInterface> quantifiedPSMs = quantifiedProtein.getQuantifiedPSMs();
-					for (QuantifiedPSMInterface quantifiedPSM : quantifiedPSMs) {
+					for (final QuantifiedPSMInterface quantifiedPSM : quantifiedPSMs) {
 						if (quantifiedPSM.isDiscarded()) {
 							continue;
 						}
@@ -1337,7 +1335,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 						if (map2.containsKey(proteinKey)) {
 							map2.get(proteinKey).add(peptideKey);
 						} else {
-							Set<String> set = new THashSet<String>();
+							final Set<String> set = new THashSet<String>();
 							set.add(peptideKey);
 							map2.put(proteinKey, set);
 						}
@@ -1347,21 +1345,21 @@ public class QuantAnalysis implements PropertyChangeListener {
 				mergeMaps(map, map2, expRepKey, expRepKey);
 			}
 		}
-		String header = "acc+replicate+experiment" + "\t" + "sequence+charge+replicate+experiment" + "\t"
+		final String header = "acc+replicate+experiment" + "\t" + "sequence+charge+replicate+experiment" + "\t"
 				+ "protein-replicate-experiment --> peptide-replicate-experiment";
 		writeMapToFile(header, map, writer);
 
 	}
 
 	private Map<String, Set<String>> getProteinGroupToPeptideMap(List<ProteinGroup> proteinGroups) {
-		Map<String, Set<String>> ret = new THashMap<String, Set<String>>();
-		for (ProteinGroup proteinGroup : proteinGroups) {
+		final Map<String, Set<String>> ret = new THashMap<String, Set<String>>();
+		for (final ProteinGroup proteinGroup : proteinGroups) {
 			final String groupKey = KeyUtils.getGroupKey(proteinGroup);
-			Set<String> set = new THashSet<String>();
+			final Set<String> set = new THashSet<String>();
 			final List<GroupablePeptide> psMs = proteinGroup.getPSMs();
-			for (GroupablePeptide groupablePSM : psMs) {
+			for (final GroupablePeptide groupablePSM : psMs) {
 				if (groupablePSM instanceof QuantifiedPSMInterface) {
-					QuantifiedPSMInterface psm = (QuantifiedPSMInterface) groupablePSM;
+					final QuantifiedPSMInterface psm = (QuantifiedPSMInterface) groupablePSM;
 					final String peptideKey = KeyUtils.getSequenceKey(psm, true);
 					set.add(peptideKey);
 				}
@@ -1372,8 +1370,8 @@ public class QuantAnalysis implements PropertyChangeListener {
 	}
 
 	private List<ProteinGroup> getProteinGroups(List<GroupableProtein> groupableProteins) {
-		PAnalyzer pa = new PAnalyzer(false);
-		List<ProteinGroup> proteinGroups = pa.run(groupableProteins);
+		final PAnalyzer pa = new PAnalyzer(false);
+		final List<ProteinGroup> proteinGroups = pa.run(groupableProteins);
 		return proteinGroups;
 	}
 
@@ -1386,16 +1384,16 @@ public class QuantAnalysis implements PropertyChangeListener {
 	 * @throws IOException
 	 */
 	private void writeSpectrumToPeptideExperimentReplicateMap() throws IOException {
-		FileWriter writer = new FileWriter(getWorkingPath().getAbsolutePath() + File.separator
+		final FileWriter writer = new FileWriter(getWorkingPath().getAbsolutePath() + File.separator
 				+ FileMappingResults.SPECTRUM_TO_PEPTIDE_REPLICATE_EXPERIMENT_2);
-		Map<String, Set<String>> map = new THashMap<String, Set<String>>();
+		final Map<String, Set<String>> map = new THashMap<String, Set<String>>();
 
-		for (QuantExperiment exp : quantExperiments) {
+		for (final QuantExperiment exp : quantExperiments) {
 			String expName = "";
 			if (quantExperiments.size() > 1) {
 				expName = exp.getName();
 			}
-			for (QuantReplicate rep : exp.getReplicates()) {
+			for (final QuantReplicate rep : exp.getReplicates()) {
 				String repName = "";
 				if (exp.getReplicates().size() > 1) {
 					repName = rep.getName();
@@ -1413,7 +1411,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 				mergeMaps(map, peptideToSpectraMap2, expRepKey, "");
 			}
 		}
-		String header = "sequence+charge+replicate+experiment" + "\t" + "scan+raw_file" + "\t"
+		final String header = "sequence+charge+replicate+experiment" + "\t" + "scan+raw_file" + "\t"
 				+ "spectrum --> peptide-replicate-experiment";
 		writeMapToFile(header, map, writer);
 
@@ -1435,16 +1433,16 @@ public class QuantAnalysis implements PropertyChangeListener {
 		if (!overrideFilesIfExists && file.exists()) {
 			return;
 		}
-		FileWriter writer = new FileWriter(file);
-		Map<String, Set<String>> map = new THashMap<String, Set<String>>();
+		final FileWriter writer = new FileWriter(file);
+		final Map<String, Set<String>> map = new THashMap<String, Set<String>>();
 
-		for (QuantExperiment exp : quantExperiments) {
+		for (final QuantExperiment exp : quantExperiments) {
 
 			String expName = "";
 			if (quantExperiments.size() > 1) {
 				expName = exp.getName();
 			}
-			for (QuantReplicate rep : exp.getReplicates()) {
+			for (final QuantReplicate rep : exp.getReplicates()) {
 
 				String repName = "";
 				if (exp.getReplicates().size() > 1) {
@@ -1467,16 +1465,16 @@ public class QuantAnalysis implements PropertyChangeListener {
 			}
 		}
 
-		String header = "scan+raw_file" + "\t" + "ion_type+scan+raw_file" + "\t" + "ion --> spectrum";
+		final String header = "scan+raw_file" + "\t" + "ion_type+scan+raw_file" + "\t" + "ion --> spectrum";
 		writeMapToFile(header, map, writer);
 	}
 
 	private Map<String, Set<String>> addRepNameToMap(Map<String, Set<String>> map, String repName) {
 		final Map<String, Set<String>> ret = new THashMap<String, Set<String>>();
-		for (String key : map.keySet()) {
+		for (final String key : map.keySet()) {
 			final Set<String> keys = map.get(key);
-			Set<String> correctedKeys = new THashSet<String>();
-			for (String key2 : keys) {
+			final Set<String> correctedKeys = new THashSet<String>();
+			for (final String key2 : keys) {
 				String newKey = key2;
 				if (!key2.endsWith(repName))
 					newKey += repName;
@@ -1494,12 +1492,12 @@ public class QuantAnalysis implements PropertyChangeListener {
 		try {
 			writer.write("#" + header + NL);
 			final Set<String> keySet = map.keySet();
-			List<String> list = new ArrayList<String>();
+			final List<String> list = new ArrayList<String>();
 			list.addAll(keySet);
 			Collections.sort(list);
-			for (String key : list) {
+			for (final String key : list) {
 				final Set<String> set = map.get(key);
-				for (String value : set) {
+				for (final String value : set) {
 					writer.write(key + "\t" + value + NL);
 				}
 			}
@@ -1512,18 +1510,18 @@ public class QuantAnalysis implements PropertyChangeListener {
 
 	private void mergeMaps(Map<String, Set<String>> receiver, Map<String, Set<String>> donor, String suffixForKey,
 			String suffixForValue) {
-		for (String originalkey : donor.keySet()) {
+		for (final String originalkey : donor.keySet()) {
 			String key = originalkey;
 			if (!key.endsWith(suffixForKey))
 				key += suffixForKey;
 			final Set<String> donorValues = donor.get(originalkey);
 			if (receiver.containsKey(key)) {
-				for (String donorValue : donorValues) {
+				for (final String donorValue : donorValues) {
 					receiver.get(key).add(donorValue + suffixForValue);
 				}
 			} else {
-				Set<String> set = new THashSet<String>();
-				for (String donorValue : donorValues) {
+				final Set<String> set = new THashSet<String>();
+				for (final String donorValue : donorValues) {
 					String key2 = donorValue;
 					if (!key2.endsWith(suffixForKey))
 						key2 += suffixForKey;
@@ -1551,7 +1549,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 			log.info(result);
 			final IntegrationResultWrapper lastIntegrationResults = result.getLastIntegrationResults();
 			final List<OutStatsLine> resultData = lastIntegrationResults.getResultData();
-			for (OutStatsLine outStatsLine : resultData) {
+			for (final OutStatsLine outStatsLine : resultData) {
 				System.out.println(outStatsLine.getIdsup() + "\t" + outStatsLine.getFDR());
 			}
 		}
