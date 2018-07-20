@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
@@ -128,7 +129,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 		processed = false;
 		log.info("Processing file...");
 
-		final int numDecoy = 0;
+		int numDecoy = 0;
 		boolean someValidFile = false;
 		for (final RemoteSSHFileReference remoteFileRetriever : remoteFileRetrievers) {
 			final Map<QuantCondition, QuantificationLabel> labelsByConditions = labelsByConditionsByFile
@@ -171,10 +172,10 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 						String proteinAcc = null;
 						final String[] split = line.split(separator);
 						if (split.length > PSM_ID_COL) {
-							psmID = split[PSM_ID_COL];
+							psmID = split[PSM_ID_COL].trim();
 						}
 						if (split.length > SEQ_COL) {
-							seq = split[SEQ_COL];
+							seq = split[SEQ_COL].trim();
 						}
 						if (split.length > RATIO_COL && !"".equals(split[RATIO_COL])) {
 							try {
@@ -195,10 +196,16 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 							}
 						}
 						if (split.length > PROTEIN_ACC_COL) {
-							proteinAcc = split[PROTEIN_ACC_COL];
+							proteinAcc = split[PROTEIN_ACC_COL].trim();
 						}
-						if (proteinAcc == null) {
-							log.info("asdf");
+						// apply the pattern if available
+						if (decoyPattern != null) {
+							final Matcher matcher = decoyPattern.matcher(proteinAcc);
+							if (matcher.find()) {
+								log.info("Discarding decoy: " + proteinAcc);
+								numDecoy++;
+								continue;
+							}
 						}
 						processPSMLine(psmID, seq, ratio, ratioWeigth, proteinAcc, conditionsByLabels,
 								labelsByConditions, labelNumerator, labelDenominator, experimentKey,
@@ -246,8 +253,8 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 
 	}
 
-	private void processPSMLine(String psmId, String sequence, Double nonLogRatioValue, Double ratioWeigth, String proteinACC,
-			Map<QuantificationLabel, QuantCondition> conditionsByLabels,
+	private void processPSMLine(String psmId, String sequence, Double nonLogRatioValue, Double ratioWeigth,
+			String proteinACC, Map<QuantificationLabel, QuantCondition> conditionsByLabels,
 			Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelNumerator,
 			QuantificationLabel labelDenominator, String experimentKey, RemoteSSHFileReference remoteFileRetriever)
 			throws IOException, DBIndexStoreException {
