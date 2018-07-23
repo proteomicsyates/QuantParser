@@ -202,7 +202,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 						if (decoyPattern != null) {
 							final Matcher matcher = decoyPattern.matcher(proteinAcc);
 							if (matcher.find()) {
-								log.info("Discarding decoy: " + proteinAcc);
+								log.debug("Discarding decoy: " + proteinAcc);
 								numDecoy++;
 								continue;
 							}
@@ -213,7 +213,6 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 					}
 
 				}
-
 				br.close();
 
 			} catch (final PeptideNotFoundInDBIndexException e) {
@@ -430,5 +429,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 			throw new IllegalArgumentException("Protein missing for peptide  " + quantifiedPeptide.getFullSequence()
 					+ " (" + psmId + "). Either provide a protein column or a Fasta file");
 		}
+
 	}
+
 }
