@@ -393,6 +393,8 @@ public abstract class AbstractQuantParser implements QuantParser {
 		}
 		// first process
 		process();
+		// set processed to true
+		processed = true;
 		// remove psms assigned to decoy proteins that were discarded
 		removeDecoyPSMs();
 		// second expand protein map
