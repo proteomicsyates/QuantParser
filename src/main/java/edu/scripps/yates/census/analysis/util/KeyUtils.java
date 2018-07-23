@@ -42,8 +42,12 @@ public class KeyUtils {
 	}
 
 	public static String getProteinKey(IndexedProtein indexedProtein, boolean ignoreACCFormat) {
-		final String fastaDefLine = indexedProtein.getFastaDefLine();
+		String fastaDefLine = indexedProtein.getFastaDefLine();
+
 		if (ignoreACCFormat) {
+			if (fastaDefLine.startsWith(">")) {
+				fastaDefLine = fastaDefLine.substring(1);
+			}
 			if (fastaDefLine.contains(" ")) {
 				return fastaDefLine.substring(0, fastaDefLine.indexOf(" "));
 			} else {
