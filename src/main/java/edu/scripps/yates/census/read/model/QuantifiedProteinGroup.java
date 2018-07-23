@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 import edu.scripps.yates.census.analysis.QuantCondition;
@@ -135,8 +134,8 @@ public class QuantifiedProteinGroup extends AbstractContainsQuantifiedPSMs {
 		return QuantUtils.getAverageRatio(QuantUtils.getNonInfinityRatios(getRatios()), AggregationLevel.PROTEINGROUP);
 	}
 
-	@Override
-	public int hashCode() {
-		return Objects.hash(getAccessionString());
-	}
+	// @Override
+	// public int hashCode() {
+	// return Objects.hash(getAccessionString());
+	// }
 }
