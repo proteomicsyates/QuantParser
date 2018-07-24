@@ -21,11 +21,11 @@ import edu.scripps.yates.census.analysis.util.KeyUtils;
 import edu.scripps.yates.census.analysis.wrappers.IntegrationResultWrapper;
 import edu.scripps.yates.census.analysis.wrappers.OutStatsLine;
 import edu.scripps.yates.census.analysis.wrappers.SanXotAnalysisResult;
+import edu.scripps.yates.census.read.SeparatedValuesParser;
 import edu.scripps.yates.census.read.model.IonCountRatio;
 import edu.scripps.yates.census.read.model.IonSerie.IonSerieType;
 import edu.scripps.yates.census.read.model.IsoRatio;
 import edu.scripps.yates.census.read.model.IsobaricQuantifiedPSM;
-import edu.scripps.yates.census.read.model.IsobaricQuantifiedPeptide;
 import edu.scripps.yates.census.read.model.QuantifiedPSM;
 import edu.scripps.yates.census.read.model.QuantifiedPeptide;
 import edu.scripps.yates.census.read.model.interfaces.IsobaricQuantParser;
@@ -425,7 +425,20 @@ public class QuantAnalysis implements PropertyChangeListener {
 								throw new IllegalArgumentException("Quant type " + quantType
 										+ " is not supported with this analysis configuration");
 							}
+							// if it is still null, try to see whether the ratio
+							// has some ratio_weight associated
+							if (fittingWeight == null) {
 
+								for (final QuantRatio quantRatio : nonInfinityRatios) {
+									if (quantRatio.getAssociatedConfidenceScore() != null) {
+										if (quantRatio.getAssociatedConfidenceScore().getScoreName()
+												.equals(SeparatedValuesParser.RATIO_WEIGHT)) {
+											fittingWeight = Double
+													.valueOf(quantRatio.getAssociatedConfidenceScore().getValue());
+										}
+									}
+								}
+							}
 							key = KeyUtils.getSpectrumKey(quantifiedPSM, true) + expRepKey;
 							// in case of not having isobaric isotopologues, we
 							// have one ratio per PSM in the replicate, not
