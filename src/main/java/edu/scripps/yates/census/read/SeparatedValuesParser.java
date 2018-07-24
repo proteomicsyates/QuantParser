@@ -46,7 +46,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 	private final static int RATIO_COL = 2;
 	private final static int RATIO_WEIGHT_COL = 3;
 	private final static int PROTEIN_ACC_COL = 4;
-	private static final String RATIO_WEIGHT = "Ratio initial weigh";
+	public static final String RATIO_WEIGHT = "Ratio initial weigh";
 	public static final String RATIO = "RATIO";
 
 	public SeparatedValuesParser(String separator) {
