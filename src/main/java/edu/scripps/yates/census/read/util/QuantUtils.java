@@ -36,10 +36,11 @@ import edu.scripps.yates.utilities.model.enums.AggregationLevel;
 import edu.scripps.yates.utilities.model.enums.AmountType;
 import edu.scripps.yates.utilities.model.enums.CombinationType;
 import edu.scripps.yates.utilities.proteomicsmodel.Amount;
+import edu.scripps.yates.utilities.sequence.PTMInPeptide;
+import edu.scripps.yates.utilities.sequence.PTMInProtein;
 import edu.scripps.yates.utilities.sequence.PositionInPeptide;
 import edu.scripps.yates.utilities.strings.StringUtils;
 import edu.scripps.yates.utilities.util.Pair;
-import edu.scripps.yates.utilities.util.StringPosition;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.THashMap;
@@ -454,31 +455,33 @@ public class QuantUtils {
 	 * @return
 	 */
 	public static IonCountRatio getNormalizedIonCountRatioForPeptidesForQuantifiedSites(
-			Collection<Pair<IsobaricQuantifiedPeptide, PositionInPeptide>> peptidesAndPositionInPeptides,
+			Collection<Pair<IsobaricQuantifiedPeptide, List<PositionInPeptide>>> peptidesAndPositionInPeptides,
 			QuantCondition cond1, QuantCondition cond2, String replicateName, char[] quantifiedAAs) {
 
 		final IonCountRatio ratio = new IonCountRatio(AggregationLevel.PEPTIDE);
-		for (final Pair<IsobaricQuantifiedPeptide, PositionInPeptide> peptideAndPositionInPeptide : peptidesAndPositionInPeptides) {
+		for (final Pair<IsobaricQuantifiedPeptide, List<PositionInPeptide>> peptideAndPositionInPeptide : peptidesAndPositionInPeptides) {
 			final IsobaricQuantifiedPeptide isoPeptide = peptideAndPositionInPeptide.getFirstelement();
-			final int positionInPeptide = peptideAndPositionInPeptide.getSecondElement().getPosition();
-			final int numPSMs = isoPeptide.getQuantifiedPSMs().size();
-			// get number of ions in one condition, and normalize by the
-			// number of PSMs
-			int peakCount1 = 0;
-			final Map<QuantCondition, Set<Ion>> ionsByConditionForSites = isoPeptide
-					.getIonsByConditionForSites(replicateName, quantifiedAAs, positionInPeptide);
-			if (ionsByConditionForSites.containsKey(cond1)) {
-				peakCount1 = ionsByConditionForSites.get(cond1).size();
-			}
-			final double normalizedPeakCount1 = peakCount1 * 1.0 / numPSMs;
-			int peakCount2 = 0;
-			if (ionsByConditionForSites.containsKey(cond2)) {
-				peakCount2 = ionsByConditionForSites.get(cond2).size();
-			}
-			final double normalizedPeakCount2 = peakCount2 * 1.0 / numPSMs;
-			ratio.addIonCount(cond1, normalizedPeakCount1);
-			ratio.addIonCount(cond2, normalizedPeakCount2);
+			for (final PositionInPeptide positionInPeptideObj : peptideAndPositionInPeptide.getSecondElement()) {
 
+				final int positionInPeptide = positionInPeptideObj.getPosition();
+				final int numPSMs = isoPeptide.getQuantifiedPSMs().size();
+				// get number of ions in one condition, and normalize by the
+				// number of PSMs
+				int peakCount1 = 0;
+				final Map<QuantCondition, Set<Ion>> ionsByConditionForSites = isoPeptide
+						.getIonsByConditionForSites(replicateName, quantifiedAAs, positionInPeptide);
+				if (ionsByConditionForSites.containsKey(cond1)) {
+					peakCount1 = ionsByConditionForSites.get(cond1).size();
+				}
+				final double normalizedPeakCount1 = peakCount1 * 1.0 / numPSMs;
+				int peakCount2 = 0;
+				if (ionsByConditionForSites.containsKey(cond2)) {
+					peakCount2 = ionsByConditionForSites.get(cond2).size();
+				}
+				final double normalizedPeakCount2 = peakCount2 * 1.0 / numPSMs;
+				ratio.addIonCount(cond1, normalizedPeakCount1);
+				ratio.addIonCount(cond2, normalizedPeakCount2);
+			}
 		}
 		ratio.setAsNormalizedIonCountRatio();
 		return ratio;
@@ -535,9 +538,9 @@ public class QuantUtils {
 		return ratio;
 	}
 
-	public static List<StringPosition> getPTMPositionsInProtein(String accession, QuantifiedPeptideInterface peptide,
+	public static List<PTMInProtein> getPTMPositionsInProtein(String accession, QuantifiedPeptideInterface peptide,
 			String uniprotVersion, File uniprotAnnotationsFolder) {
-		final List<StringPosition> ptmPositionsInProtein = new ArrayList<StringPosition>();
+		final List<PTMInProtein> ptmPositionsInProtein = new ArrayList<PTMInProtein>();
 		final UniprotProteinRetriever uplr2 = getUniprotProteinLocalRetriever(uniprotVersion, uniprotAnnotationsFolder);
 		// get protein sequence from uniprot
 		final Map<String, String> annotatedProteinSequence = uplr2.getAnnotatedProteinSequence(accession);
@@ -547,12 +550,13 @@ public class QuantUtils {
 					peptide.getSequence());
 			if (!positionsInProteinSequence.isEmpty()) {
 				for (final int startingPosition : positionsInProteinSequence.toArray()) {
-					final List<StringPosition> ptms = peptide.getPtms();
-					for (final StringPosition ptmPositionInPeptide : ptms) {
-						final int positionInPeptide = ptmPositionInPeptide.position;
-						final StringPosition ptmPositionInProtein = new StringPosition(ptmPositionInPeptide.string,
-								positionInPeptide + startingPosition - 1);
-						ptmPositionsInProtein.add(ptmPositionInProtein);
+					final List<PTMInPeptide> ptms = peptide.getPtms();
+					for (final PTMInPeptide ptmInPeptide : ptms) {
+						final int positionInPeptide = ptmInPeptide.getPosition();
+						final PTMInProtein ptmInProtein = new PTMInProtein(positionInPeptide + startingPosition - 1,
+								peptide.getSequence().charAt(positionInPeptide - 1), accession,
+								ptmInPeptide.getDeltaMass());
+						ptmPositionsInProtein.add(ptmInProtein);
 					}
 				}
 
