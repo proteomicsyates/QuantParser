@@ -1,8 +1,9 @@
 package edu.scripps.yates.census.read.model;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
+
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import edu.scripps.yates.census.analysis.QuantCondition;
 import edu.scripps.yates.census.read.model.interfaces.HasIsoRatios;
@@ -386,6 +387,6 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements Quan
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(getKey());
+		return HashCodeBuilder.reflectionHashCode(getKey(), false);
 	}
 }
