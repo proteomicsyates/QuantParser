@@ -1,5 +1,7 @@
 package edu.scripps.yates.census.read.model;
 
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import edu.scripps.yates.census.analysis.QuantCondition;
 import edu.scripps.yates.utilities.model.enums.AmountType;
 import edu.scripps.yates.utilities.model.enums.CombinationType;
@@ -141,7 +143,7 @@ public class QuantAmount implements Amount {
 
 	@Override
 	public int hashCode() {
-		return -1;
+		return HashCodeBuilder.reflectionHashCode(toString(), false);
 	}
 
 	/*
