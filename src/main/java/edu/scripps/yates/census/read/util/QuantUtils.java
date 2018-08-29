@@ -193,7 +193,12 @@ public class QuantUtils {
 		// UPDATE ON 28th Nov 2017: Use just AREA_RATIO
 		if (quantifiedPSM instanceof QuantifiedPSM) {
 			// if (quantifiedPSM.isSingleton()) {
-			return getRatioByName(quantifiedPSM, CensusOutParser.AREA_RATIO);
+			final QuantRatio ret = getRatioByName(quantifiedPSM, CensusOutParser.AREA_RATIO);
+			if (ret != null) {
+				return ret;
+			}
+			return getRatioByName(quantifiedPSM, CensusOutParser.RATIO);
+
 			// } else {
 			// return getRatioByName(quantifiedPSM, CensusOutParser.RATIO);
 			// }
