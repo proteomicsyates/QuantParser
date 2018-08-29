@@ -6,9 +6,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.log4j.Logger;
 
 import edu.scripps.yates.census.analysis.QuantCondition;
@@ -243,7 +243,7 @@ public class IsobaricQuantifiedProtein extends AbstractContainsQuantifiedPSMs
 
 	@Override
 	public int getDBId() {
-		return hashCode();
+		return HashCodeBuilder.reflectionHashCode(this, false);
 	}
 
 	@Override
@@ -843,6 +843,6 @@ public class IsobaricQuantifiedProtein extends AbstractContainsQuantifiedPSMs
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(getKey());
+		return HashCodeBuilder.reflectionHashCode(getKey(), false);
 	}
 }
