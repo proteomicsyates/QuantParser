@@ -5,9 +5,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.log4j.Logger;
 
 import edu.scripps.yates.census.analysis.QuantCondition;
@@ -31,6 +31,7 @@ import edu.scripps.yates.utilities.maths.Maths;
 import edu.scripps.yates.utilities.model.enums.AggregationLevel;
 import edu.scripps.yates.utilities.model.factories.AmountEx;
 import edu.scripps.yates.utilities.proteomicsmodel.Amount;
+import edu.scripps.yates.utilities.sequence.PTMInPeptide;
 import edu.scripps.yates.utilities.strings.StringUtils;
 import edu.scripps.yates.utilities.util.StringPosition;
 import gnu.trove.list.array.TDoubleArrayList;
@@ -64,7 +65,7 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	private final Set<Amount> amounts = new THashSet<Amount>();
 	private final Set<String> fileNames = new THashSet<String>();
 	private boolean discarded;
-	private List<StringPosition> ptms;
+	private List<PTMInPeptide> ptms;
 	private String key;
 	private final Set<Character> quantifiedSites;
 
@@ -959,9 +960,21 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	 * @return the ptms
 	 */
 	@Override
-	public List<StringPosition> getPtms() {
+	public List<PTMInPeptide> getPtms() {
 		if (ptms == null) {
-			ptms = FastaParser.getInside(getFullSequence());
+			ptms = new ArrayList<PTMInPeptide>();
+			final List<StringPosition> tmp = FastaParser.getInside(getFullSequence());
+			for (final StringPosition stringPosition : tmp) {
+				Double deltaMass = null;
+				try {
+					deltaMass = Double.valueOf(stringPosition.string);
+				} catch (final NumberFormatException e) {
+
+				}
+				final PTMInPeptide ptmInPeptide = new PTMInPeptide(stringPosition.position,
+						getSequence().charAt(stringPosition.position - 1), getSequence(), deltaMass);
+				ptms.add(ptmInPeptide);
+			}
 		}
 		return ptms;
 	}
@@ -1268,6 +1281,6 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(getKey());
+		return HashCodeBuilder.reflectionHashCode(getKey(), false);
 	}
 }
