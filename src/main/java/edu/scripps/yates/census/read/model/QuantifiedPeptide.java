@@ -387,6 +387,7 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 					final Set<QuantifiedProteinInterface> proteins = getQuantifiedProteins();
 					for (final QuantifiedProteinInterface quantifiedProtein : proteins) {
 						final String acc = quantifiedProtein.getAccession();
+
 						String proteinSequence = null;
 						// it is important that we look for any protein
 						// CONTAINING the accession, so that we can search for
@@ -414,6 +415,10 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 								}
 							}
 						} else {
+							if (FastaParser.getACC(acc).getSecondElement() == "UNKNOWN") {
+								log.warn("Protein " + acc + " is ignored because we don't have its protein sequence");
+								continue;
+							}
 							throw new IllegalArgumentException("Protein sequence from protein " + acc
 									+ " not found neither in the fasta file nor in Uniprot");
 						}
