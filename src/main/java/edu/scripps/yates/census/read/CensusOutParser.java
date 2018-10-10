@@ -381,7 +381,7 @@ public class CensusOutParser extends AbstractQuantParser {
 							}
 						}
 					}
-					log.info(numRemoved + " PSMs where redundant and removed.");
+					log.info(numRemoved + " PSMs were redundant and removed.");
 
 				}
 			}
