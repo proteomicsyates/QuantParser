@@ -984,7 +984,7 @@ public class CensusOutParser extends AbstractQuantParser {
 					int quantifiedSitePositionInPeptide = -1;
 					for (final Character c : getQuantifiedAAs()) {
 						final TIntArrayList allPositionsOf = StringUtils.allPositionsOf(quantifiedPSM.getSequence(), c);
-						numSites = +allPositionsOf.size();
+						numSites += allPositionsOf.size();
 						if (allPositionsOf.size() == 1) {
 							quantifiedSitePositionInPeptide = allPositionsOf.get(0);
 						}
