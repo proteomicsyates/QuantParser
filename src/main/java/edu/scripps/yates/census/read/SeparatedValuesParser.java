@@ -33,6 +33,7 @@ import edu.scripps.yates.dbindex.util.PeptideNotFoundInDBIndexException;
 import edu.scripps.yates.utilities.fasta.FastaParser;
 import edu.scripps.yates.utilities.model.enums.AggregationLevel;
 import edu.scripps.yates.utilities.remote.RemoteSSHFileReference;
+import edu.scripps.yates.utilities.sequence.PositionInPeptide;
 import edu.scripps.yates.utilities.strings.StringUtils;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.THashMap;
@@ -327,17 +328,19 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 					}
 					// check for ambiguity on the quantified site
 					int numSites = 0;
-					int quantifiedSitePositionInPeptide = -1;
+					PositionInPeptide quantifiedSitePositionInPeptide = null;
 					for (final Character c : getQuantifiedAAs()) {
 						final TIntArrayList allPositionsOf = StringUtils.allPositionsOf(quantifiedPSM.getSequence(), c);
 						numSites = +allPositionsOf.size();
 						if (allPositionsOf.size() == 1) {
-							quantifiedSitePositionInPeptide = allPositionsOf.get(0);
+							quantifiedSitePositionInPeptide = new PositionInPeptide(allPositionsOf.get(0), c,
+									quantifiedPSM.getSequence());
+							ratio.setQuantifiedAA(c);
 						}
 					}
 					// if no ambiguities
 					if (numSites == 1) {
-						ratio.setQuantifiedSitePositionInPeptide(quantifiedSitePositionInPeptide);
+						ratio.addQuantifiedSitePositionInPeptide(quantifiedSitePositionInPeptide);
 					}
 				}
 			} catch (final NumberFormatException e) {
