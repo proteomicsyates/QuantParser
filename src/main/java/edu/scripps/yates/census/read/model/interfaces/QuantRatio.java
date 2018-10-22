@@ -1,7 +1,10 @@
 package edu.scripps.yates.census.read.model.interfaces;
 
+import java.util.Set;
+
 import edu.scripps.yates.census.analysis.QuantCondition;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
+import edu.scripps.yates.utilities.sequence.PositionInPeptide;
 
 public interface QuantRatio extends edu.scripps.yates.utilities.proteomicsmodel.Ratio {
 
@@ -29,7 +32,7 @@ public interface QuantRatio extends edu.scripps.yates.utilities.proteomicsmodel.
 
 	public void setQuantifiedAA(Character c);
 
-	public void setQuantifiedSitePositionInPeptide(int quantifiedSitePositionInPeptide);
+	public void addQuantifiedSitePositionInPeptide(PositionInPeptide quantifiedSitePositionInPeptide);
 
-	public Integer getQuantifiedSitePositionInPeptide();
+	public Set<PositionInPeptide> getQuantifiedSitePositionInPeptide();
 }

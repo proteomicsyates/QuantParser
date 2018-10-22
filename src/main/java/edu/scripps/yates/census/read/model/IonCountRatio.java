@@ -14,7 +14,9 @@ import edu.scripps.yates.utilities.model.enums.AggregationLevel;
 import edu.scripps.yates.utilities.model.enums.CombinationType;
 import edu.scripps.yates.utilities.proteomicsmodel.Condition;
 import edu.scripps.yates.utilities.proteomicsmodel.Score;
+import edu.scripps.yates.utilities.sequence.PositionInPeptide;
 import gnu.trove.map.hash.THashMap;
+import gnu.trove.set.hash.THashSet;
 
 public class IonCountRatio implements QuantRatio {
 	public static final IonCountRatio NAN_RATIO = new IonCountRatio(null);
@@ -24,7 +26,7 @@ public class IonCountRatio implements QuantRatio {
 	private final AggregationLevel aggregationLevel;
 	private String description = "Rc";
 	private Condition condition2;
-	private Integer quantifiedSitePositionInPeptide;
+	private final Set<PositionInPeptide> quantifiedSitePositionInPeptide = new THashSet<PositionInPeptide>();
 	private Character quantifiedAA;
 
 	public IonCountRatio(AggregationLevel aggregationLevel) {
@@ -203,13 +205,13 @@ public class IonCountRatio implements QuantRatio {
 	}
 
 	@Override
-	public Integer getQuantifiedSitePositionInPeptide() {
+	public Set<PositionInPeptide> getQuantifiedSitePositionInPeptide() {
 		return quantifiedSitePositionInPeptide;
 	}
 
 	@Override
-	public void setQuantifiedSitePositionInPeptide(int quantifiedSitePositionInPeptide) {
-		this.quantifiedSitePositionInPeptide = quantifiedSitePositionInPeptide;
+	public void addQuantifiedSitePositionInPeptide(PositionInPeptide quantifiedSitePositionInPeptide) {
+		this.quantifiedSitePositionInPeptide.add(quantifiedSitePositionInPeptide);
 	}
 
 	@Override
