@@ -31,6 +31,7 @@ import edu.scripps.yates.utilities.strings.StringUtils;
 import edu.scripps.yates.utilities.util.StringPosition;
 import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.THashMap;
+import gnu.trove.set.hash.TCharHashSet;
 import gnu.trove.set.hash.THashSet;
 
 public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements QuantifiedPeptideInterface {
@@ -224,18 +225,36 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 	public QuantRatio getConsensusRatio(QuantCondition quantConditionNumerator,
 			QuantCondition quantConditionDenominator) {
 		final List<QuantRatio> ratios = new ArrayList<QuantRatio>();
+		final Set<PositionInPeptide> quantPositionsInPeptides = new THashSet<PositionInPeptide>();
+		final TCharHashSet chars = new TCharHashSet();
 		for (final QuantifiedPSMInterface psm : getQuantifiedPSMs()) {
 			final QuantRatio ratio = QuantUtils.getRepresentativeRatio(psm);
 			if (ratio != null) {
 				if (ratio.getCondition1().getName().equals(quantConditionNumerator.getName())) {
 					if (ratio.getCondition2().getName().equals(quantConditionDenominator.getName())) {
 						ratios.add(ratio);
+						if (ratio.getQuantifiedAA() != null) {
+							chars.add(ratio.getQuantifiedAA());
+						}
+						if (ratio.getQuantifiedSitePositionInPeptide() != null) {
+							quantPositionsInPeptides.addAll(ratio.getQuantifiedSitePositionInPeptide());
+						}
 					}
 				}
 
 			}
 		}
-		return QuantUtils.getAverageRatio(QuantUtils.getNonInfinityRatios(ratios), AggregationLevel.PEPTIDE);
+
+		final QuantRatio ratio = QuantUtils.getAverageRatio(QuantUtils.getNonInfinityRatios(ratios),
+				AggregationLevel.PEPTIDE);
+		for (final PositionInPeptide positionInPeptide : quantPositionsInPeptides) {
+			ratio.addQuantifiedSitePositionInPeptide(positionInPeptide);
+		}
+		for (final char aa : chars.toArray()) {
+			ratio.setQuantifiedAA(aa);
+		}
+
+		return ratio;
 	}
 
 	@Override
