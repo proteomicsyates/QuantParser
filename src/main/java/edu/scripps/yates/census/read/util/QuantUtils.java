@@ -611,11 +611,46 @@ public class QuantUtils {
 
 		final Set<IsoRatio> individualIsoRatios = peptide.getIsoRatios();
 		for (final IsoRatio isoRatio : individualIsoRatios) {
-			if (isoRatio.getQuantifiedSitePositionInPeptide() == positionInPeptide) {
+			if (containsPosition(isoRatio.getQuantifiedSitePositionInPeptide(), positionInPeptide)) {
 				ret.add(isoRatio);
 			}
 		}
 		return ret;
 	}
 
+	public static boolean containsPosition(Collection<PositionInPeptide> positionInPeptides, int position) {
+		if (positionInPeptides != null) {
+			for (final PositionInPeptide positionInPeptide : positionInPeptides) {
+				if (positionInPeptide.getPosition() == position) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	public static String printPositionsInPeptideInOrder(Collection<PositionInPeptide> positionsInPeptides) {
+		final List<PositionInPeptide> list = new ArrayList<PositionInPeptide>();
+		list.addAll(positionsInPeptides);
+		list.sort(new Comparator<PositionInPeptide>() {
+
+			@Override
+			public int compare(PositionInPeptide o1, PositionInPeptide o2) {
+				final int ret = o1.getProteinACC().compareTo(o2.getProteinACC());
+				if (ret == 0) {
+					return Integer.compare(o1.getPosition(), o2.getPosition());
+				} else {
+					return ret;
+				}
+			}
+		});
+		final StringBuilder sb = new StringBuilder();
+		for (final PositionInPeptide positionInPeptide : list) {
+			if (!"".equals(sb.toString())) {
+				sb.append("-");
+			}
+			sb.append(positionInPeptide.toString());
+		}
+		return sb.toString();
+	}
 }
