@@ -1,6 +1,7 @@
 package edu.scripps.yates.census.read.model;
 
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 
@@ -14,6 +15,8 @@ import edu.scripps.yates.utilities.model.enums.AggregationLevel;
 import edu.scripps.yates.utilities.model.enums.CombinationType;
 import edu.scripps.yates.utilities.proteomicsmodel.Condition;
 import edu.scripps.yates.utilities.proteomicsmodel.Score;
+import edu.scripps.yates.utilities.sequence.PositionInPeptide;
+import gnu.trove.set.hash.THashSet;
 
 public class CensusRatio implements QuantRatio {
 	// public static final CensusRatio NAN_RATIO = new CensusRatio(null, null,
@@ -31,7 +34,7 @@ public class CensusRatio implements QuantRatio {
 	private CombinationType combinationType;
 	private Condition condition1;
 	private Condition condition2;
-	private Integer quantifiedSitePositionInPeptide;
+	private final Set<PositionInPeptide> quantifiedSitePositionInPeptide = new THashSet<PositionInPeptide>();
 	private Character quantifiedAA;
 	private final static HashFunction goodFastHash = Hashing.goodFastHash(256);
 
@@ -354,7 +357,7 @@ public class CensusRatio implements QuantRatio {
 	}
 
 	@Override
-	public Integer getQuantifiedSitePositionInPeptide() {
+	public Set<PositionInPeptide> getQuantifiedSitePositionInPeptide() {
 		return quantifiedSitePositionInPeptide;
 	}
 
@@ -364,8 +367,8 @@ public class CensusRatio implements QuantRatio {
 	}
 
 	@Override
-	public void setQuantifiedSitePositionInPeptide(int quantifiedSitePositionInPeptide) {
-		this.quantifiedSitePositionInPeptide = quantifiedSitePositionInPeptide;
+	public void addQuantifiedSitePositionInPeptide(PositionInPeptide quantifiedSitePositionInPeptide) {
+		this.quantifiedSitePositionInPeptide.add(quantifiedSitePositionInPeptide);
 	}
 
 }
