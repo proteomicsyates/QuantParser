@@ -32,6 +32,7 @@ import edu.scripps.yates.utilities.model.enums.AggregationLevel;
 import edu.scripps.yates.utilities.model.factories.AmountEx;
 import edu.scripps.yates.utilities.proteomicsmodel.Amount;
 import edu.scripps.yates.utilities.sequence.PTMInPeptide;
+import edu.scripps.yates.utilities.sequence.PositionInPeptide;
 import edu.scripps.yates.utilities.strings.StringUtils;
 import edu.scripps.yates.utilities.util.StringPosition;
 import gnu.trove.list.array.TDoubleArrayList;
@@ -1016,7 +1017,8 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 					final Integer quantifiedPosition = tmpPositions.get(0);
 					final Character quantifiedAA = sequence.charAt(quantifiedPosition - 1);
 					isoRatio.setQuantifiedAA(quantifiedAA);
-					isoRatio.setQuantifiedSitePositionInPeptide(quantifiedPosition);
+					isoRatio.addQuantifiedSitePositionInPeptide(
+							new PositionInPeptide(quantifiedPosition, quantifiedAA, sequence));
 					if (ret.containsKey(quantifiedPosition)) {
 						ret.get(quantifiedPosition).add(isoRatio);
 					} else {
@@ -1032,7 +1034,8 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 						final Character quantifiedAA = sequence.charAt(quantifiedPosition - 1);
 						final IsoRatio clonedIsoRatio = cloneIsoRatio(isoRatio);
 						clonedIsoRatio.setQuantifiedAA(quantifiedAA);
-						clonedIsoRatio.setQuantifiedSitePositionInPeptide(quantifiedPosition);
+						clonedIsoRatio.addQuantifiedSitePositionInPeptide(
+								new PositionInPeptide(quantifiedPosition, quantifiedAA, sequence));
 						if (ret.containsKey(quantifiedPosition)) {
 							ret.get(quantifiedPosition).add(clonedIsoRatio);
 						} else {
@@ -1074,7 +1077,8 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 					final Integer quantifiedPosition = tmpPositions.get(0);
 					final Character quantifiedAA = sequence.charAt(quantifiedPosition - 1);
 					isoRatio.setQuantifiedAA(quantifiedAA);
-					isoRatio.setQuantifiedSitePositionInPeptide(quantifiedPosition);
+					isoRatio.addQuantifiedSitePositionInPeptide(
+							new PositionInPeptide(quantifiedPosition, quantifiedAA, sequence));
 					if (ret.containsKey(quantifiedPosition)) {
 						ret.get(quantifiedPosition).add(isoRatio);
 					} else {
@@ -1090,7 +1094,8 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 						final Character quantifiedAA = sequence.charAt(quantifiedPosition - 1);
 						final IsoRatio clonedIsoRatio = cloneIsoRatio(isoRatio);
 						clonedIsoRatio.setQuantifiedAA(quantifiedAA);
-						clonedIsoRatio.setQuantifiedSitePositionInPeptide(quantifiedPosition);
+						clonedIsoRatio.addQuantifiedSitePositionInPeptide(
+								new PositionInPeptide(quantifiedPosition, quantifiedAA, sequence));
 						if (ret.containsKey(quantifiedPosition)) {
 							ret.get(quantifiedPosition).add(clonedIsoRatio);
 						} else {
