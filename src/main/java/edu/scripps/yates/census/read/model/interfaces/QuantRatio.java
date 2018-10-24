@@ -35,4 +35,15 @@ public interface QuantRatio extends edu.scripps.yates.utilities.proteomicsmodel.
 	public void addQuantifiedSitePositionInPeptide(PositionInPeptide quantifiedSitePositionInPeptide);
 
 	public Set<PositionInPeptide> getQuantifiedSitePositionInPeptide();
+
+	/**
+	 * The number of measurements that have been used to calculate this ratio.
+	 * In case of being an average ratio over 3 ratios, this function will
+	 * return a 3.
+	 * 
+	 * @return
+	 */
+	public int getNumMeasurements();
+
+	public void setNumMeasurements(int numMeasurements);
 }

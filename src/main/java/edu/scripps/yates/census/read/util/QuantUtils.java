@@ -155,16 +155,21 @@ public class QuantUtils {
 		if (ratioValues.isEmpty()) {
 			final CensusRatio ret = new CensusRatio(Double.NaN, false, cond1, cond2, aggregationLevel,
 					"Peptide with no PSM ratios");
+
 			return ret;
 		}
 		final double mean = Maths.mean(ratioValues);
-		final double stdev = Maths.stddev(ratioValues);
+		double stdev = Maths.stddev(ratioValues);
+		if (ratioValues.size() == 1) {
+			stdev = 0;
+		}
 		String ratioDescription = nonInfinityRatios.iterator().next().getDescription();
 		if (ratioValues.size() > 1) {
 			ratioDescription = "Average of " + ratioDescription;
 		}
 		final CensusRatio ret = new CensusRatio(mean, true, cond1, cond2, aggregationLevel, ratioDescription);
 		ret.setCombinationType(CombinationType.AVERAGE);
+		ret.setNumMeasurements(ratioValues.size());
 		final RatioScore ratioScore = new RatioScore(String.valueOf(stdev), "STDEV",
 				"Standard deviation of log2 ratios", "Standard deviation of multiple log2 ratios");
 		ret.setRatioScore(ratioScore);
