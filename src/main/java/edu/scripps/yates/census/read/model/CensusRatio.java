@@ -36,6 +36,7 @@ public class CensusRatio implements QuantRatio {
 	private Condition condition2;
 	private final Set<PositionInPeptide> quantifiedSitePositionInPeptide = new THashSet<PositionInPeptide>();
 	private Character quantifiedAA;
+	private int numMeasurements;
 	private final static HashFunction goodFastHash = Hashing.goodFastHash(256);
 
 	public static CensusRatio getNaNRatio(QuantCondition quantConditionNumerator,
@@ -369,6 +370,15 @@ public class CensusRatio implements QuantRatio {
 	@Override
 	public void addQuantifiedSitePositionInPeptide(PositionInPeptide quantifiedSitePositionInPeptide) {
 		this.quantifiedSitePositionInPeptide.add(quantifiedSitePositionInPeptide);
+	}
+
+	@Override
+	public int getNumMeasurements() {
+		return numMeasurements;
+	}
+
+	public void setNumMeasurements(int numMeasurements) {
+		this.numMeasurements = numMeasurements;
 	}
 
 }
