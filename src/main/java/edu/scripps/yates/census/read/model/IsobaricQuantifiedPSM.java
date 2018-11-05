@@ -10,6 +10,9 @@ import java.util.Set;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.log4j.Logger;
 
+import edu.scripps.yates.annotations.uniprot.UniprotProteinLocalRetriever;
+import edu.scripps.yates.annotations.uniprot.xml.Entry;
+import edu.scripps.yates.annotations.util.UniprotEntryUtil;
 import edu.scripps.yates.census.analysis.QuantCondition;
 import edu.scripps.yates.census.analysis.util.KeyUtils;
 import edu.scripps.yates.census.quant.xml.ProteinType.Peptide;
@@ -32,6 +35,7 @@ import edu.scripps.yates.utilities.model.enums.AggregationLevel;
 import edu.scripps.yates.utilities.model.factories.AmountEx;
 import edu.scripps.yates.utilities.proteomicsmodel.Amount;
 import edu.scripps.yates.utilities.sequence.PTMInPeptide;
+import edu.scripps.yates.utilities.sequence.PTMInProtein;
 import edu.scripps.yates.utilities.sequence.PositionInPeptide;
 import edu.scripps.yates.utilities.strings.StringUtils;
 import edu.scripps.yates.utilities.util.StringPosition;
@@ -1287,5 +1291,56 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	@Override
 	public int hashCode() {
 		return HashCodeBuilder.reflectionHashCode(getKey(), false);
+	}
+
+	@Override
+	public List<PTMInProtein> getPTMInProtein(UniprotProteinLocalRetriever uplr, Map<String, String> proteinSequences) {
+		final List<PTMInProtein> ptmsInProtein = new ArrayList<PTMInProtein>();
+		final List<PTMInPeptide> ptms = getPtms();
+		if (ptms.isEmpty()) {
+			return ptmsInProtein;
+		}
+
+		for (final PTMInPeptide ptmInPeptide : ptms) {
+			final int positionInPeptide = ptmInPeptide.getPosition();
+
+			final Set<QuantifiedProteinInterface> proteins = getQuantifiedProteins();
+			for (final QuantifiedProteinInterface quantifiedProtein : proteins) {
+				final String acc = quantifiedProtein.getAccession();
+				String proteinSequence = null;
+				// it is important that we look for any protein
+				// CONTAINING the accession, so that we can search for
+				// the isoforms and proteoforms
+				if (proteinSequences != null && proteinSequences.containsKey(acc)) {
+					proteinSequence = proteinSequences.get(acc);
+				}
+				if (proteinSequence == null && uplr != null) {
+					final Map<String, Entry> annotatedProtein = uplr.getAnnotatedProtein(null, acc);
+					final Entry entry = annotatedProtein.get(acc);
+					if (entry != null) {
+						proteinSequence = UniprotEntryUtil.getProteinSequence(entry);
+					}
+				}
+				if (proteinSequence != null) {
+					final TIntArrayList positionsInProteinSequence = StringUtils.allPositionsOf(proteinSequence,
+							getSequence());
+					for (final int positionInProteinSequence : positionsInProteinSequence.toArray()) {
+						final int positionOfSiteInProtein = positionInProteinSequence + positionInPeptide - 1;
+						final PTMInProtein ptmInProtein = new PTMInProtein(positionOfSiteInProtein,
+								proteinSequence.charAt(positionOfSiteInProtein - 1), acc, ptmInPeptide.getDeltaMass());
+						if (!ptmsInProtein.contains(ptmInProtein)) {
+							ptmsInProtein.add(ptmInProtein);
+						}
+					}
+				} else {
+					throw new IllegalArgumentException("Protein sequence from protein " + acc
+							+ " not found neither in the fasta file nor in Uniprot");
+				}
+
+			}
+
+		}
+
+		return ptmsInProtein;
 	}
 }
