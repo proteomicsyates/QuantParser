@@ -6,7 +6,6 @@ import java.util.Set;
 
 import edu.scripps.yates.annotations.uniprot.UniprotProteinLocalRetriever;
 import edu.scripps.yates.utilities.proteomicsmodel.HasAmounts;
-import edu.scripps.yates.utilities.sequence.PTMInProtein;
 import edu.scripps.yates.utilities.sequence.PositionInPeptide;
 import edu.scripps.yates.utilities.sequence.PositionInProtein;
 
@@ -50,20 +49,5 @@ public interface QuantifiedPeptideInterface extends PeptideSequenceInterface, Ha
 			UniprotProteinLocalRetriever uplr);
 
 	public List<PositionInProtein> getStartingPositionsInProtein(String proteinACC, UniprotProteinLocalRetriever uplr);
-
-	/**
-	 * Get a list of {@link PositionInProtein} for each ptm site in the peptide
-	 * sequence (represented as a {@link PositionInPeptide}).<br>
-	 * Examples:<br>
-	 * "PEPTIDE#4 {PROTEIN1#234#238, PROTEIN2#123#127}
-	 * 
-	 * @param uplr
-	 *            used in order to get the protein sequence
-	 * @param proteinSequences
-	 *            map of protein sequences
-	 * @param dBIndex
-	 * @return
-	 */
-	public List<PTMInProtein> getPTMInProtein(UniprotProteinLocalRetriever uplr, Map<String, String> proteinSequences);
 
 }
