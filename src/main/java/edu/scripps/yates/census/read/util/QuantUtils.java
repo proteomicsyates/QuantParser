@@ -13,7 +13,10 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
+import edu.scripps.yates.annotations.uniprot.UniprotProteinLocalRetriever;
 import edu.scripps.yates.annotations.uniprot.UniprotProteinRetriever;
+import edu.scripps.yates.annotations.uniprot.xml.Entry;
+import edu.scripps.yates.annotations.util.UniprotEntryUtil;
 import edu.scripps.yates.census.analysis.QuantCondition;
 import edu.scripps.yates.census.analysis.util.KeyUtils;
 import edu.scripps.yates.census.read.CensusOutParser;
@@ -39,6 +42,7 @@ import edu.scripps.yates.utilities.proteomicsmodel.Amount;
 import edu.scripps.yates.utilities.sequence.PTMInPeptide;
 import edu.scripps.yates.utilities.sequence.PTMInProtein;
 import edu.scripps.yates.utilities.sequence.PositionInPeptide;
+import edu.scripps.yates.utilities.sequence.PositionInProtein;
 import edu.scripps.yates.utilities.strings.StringUtils;
 import edu.scripps.yates.utilities.util.Pair;
 import gnu.trove.list.array.TDoubleArrayList;
@@ -49,6 +53,7 @@ import gnu.trove.set.hash.THashSet;
 public class QuantUtils {
 	private static final Logger log = Logger.getLogger(QuantUtils.class);
 	private static UniprotProteinRetriever uplr;
+	public static final String KEY_SEPARATOR = "-";
 
 	public static void addToPeptideMap(QuantifiedPSMInterface quantifiedPSM, Map<String, QuantifiedPeptide> map,
 			boolean ignoreTaxonomies) {
@@ -657,5 +662,120 @@ public class QuantUtils {
 			sb.append(positionInPeptide.toString());
 		}
 		return sb.toString();
+	}
+
+	public static String getPositionsInProteinKey(List<PositionInProtein> positionsInProtein, String proteinACC,
+			boolean useProteinGeneName, boolean useProteinID, UniprotProteinLocalRetriever uplr,
+			String uniprotVersion) {
+		final Set<String> accs = new THashSet<String>();
+		accs.add(proteinACC);
+		return getPositionsInProteinsKey(positionsInProtein, accs, useProteinGeneName, useProteinID, uplr,
+				uniprotVersion);
+	}
+
+	/**
+	 * Get a string such as: P12345#12#P23456#456 from, in this example, two
+	 * proteins with position 12 and 456 respectively
+	 * 
+	 * @param positionsInProtein
+	 * @return
+	 */
+	public static String getPositionsInProteinsKey(List<PositionInProtein> positionsInProtein, Set<String> proteinACCs,
+			boolean useProteinGeneName, boolean useProteinID, UniprotProteinLocalRetriever uplr,
+			String uniprotVersion) {
+		if (positionsInProtein == null || positionsInProtein.isEmpty()) {
+			positionsInProtein = new ArrayList<PositionInProtein>();
+			for (final String proteinAcc : proteinACCs) {
+				positionsInProtein.add(new PositionInProtein(0, PositionInProtein.NULL_CHAR, proteinAcc));
+			}
+		}
+		Collections.sort(positionsInProtein, new Comparator<PositionInProtein>() {
+
+			@Override
+			public int compare(PositionInProtein o1, PositionInProtein o2) {
+				final int compareTo = o1.getProteinACC().compareTo(o2.getProteinACC());
+				if (compareTo == 0) {
+					return Integer.compare(o1.getPosition(), o2.getPosition());
+				}
+				return compareTo;
+			}
+		});
+		final StringBuilder sb = new StringBuilder();
+		for (final PositionInProtein positionInProtein : positionsInProtein) {
+			if (!"".equals(sb.toString())) {
+				sb.append(KEY_SEPARATOR);
+			}
+			String key = null;
+
+			if (useProteinGeneName || useProteinID) {
+				final Map<String, Entry> entries = uplr.getAnnotatedProtein(uniprotVersion,
+						positionInProtein.getProteinACC());
+				if (entries.containsKey(positionInProtein.getProteinACC())) {
+					if (useProteinGeneName) {
+						final List<Pair<String, String>> geneNames = UniprotEntryUtil
+								.getGeneName(entries.get(positionInProtein.getProteinACC()), true, true);
+						if (!geneNames.isEmpty()) {
+							key = geneNames.get(0).getFirstelement();
+						}
+					} else if (useProteinID) {
+						final List<String> proteinNames = UniprotEntryUtil
+								.getNames(entries.get(positionInProtein.getProteinACC()));
+						if (!proteinNames.isEmpty()) {
+							key = proteinNames.get(0);
+						}
+					}
+				}
+			}
+
+			if (key == null) {
+				key = positionInProtein.getProteinACC();
+			}
+			sb.append(key + PositionInProtein.SEPARATOR);
+			if (positionInProtein.getAa() != PositionInProtein.NULL_CHAR) {
+				sb.append(positionInProtein.getAa());
+			}
+			if (positionInProtein.getPosition() > 0) {
+				sb.append(positionInProtein.getPosition());
+			}
+
+		}
+		return sb.toString();
+	}
+
+	public static String getPositionsInProteinsKey(List<PositionInProtein> positionsInProtein,
+			boolean useProteinGeneName, boolean useProteinID, UniprotProteinLocalRetriever uplr,
+			String uniprotVersion) {
+		return getPositionsInProteinsKey(positionsInProtein, null, useProteinGeneName, useProteinID, uplr,
+				uniprotVersion);
+	}
+
+	/**
+	 * Get a string such as: P12345#12#P23456#456 from, in this example, two
+	 * proteins with position 12 and 456 respectively
+	 * 
+	 * @param keys1
+	 * @return
+	 */
+	public static String getPositionsInProteinsKey(Map<PositionInPeptide, List<PositionInProtein>> keysMap,
+			boolean useProteinGeneName, boolean useProteinID, UniprotProteinLocalRetriever uplr,
+			String uniprotVersion) {
+		if (keysMap == null) {
+			return null;
+		}
+		final List<PositionInProtein> list = new ArrayList<PositionInProtein>();
+		for (final List<PositionInProtein> positionsInProtein : keysMap.values()) {
+			list.addAll(positionsInProtein);
+		}
+		return getPositionsInProteinsKey(list, useProteinGeneName, useProteinID, uplr, uniprotVersion);
+	}
+
+	public static List<PositionInProtein> getAsPositionInProtein(List<PTMInProtein> ptmsInProtein) {
+		final List<PositionInProtein> ret = new ArrayList<PositionInProtein>();
+		if (ptmsInProtein != null) {
+			for (final PTMInProtein ptmInProtein : ptmsInProtein) {
+				ret.add(ptmInProtein);
+			}
+		}
+		return ret;
 	}
 }
