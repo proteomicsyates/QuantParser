@@ -15,6 +15,7 @@ import java.util.concurrent.ExecutionException;
 
 import org.apache.log4j.Logger;
 
+import edu.scripps.yates.annotations.uniprot.UniprotProteinLocalRetriever;
 import edu.scripps.yates.census.analysis.clustering.ProteinCluster;
 import edu.scripps.yates.census.analysis.clustering.ProteinClusterUtils;
 import edu.scripps.yates.census.analysis.util.KeyUtils;
@@ -35,6 +36,7 @@ import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
 import edu.scripps.yates.census.read.util.IonExclusion;
+import edu.scripps.yates.census.read.util.ProteinSequences;
 import edu.scripps.yates.census.read.util.QuantUtils;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
 import edu.scripps.yates.dbindex.DBIndexInterface;
@@ -59,7 +61,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 	private QuantParameters quantParameters = new QuantParameters();
 	private final Map<String, List<String>> replicateAndExperimentNames = new THashMap<String, List<String>>();
 	private DBIndexInterface dbIndex;
-	private boolean ignorePTMs = true;
+	private final boolean ignorePTMs;
 	private static final String QUANT_FOLDER = "quant";
 	private SanXotAnalysisResult result;
 	private final ANALYSIS_LEVEL_OUTCOME analysisOutCome;
@@ -72,9 +74,16 @@ public class QuantAnalysis implements PropertyChangeListener {
 	private Set<Set<String>> proteinAccClusters;
 	private final QuantificationType quantType;
 	private Boolean keepExperimentsSeparated;
+	private final boolean collapseByPTM;
+	private final boolean collapseBySite;
+	private ProteinSequences proteinSequences;
+	private UniprotProteinLocalRetriever uplr;
+	private boolean useProteinGeneName;
+	private boolean useProteinID;
+	private String uniprotVersion;
 
 	public static enum ANALYSIS_LEVEL_OUTCOME {
-		PEPTIDE, PROTEIN, PROTEINGROUP, PROTEIN_CLUSTER, FORCED_CLUSTERS
+		PEPTIDE, PROTEIN, PROTEINGROUP, PROTEIN_CLUSTER, FORCED_CLUSTERS, QUANTIFIED_SITE, QUANTIFIED_PTM
 	};
 
 	/**
@@ -85,12 +94,15 @@ public class QuantAnalysis implements PropertyChangeListener {
 	 * @param condition2
 	 */
 	public QuantAnalysis(QuantificationType quantType, String workingPath, QuantCondition condition1,
-			QuantCondition condition2) {
+			QuantCondition condition2, boolean ignorePTMs, boolean collapseByPTM, boolean collapseBySite) {
 		this.condition1 = condition1;
 		this.condition2 = condition2;
 		analysisOutCome = ANALYSIS_LEVEL_OUTCOME.PROTEINGROUP;
 		workingFolder = createWorkingFolder(workingPath, analysisOutCome);
 		this.quantType = quantType;
+		this.ignorePTMs = ignorePTMs;
+		this.collapseByPTM = collapseByPTM;
+		this.collapseBySite = collapseBySite;
 	}
 
 	/**
@@ -102,12 +114,15 @@ public class QuantAnalysis implements PropertyChangeListener {
 	 * @param analysisOutCome
 	 */
 	public QuantAnalysis(QuantificationType quantType, File workingFolder, QuantCondition condition1,
-			QuantCondition condition2) {
+			QuantCondition condition2, boolean ignorePTMs, boolean collapseByPTM, boolean collapseBySite) {
 		this.condition1 = condition1;
 		this.condition2 = condition2;
 		analysisOutCome = ANALYSIS_LEVEL_OUTCOME.PROTEINGROUP;
 		this.workingFolder = createWorkingFolder(workingFolder, analysisOutCome);
 		this.quantType = quantType;
+		this.ignorePTMs = ignorePTMs;
+		this.collapseByPTM = collapseByPTM;
+		this.collapseBySite = collapseBySite;
 	}
 
 	/**
@@ -118,13 +133,17 @@ public class QuantAnalysis implements PropertyChangeListener {
 	 * @param condition2
 	 */
 	public QuantAnalysis(QuantificationType quantType, String workingPath, QuantCondition condition1,
-			QuantCondition condition2, ANALYSIS_LEVEL_OUTCOME analysisOutCome) {
+			QuantCondition condition2, ANALYSIS_LEVEL_OUTCOME analysisOutCome, boolean ignorePTMs,
+			boolean collapseByPTM, boolean collapseBySite) {
 		this.condition1 = condition1;
 		this.condition2 = condition2;
 		this.analysisOutCome = analysisOutCome;
 
 		workingFolder = createWorkingFolder(workingPath, analysisOutCome);
 		this.quantType = quantType;
+		this.ignorePTMs = ignorePTMs;
+		this.collapseByPTM = collapseByPTM;
+		this.collapseBySite = collapseBySite;
 	}
 
 	/**
@@ -136,13 +155,33 @@ public class QuantAnalysis implements PropertyChangeListener {
 	 * @param analysisOutCome
 	 */
 	public QuantAnalysis(QuantificationType quantType, File workingFolder, QuantCondition condition1,
-			QuantCondition condition2, ANALYSIS_LEVEL_OUTCOME analysisOutCome) {
+			QuantCondition condition2, ANALYSIS_LEVEL_OUTCOME analysisOutCome, boolean ignorePTMs,
+			boolean collapseByPTM, boolean collapseBySite) {
 		this.condition1 = condition1;
 		this.condition2 = condition2;
 		this.analysisOutCome = analysisOutCome;
 		this.workingFolder = createWorkingFolder(workingFolder, analysisOutCome);
 		this.quantType = quantType;
+		this.ignorePTMs = ignorePTMs;
+		this.collapseByPTM = collapseByPTM;
+		this.collapseBySite = collapseBySite;
 
+	}
+
+	public ProteinSequences getProteinSequences() {
+		return proteinSequences;
+	}
+
+	public void setProteinSequences(ProteinSequences proteinSequences) {
+		this.proteinSequences = proteinSequences;
+	}
+
+	public UniprotProteinLocalRetriever getUplr() {
+		return uplr;
+	}
+
+	public void setUplr(UniprotProteinLocalRetriever uplr) {
+		this.uplr = uplr;
 	}
 
 	/**
@@ -150,14 +189,6 @@ public class QuantAnalysis implements PropertyChangeListener {
 	 */
 	public boolean isIgnorePTMs() {
 		return ignorePTMs;
-	}
-
-	/**
-	 * @param ignorePTMs
-	 *            the ignorePTMs to set
-	 */
-	public void setIgnorePTMs(boolean ignorePTMs) {
-		this.ignorePTMs = ignorePTMs;
 	}
 
 	private File createWorkingFolder(String workingPath, ANALYSIS_LEVEL_OUTCOME outcome) {
@@ -188,6 +219,30 @@ public class QuantAnalysis implements PropertyChangeListener {
 	 */
 	public void setKeepExperimentsSeparated(Boolean keepExperimentsSeparated) {
 		this.keepExperimentsSeparated = keepExperimentsSeparated;
+	}
+
+	public boolean isUseProteinGeneName() {
+		return useProteinGeneName;
+	}
+
+	public void setUseProteinGeneName(boolean useProteinGeneName) {
+		this.useProteinGeneName = useProteinGeneName;
+	}
+
+	public boolean isUseProteinID() {
+		return useProteinID;
+	}
+
+	public void setUseProteinID(boolean useProteinID) {
+		this.useProteinID = useProteinID;
+	}
+
+	public String getUniprotVersion() {
+		return uniprotVersion;
+	}
+
+	public void setUniprotVersion(String uniprotVersion) {
+		this.uniprotVersion = uniprotVersion;
 	}
 
 	public void addQuantExperiment(QuantExperiment exp) {
@@ -258,6 +313,12 @@ public class QuantAnalysis implements PropertyChangeListener {
 		case PEPTIDE:
 			writeRelationshipsFilesForPeptideOutcome();
 			break;
+		case QUANTIFIED_PTM:
+			writeRelationshipsFilesForPTMOutcome();
+			break;
+		case QUANTIFIED_SITE:
+			writeRelationshipsFilesForQuantSiteOutcome();
+			break;
 		case PROTEIN_CLUSTER:
 			if (minAlignmentScore == 0) {
 				throw new IllegalArgumentException(
@@ -322,8 +383,8 @@ public class QuantAnalysis implements PropertyChangeListener {
 
 	private void writeDataFile() throws IOException {
 
-		final FileWriter dataFileWriter = new FileWriter(
-				getWorkingPath().getAbsolutePath() + File.separator + FileMappingResults.DATA_FILE);
+		final String fileName = getWorkingPath().getAbsolutePath() + File.separator + FileMappingResults.DATA_FILE;
+		final FileWriter dataFileWriter = new FileWriter(fileName);
 		dataFileWriter.write("#id\tX\tVcal" + NL);
 		int numPSMsDiscarded = 0;
 		try {
@@ -371,6 +432,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 								if (ratio instanceof IsoRatio) {
 
 									final IsoRatio isoRatio = (IsoRatio) ratio;
+
 									key = KeyUtils.getIonKey(isoRatio,
 											((IsobaricQuantifiedPSM) quantifiedPSM).getPeptide(), true) + expRepKey;
 
@@ -421,6 +483,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 								// which is the weight
 								Double.valueOf(quantifiedPSM.getRatios().iterator().next()
 										.getAssociatedConfidenceScore().getValue());
+								break;
 							default:
 								throw new IllegalArgumentException("Quant type " + quantType
 										+ " is not supported with this analysis configuration");
@@ -439,7 +502,9 @@ public class QuantAnalysis implements PropertyChangeListener {
 									}
 								}
 							}
+
 							key = KeyUtils.getSpectrumKey(quantifiedPSM, true) + expRepKey;
+
 							// in case of not having isobaric isotopologues, we
 							// have one ratio per PSM in the replicate, not
 							// matters if it is comming from a TMT, where we
@@ -479,7 +544,10 @@ public class QuantAnalysis implements PropertyChangeListener {
 			}
 
 		} finally {
-			log.info(numPSMsDiscarded + " PSMs were tagged as discarded and will not be considered in the analysis");
+			if (numPSMsDiscarded > 0) {
+				log.info(
+						numPSMsDiscarded + " PSMs were tagged as discarded and will not be considered in the analysis");
+			}
 			if (dataFileWriter != null) {
 				dataFileWriter.close();
 			}
@@ -642,6 +710,99 @@ public class QuantAnalysis implements PropertyChangeListener {
 			}
 		}
 		writePeptideToAllMap();
+	}
+
+	private void writeRelationshipsFilesForPTMOutcome() throws IOException {
+		writeIonToSpectrumMap();
+
+		writeSpectrumToPTMExperimentReplicateMap();
+
+		try {
+			writePTMExperimentReplicateToPTMExperimentMap();
+			try {
+				writePTMExperimentToPTMMap();
+			} catch (final IllegalArgumentException e) {
+				log.info(e.getMessage());
+				// "There is not more than 1 experiment"
+				// do nothing and perform the last step: proteinToAll
+			}
+
+		} catch (final IllegalArgumentException e) {
+			log.info(e.getMessage());
+			// "There is not any experiment with some replicates"
+			try {
+				writePTMExperimentToPTMMap();
+			} catch (final IllegalArgumentException e2) {
+				log.info(e2.getMessage());
+				// "There is not more than 1 experiment"
+				// do nothing and perform the last step: proteinToAll
+			}
+		}
+		writePTMToAllMap();
+	}
+
+	private void writePTMToAllMap() {
+		// TODO Auto-generated method stub
+
+	}
+
+	private void writePTMExperimentToPTMMap() {
+		// TODO Auto-generated method stub
+
+	}
+
+	private void writePTMExperimentReplicateToPTMExperimentMap() {
+		// TODO Auto-generated method stub
+
+	}
+
+	private void writeRelationshipsFilesForQuantSiteOutcome() throws IOException {
+		writeIonToSpectrumMap();
+
+		writeSpectrumToProteinQuantSiteExperimentReplicateMap();
+
+		try {
+			writeProteinQuantExperimentReplicateToProteinQuantExperimentMap();
+			try {
+				writeProteinQuantExperimentToProteinQuantMap();
+			} catch (final IllegalArgumentException e) {
+				log.info(e.getMessage());
+				// "There is not more than 1 experiment"
+				// do nothing and perform the last step: proteinToAll
+			}
+
+		} catch (final IllegalArgumentException e) {
+			log.info(e.getMessage());
+			// "There is not any experiment with some replicates"
+			try {
+				writeProteinQuantExperimentToProteinQuantMap();
+			} catch (final IllegalArgumentException e2) {
+				log.info(e2.getMessage());
+				// "There is not more than 1 experiment"
+				// do nothing and perform the last step: proteinToAll
+			}
+		}
+		writeProteinQuantToAllMap();
+	}
+
+	private void writeProteinQuantToAllMap() {
+		// TODO Auto-generated method stub
+
+	}
+
+	private void writeProteinQuantExperimentToProteinQuantMap() {
+		// TODO Auto-generated method stub
+
+	}
+
+	private void writeProteinQuantExperimentReplicateToProteinQuantExperimentMap() {
+		// TODO Auto-generated method stub
+
+	}
+
+	private void writeSpectrumToProteinQuantSiteExperimentReplicateMap() {
+		// TODO Auto-generated method stub
+
 	}
 
 	/**
@@ -1397,8 +1558,9 @@ public class QuantAnalysis implements PropertyChangeListener {
 	 * @throws IOException
 	 */
 	private void writeSpectrumToPeptideExperimentReplicateMap() throws IOException {
-		final FileWriter writer = new FileWriter(getWorkingPath().getAbsolutePath() + File.separator
-				+ FileMappingResults.SPECTRUM_TO_PEPTIDE_REPLICATE_EXPERIMENT_2);
+		final String fileName = getWorkingPath().getAbsolutePath() + File.separator
+				+ FileMappingResults.SPECTRUM_TO_PEPTIDE_REPLICATE_EXPERIMENT_2;
+		final FileWriter writer = new FileWriter(fileName);
 		final Map<String, Set<String>> map = new THashMap<String, Set<String>>();
 
 		for (final QuantExperiment exp : quantExperiments) {
@@ -1426,6 +1588,49 @@ public class QuantAnalysis implements PropertyChangeListener {
 		}
 		final String header = "sequence+charge+replicate+experiment" + "\t" + "scan+raw_file" + "\t"
 				+ "spectrum --> peptide-replicate-experiment";
+		writeMapToFile(header, map, writer);
+
+	}
+
+	/**
+	 * PEPTIDEA_3_REP1_EXP1 --> SCAN1_RAWFILE1<br>
+	 * PEPTIDEA_3_REP1_EXP1 --> SCAN2_RAWFILE1<br>
+	 * PEPTIDEA_3_REP2_EXP1 --> SCAN1_RAWFILE2<br>
+	 * PEPTIDEB_2_REP1_EXP1 --> SCAN3_RAWFILE1<br>
+	 *
+	 * @throws IOException
+	 */
+	private void writeSpectrumToPTMExperimentReplicateMap() throws IOException {
+		final String fileName = getWorkingPath().getAbsolutePath() + File.separator
+				+ FileMappingResults.SPECTRUM_TO_PEPTIDE_REPLICATE_EXPERIMENT_2;
+		final FileWriter writer = new FileWriter(fileName);
+		final Map<String, Set<String>> map = new THashMap<String, Set<String>>();
+
+		for (final QuantExperiment exp : quantExperiments) {
+			String expName = "";
+			if (quantExperiments.size() > 1) {
+				expName = exp.getName();
+			}
+			for (final QuantReplicate rep : exp.getReplicates()) {
+				String repName = "";
+				if (exp.getReplicates().size() > 1) {
+					repName = rep.getName();
+				}
+				String expRepKey = "";
+				if (!"".equals(repName)) {
+					expRepKey = "_" + repName;
+				}
+				if (!"".equals(expName)) {
+					expRepKey += "_" + expName;
+				}
+				final QuantParser parser = rep.getParser();
+				final Map<String, Set<String>> tmpMap = parser.getPTMToSpectraMap();
+				final Map<String, Set<String>> peptideToSpectraMap2 = addRepNameToMap(tmpMap, expRepKey);
+				mergeMaps(map, peptideToSpectraMap2, expRepKey, "");
+			}
+		}
+		final String header = "PTM_SITE+replicate+experiment" + "\t" + "scan+raw_file" + "\t"
+				+ "spectrum --> PTM_SITE-replicate-experiment";
 		writeMapToFile(header, map, writer);
 
 	}
