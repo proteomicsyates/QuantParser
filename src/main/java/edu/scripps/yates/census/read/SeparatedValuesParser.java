@@ -284,9 +284,14 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 			chargeState = Integer.valueOf(FastaParser.getChargeStateFromPSMIdentifier(psmId));
 		} catch (final Exception e) {
 		}
-		QuantifiedPSMInterface quantifiedPSM = new QuantifiedPSM(sequence, labelsByConditions, peptideToSpectraMap,
-				scanNumber, chargeState, rawFileName, false);
-
+		QuantifiedPSMInterface quantifiedPSM = null;
+		if (!isGetPTMInProteinMap()) {
+			quantifiedPSM = new QuantifiedPSM(sequence, labelsByConditions, peptideToSpectraMap, scanNumber,
+					chargeState, rawFileName, false);
+		} else {
+			quantifiedPSM = new QuantifiedPSM(sequence, labelsByConditions, peptideToSpectraMap, ptmToSpectraMap,
+					scanNumber, chargeState, rawFileName, false, super.uplr, super.proteinSequences);
+		}
 		quantifiedPSM.getFileNames().add(inputFileName);
 		final String psmKey = KeyUtils.getSpectrumKey(quantifiedPSM, true);
 		// in case of TMT, the psm may have been created before

@@ -23,6 +23,7 @@ import edu.scripps.yates.census.read.model.interfaces.QuantParser;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
+import edu.scripps.yates.census.read.util.ProteinSequences;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
 import edu.scripps.yates.dbindex.DBIndexInterface;
 import edu.scripps.yates.utilities.fasta.FastaParser;
@@ -54,7 +55,8 @@ public abstract class AbstractQuantParser implements QuantParser {
 	protected final Map<String, Set<String>> proteinToPeptidesMap = new THashMap<String, Set<String>>();
 	// key=peptideKey, values=spectrumKeys
 	protected final Map<String, Set<String>> peptideToSpectraMap = new THashMap<String, Set<String>>();
-
+	// key=siteInProtein(more than one can be), values=spectrumKeys
+	protected final Map<String, Set<String>> ptmToSpectraMap = new THashMap<String, Set<String>>();
 	// the key is the protein key
 	protected final Map<String, QuantifiedProteinInterface> localProteinMap = new THashMap<String, QuantifiedProteinInterface>();
 	// the key is the spectrum key
@@ -75,12 +77,14 @@ public abstract class AbstractQuantParser implements QuantParser {
 	// denominatorLabelByFile = new THashMap<RemoteSSHFileReference,
 	// QuantificationLabel>();
 	protected final Map<RemoteSSHFileReference, List<RatioDescriptor>> ratioDescriptorsByFile = new THashMap<RemoteSSHFileReference, List<RatioDescriptor>>();
-	private UniprotProteinLocalRetriever uplr;
-	private String uniprotVersion;
+	protected UniprotProteinLocalRetriever uplr;
+	protected String uniprotVersion;
 	protected boolean clearStaticMapsBeforeReading = true;
 	private boolean retrieveFastaIsoforms;
 	private boolean ignoreTaxonomies;
 	private boolean ignoreACCFormat;
+	protected boolean getPTMInProteinMap = false;
+	protected ProteinSequences proteinSequences;
 
 	public AbstractQuantParser() {
 
@@ -277,6 +281,14 @@ public abstract class AbstractQuantParser implements QuantParser {
 		}
 	}
 
+	public boolean isGetPTMInProteinMap() {
+		return getPTMInProteinMap;
+	}
+
+	public void setGetPTMInProteinMap(boolean getPTMInProteinMap) {
+		this.getPTMInProteinMap = getPTMInProteinMap;
+	}
+
 	/**
 	 * It clears the static maps by protein keys and psm keys in
 	 * {@link QuantifiedProteinInterface} and {@link QuantifiedPSMInterface}
@@ -333,6 +345,18 @@ public abstract class AbstractQuantParser implements QuantParser {
 			startProcess();
 		}
 		return peptideToSpectraMap;
+	}
+
+	/**
+	 * @return the peptideMap @
+	 * @throws IOException
+	 */
+	@Override
+	public Map<String, Set<String>> getPTMToSpectraMap() throws IOException {
+		if (!processed) {
+			startProcess();
+		}
+		return ptmToSpectraMap;
 	}
 
 	/**
@@ -663,4 +687,29 @@ public abstract class AbstractQuantParser implements QuantParser {
 	public void setIgnoreACCFormat(boolean ignoreACCFormat) {
 		this.ignoreACCFormat = ignoreACCFormat;
 	}
+
+	public UniprotProteinLocalRetriever getUplr() {
+		return uplr;
+	}
+
+	public void setUplr(UniprotProteinLocalRetriever uplr) {
+		this.uplr = uplr;
+	}
+
+	public ProteinSequences getProteinSequences() {
+		return proteinSequences;
+	}
+
+	public void setProteinSequences(ProteinSequences proteinSequences) {
+		this.proteinSequences = proteinSequences;
+	}
+
+	public String getUniprotVersion() {
+		return uniprotVersion;
+	}
+
+	public void setUniprotVersion(String uniprotVersion) {
+		this.uniprotVersion = uniprotVersion;
+	}
+
 }

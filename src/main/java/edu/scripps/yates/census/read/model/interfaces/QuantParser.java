@@ -60,4 +60,6 @@ public interface QuantParser {
 	void setIgnoreTaxonomies(boolean ignoreTaxonomies);
 
 	boolean isIgnoreTaxonomies();
+
+	Map<String, Set<String>> getPTMToSpectraMap() throws IOException;
 }
