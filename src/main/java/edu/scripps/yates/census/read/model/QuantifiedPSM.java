@@ -2,12 +2,17 @@ package edu.scripps.yates.census.read.model;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
 
+import edu.scripps.yates.annotations.uniprot.UniprotProteinLocalRetriever;
+import edu.scripps.yates.annotations.uniprot.xml.Entry;
+import edu.scripps.yates.annotations.util.UniprotEntryUtil;
 import edu.scripps.yates.census.analysis.QuantCondition;
 import edu.scripps.yates.census.analysis.util.KeyUtils;
 import edu.scripps.yates.census.read.model.interfaces.HasRatios;
@@ -16,6 +21,7 @@ import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
+import edu.scripps.yates.census.read.util.ProteinSequences;
 import edu.scripps.yates.census.read.util.QuantUtils;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
 import edu.scripps.yates.utilities.fasta.FastaParser;
@@ -26,8 +32,11 @@ import edu.scripps.yates.utilities.maths.Maths;
 import edu.scripps.yates.utilities.model.enums.AggregationLevel;
 import edu.scripps.yates.utilities.proteomicsmodel.Amount;
 import edu.scripps.yates.utilities.sequence.PTMInPeptide;
+import edu.scripps.yates.utilities.sequence.PTMInProtein;
+import edu.scripps.yates.utilities.strings.StringUtils;
 import edu.scripps.yates.utilities.util.StringPosition;
 import gnu.trove.list.array.TDoubleArrayList;
+import gnu.trove.list.array.TIntArrayList;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
 
@@ -54,10 +63,21 @@ public class QuantifiedPSM implements GroupablePeptide, PeptideSequenceInterface
 	private boolean singleton;
 	private List<PTMInPeptide> ptms;
 	private String key;
+	private final Map<String, Set<String>> ptmToSpectraMap;
+	private final UniprotProteinLocalRetriever uplr;
+	private final Map<String, String> proteinSequences;
 
 	public QuantifiedPSM(String sequence, Map<QuantCondition, QuantificationLabel> labelsByConditions,
 			Map<String, Set<String>> peptideToSpectraMap, int scanNumber, int chargeState, String rawFileName,
 			boolean singleton) throws IOException {
+		this(sequence, labelsByConditions, peptideToSpectraMap, null, scanNumber, chargeState, rawFileName, singleton,
+				null, null);
+	}
+
+	public QuantifiedPSM(String sequence, Map<QuantCondition, QuantificationLabel> labelsByConditions,
+			Map<String, Set<String>> peptideToSpectraMap, Map<String, Set<String>> ptmToSpectraMap, int scanNumber,
+			int chargeState, String rawFileName, boolean singleton, UniprotProteinLocalRetriever uplr,
+			ProteinSequences proteinSequences) throws IOException {
 		fullSequence = FastaParser.getSequenceInBetween(sequence);
 		this.sequence = FastaParser.cleanSequence(sequence);
 		scan = String.valueOf(scanNumber);
@@ -78,8 +98,12 @@ public class QuantifiedPSM implements GroupablePeptide, PeptideSequenceInterface
 		this.singleton = singleton;
 		final String peptideKey = KeyUtils.getSequenceKey(this, true);
 		final String spectrumKey = KeyUtils.getSpectrumKey(this, true);
-
 		addToMap(peptideKey, peptideToSpectraMap, spectrumKey);
+
+		this.ptmToSpectraMap = ptmToSpectraMap;
+		this.uplr = uplr;
+		this.proteinSequences = proteinSequences;
+
 	}
 
 	@Override
@@ -137,7 +161,44 @@ public class QuantifiedPSM implements GroupablePeptide, PeptideSequenceInterface
 		// get the taxonomy
 		final Set<String> taxonomies = quantifiedProtein.getTaxonomies();
 		taxonomies.addAll(taxonomies);
+
+		if (ptmToSpectraMap != null) {
+			if (getQuantifiedProteins().size() > 1) {
+				log.info(this);
+			}
+			String ptmKey = sequence; // by default if no ptms
+			if (!getPtms().isEmpty()) {
+				final List<PTMInProtein> ptmsInProtein = getPTMInProtein(uplr, proteinSequences);
+				ptmKey = getPTMKeyFromPTMsInProtein(ptmsInProtein);
+
+			}
+			final String spectrumKey = KeyUtils.getSpectrumKey(this, true);
+			addToMap(ptmKey, ptmToSpectraMap, spectrumKey);
+		}
+
 		return true;
+	}
+
+	private String getPTMKeyFromPTMsInProtein(List<PTMInProtein> ptmsInProtein) {
+		final StringBuilder sb = new StringBuilder();
+		Collections.sort(ptmsInProtein, new Comparator<PTMInProtein>() {
+
+			@Override
+			public int compare(PTMInProtein o1, PTMInProtein o2) {
+				final int ret = o1.getProteinACC().compareTo(o2.getProteinACC());
+				if (ret != 0) {
+					return ret;
+				}
+				return Integer.compare(o1.getPosition(), o2.getPosition());
+			}
+		});
+		for (final PTMInProtein ptmInProtein : ptmsInProtein) {
+			if (!"".equals(sb.toString())) {
+				sb.append(QuantUtils.KEY_SEPARATOR);
+			}
+			sb.append(ptmInProtein.toString());
+		}
+		return sb.toString();
 	}
 
 	/**
@@ -420,6 +481,56 @@ public class QuantifiedPSM implements GroupablePeptide, PeptideSequenceInterface
 		return true;
 	}
 
+	@Override
+	public List<PTMInProtein> getPTMInProtein(UniprotProteinLocalRetriever uplr, Map<String, String> proteinSequences) {
+		final List<PTMInProtein> ptmsInProtein = new ArrayList<PTMInProtein>();
+		final List<PTMInPeptide> ptms = getPtms();
+		if (ptms.isEmpty()) {
+			return ptmsInProtein;
+		}
+
+		for (final PTMInPeptide ptmInPeptide : ptms) {
+			final int positionInPeptide = ptmInPeptide.getPosition();
+
+			final Set<QuantifiedProteinInterface> proteins = getQuantifiedProteins();
+			for (final QuantifiedProteinInterface quantifiedProtein : proteins) {
+				final String acc = quantifiedProtein.getAccession();
+				String proteinSequence = null;
+				// it is important that we look for any protein
+				// CONTAINING the accession, so that we can search for
+				// the isoforms and proteoforms
+				if (proteinSequences != null && proteinSequences.containsKey(acc)) {
+					proteinSequence = proteinSequences.get(acc);
+				}
+				if (proteinSequence == null && uplr != null) {
+					final Map<String, Entry> annotatedProtein = uplr.getAnnotatedProtein(null, acc);
+					final Entry entry = annotatedProtein.get(acc);
+					if (entry != null) {
+						proteinSequence = UniprotEntryUtil.getProteinSequence(entry);
+					}
+				}
+				if (proteinSequence != null) {
+					final TIntArrayList positionsInProteinSequence = StringUtils.allPositionsOf(proteinSequence,
+							getSequence());
+					for (final int positionInProteinSequence : positionsInProteinSequence.toArray()) {
+						final int positionOfSiteInProtein = positionInProteinSequence + positionInPeptide - 1;
+						final PTMInProtein ptmInProtein = new PTMInProtein(positionOfSiteInProtein,
+								proteinSequence.charAt(positionOfSiteInProtein - 1), acc, ptmInPeptide.getDeltaMass());
+						if (!ptmsInProtein.contains(ptmInProtein)) {
+							ptmsInProtein.add(ptmInProtein);
+						}
+					}
+				} else {
+					throw new IllegalArgumentException("Protein sequence from protein " + acc
+							+ " not found neither in the fasta file nor in Uniprot");
+				}
+
+			}
+
+		}
+
+		return ptmsInProtein;
+	}
 	// @Override
 	// public int hashCode() {
 	// return Objects.hash(getKey());
