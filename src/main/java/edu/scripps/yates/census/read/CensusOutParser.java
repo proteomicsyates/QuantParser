@@ -518,8 +518,16 @@ public class CensusOutParser extends AbstractQuantParser {
 			if (mapValues.containsKey(SCAN)) {
 				scanNumber = Double.valueOf(mapValues.get(SCAN)).intValue();
 			}
-			QuantifiedPSMInterface quantifiedPSM = new QuantifiedPSM(sequence, labelsByConditions, peptideToSpectraMap,
-					scanNumber, Double.valueOf(mapValues.get(CS)).intValue(), rawFileName, singleton);
+			QuantifiedPSMInterface quantifiedPSM = null;
+			// if (!isGetPTMInProteinMap()) {
+			// quantifiedPSM = new QuantifiedPSM(sequence, labelsByConditions,
+			// peptideToSpectraMap, scanNumber,
+			// Double.valueOf(mapValues.get(CS)).intValue(), rawFileName,
+			// singleton);
+			// } else {
+			quantifiedPSM = new QuantifiedPSM(sequence, labelsByConditions, peptideToSpectraMap, scanNumber,
+					Double.valueOf(mapValues.get(CS)).intValue(), rawFileName, singleton);
+			// }
 
 			// xcorr
 			Float xcorr = null;
@@ -556,251 +564,323 @@ public class CensusOutParser extends AbstractQuantParser {
 				localPsmMap.put(quantifiedPSM.getKey(), quantifiedPSM);
 			}
 
-			if (ratioDescriptors.size() == 1) {
-				final QuantificationLabel labelNumerator = ratioDescriptors.get(0).getLabel1();
-				final QuantificationLabel labelDenominator = ratioDescriptors.get(0).getLabel2();
-				String ratioSuffix = ratioDescriptors.get(0).getRatioSuffix();
-				// PSM regular ratio
-				// add PSM ratios from census out
-				if (mapValues.containsKey(RATIO)) {
-					ratioSuffix = "";
-				} else if (mapValues.containsKey(RATIO + ratioSuffix)) {
+			// if we have ratios
+			if (ratioDescriptors != null && !ratioDescriptors.isEmpty()) {
+				// if there is only one ratio
+				if (ratioDescriptors.size() == 1) {
+					final QuantificationLabel labelNumerator = ratioDescriptors.get(0).getLabel1();
+					final QuantificationLabel labelDenominator = ratioDescriptors.get(0).getLabel2();
+					String ratioSuffix = ratioDescriptors.get(0).getRatioSuffix();
+					// PSM regular ratio
+					// add PSM ratios from census out
+					if (mapValues.containsKey(RATIO)) {
+						ratioSuffix = "";
+					} else if (mapValues.containsKey(RATIO + ratioSuffix)) {
 
-				}
-				if (mapValues.containsKey(RATIO + ratioSuffix)) {
-					try {
+					}
+					if (mapValues.containsKey(RATIO + ratioSuffix)) {
+						try {
 
-						final double ratioValue = QuantUtils.parseCensusRatioValue(mapValues.get(RATIO + ratioSuffix));
-						CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
-								labelDenominator, AggregationLevel.PSM, RATIO);
-						RatioScore ratioScore = null;
-						// profile score
-						String scoreValue = null;
-						// check in any case the regressionFactor. If that is
-						// -1,
-						// then
-						// convert the ratio from 0 to inf
-						String regressionFactor = null;
-						if (mapValues.containsKey(PROFILE_SCORE) && // PROFILE
-																	// SCORE IS
-																	// NOT
-																	// SPECIFIC
-																	// OF A PAIR
-																	// OF LABELS
-						// because profile score will be
-						// assigned to area ratio in case of
-						// exist
-								!mapValues.containsKey(AREA_RATIO + ratioSuffix)) {
-							scoreValue = mapValues.get(PROFILE_SCORE);
-							if (!"NA".equals(scoreValue)) {
-								ratioScore = new RatioScore(scoreValue, PROFILE_SCORE,
-										"PSM-level quantification confidence metric",
-										"fitting score comparing peak and gaussian distribution");
-								ratio.setRatioScore(ratioScore);
-							}
-							// score regression p-value N15
-						} else if (mapValues.containsKey(PVALUE + ratioSuffix)) {
-							scoreValue = mapValues.get(PVALUE + ratioSuffix);
-							if (!"NA".equals(scoreValue)) {
-								ratioScore = new RatioScore(scoreValue, PVALUE, "PSM-level p-value",
-										"probability score based on LR");
-								ratio.setRatioScore(ratioScore);
-							}
-							// score regression p-value SILAC
-						} else if (mapValues.containsKey(PROBABILITY_SCORE + ratioSuffix)) {
-							scoreValue = mapValues.get(PROBABILITY_SCORE + ratioSuffix);
-							if (!"NA".equals(scoreValue)) {
-								ratioScore = new RatioScore(scoreValue, PROBABILITY_SCORE, "PSM-level p-value",
-										"probability score based on LR");
-								ratio.setRatioScore(ratioScore);
-							}
-						} else if (mapValues.containsKey(DET_FACTOR + ratioSuffix)) {
-							scoreValue = mapValues.get(DET_FACTOR + ratioSuffix);
-							if (!"NA".equals(scoreValue)) {
-								ratioScore = new RatioScore(scoreValue, DET_FACTOR,
-										"PSM-level quantification confidence metric", "PSM-level Determining factor");
-								ratio.setRatioScore(ratioScore);
-							}
-						}
-						// get the regression_factor anyway, but add it only in
-						// case
-						// there is not any other score
-						if (mapValues.containsKey(REGRESSION_FACTOR + ratioSuffix)) {
-							regressionFactor = mapValues.get(REGRESSION_FACTOR + ratioSuffix);
-							if (!"NA".equals(regressionFactor)) {
-								// just in case there was not any other
-								// ratioScore:
-								if (ratioScore == null) {
-									ratioScore = new RatioScore(regressionFactor, REGRESSION_FACTOR,
+							final double ratioValue = QuantUtils
+									.parseCensusRatioValue(mapValues.get(RATIO + ratioSuffix));
+							CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
+									labelDenominator, AggregationLevel.PSM, RATIO);
+							RatioScore ratioScore = null;
+							// profile score
+							String scoreValue = null;
+							// check in any case the regressionFactor. If that
+							// is
+							// -1,
+							// then
+							// convert the ratio from 0 to inf
+							String regressionFactor = null;
+							if (mapValues.containsKey(PROFILE_SCORE) && // PROFILE
+																		// SCORE
+																		// IS
+																		// NOT
+																		// SPECIFIC
+																		// OF A
+																		// PAIR
+																		// OF
+																		// LABELS
+							// because profile score will be
+							// assigned to area ratio in case of
+							// exist
+									!mapValues.containsKey(AREA_RATIO + ratioSuffix)) {
+								scoreValue = mapValues.get(PROFILE_SCORE);
+								if (!"NA".equals(scoreValue)) {
+									ratioScore = new RatioScore(scoreValue, PROFILE_SCORE,
 											"PSM-level quantification confidence metric",
-											"Regression factor or linear regression");
+											"fitting score comparing peak and gaussian distribution");
+									ratio.setRatioScore(ratioScore);
+								}
+								// score regression p-value N15
+							} else if (mapValues.containsKey(PVALUE + ratioSuffix)) {
+								scoreValue = mapValues.get(PVALUE + ratioSuffix);
+								if (!"NA".equals(scoreValue)) {
+									ratioScore = new RatioScore(scoreValue, PVALUE, "PSM-level p-value",
+											"probability score based on LR");
+									ratio.setRatioScore(ratioScore);
+								}
+								// score regression p-value SILAC
+							} else if (mapValues.containsKey(PROBABILITY_SCORE + ratioSuffix)) {
+								scoreValue = mapValues.get(PROBABILITY_SCORE + ratioSuffix);
+								if (!"NA".equals(scoreValue)) {
+									ratioScore = new RatioScore(scoreValue, PROBABILITY_SCORE, "PSM-level p-value",
+											"probability score based on LR");
+									ratio.setRatioScore(ratioScore);
+								}
+							} else if (mapValues.containsKey(DET_FACTOR + ratioSuffix)) {
+								scoreValue = mapValues.get(DET_FACTOR + ratioSuffix);
+								if (!"NA".equals(scoreValue)) {
+									ratioScore = new RatioScore(scoreValue, DET_FACTOR,
+											"PSM-level quantification confidence metric",
+											"PSM-level Determining factor");
 									ratio.setRatioScore(ratioScore);
 								}
 							}
-						}
+							// get the regression_factor anyway, but add it only
+							// in
+							// case
+							// there is not any other score
+							if (mapValues.containsKey(REGRESSION_FACTOR + ratioSuffix)) {
+								regressionFactor = mapValues.get(REGRESSION_FACTOR + ratioSuffix);
+								if (!"NA".equals(regressionFactor)) {
+									// just in case there was not any other
+									// ratioScore:
+									if (ratioScore == null) {
+										ratioScore = new RatioScore(regressionFactor, REGRESSION_FACTOR,
+												"PSM-level quantification confidence metric",
+												"Regression factor or linear regression");
+										ratio.setRatioScore(ratioScore);
+									}
+								}
+							}
 
-						try {
-							// if ratio is 0 and regression factor is -1
-							if (Double.compare(ratio.getValue(), 0.0) == 0) {
-								if (regressionFactor != null && ("NA".equals(regressionFactor)
-										|| Double.valueOf(-1.0).equals(Double.valueOf(regressionFactor)))) {
-									// check area_ratio value. If the are_ratio
-									// is < 1, leave it as 0. If the area_ratio
-									// is > 1,
-									// convert it to +INF.
-									// note that all numbers are not log
-									// numbers.
-									if (mapValues.containsKey(AREA_RATIO + ratioSuffix)) {
-										final double areaRatioValue = QuantUtils
-												.parseCensusRatioValue(mapValues.get(AREA_RATIO + ratioSuffix));
-										if (Double.isInfinite(areaRatioValue) || areaRatioValue > 1) {
-											ratio = new CensusRatio(Double.POSITIVE_INFINITY, false, conditionsByLabels,
-													labelNumerator, labelDenominator, AggregationLevel.PSM, RATIO);
-											if (ratioScore != null) {
-												ratio.setRatioScore(ratioScore);
+							try {
+								// if ratio is 0 and regression factor is -1
+								if (Double.compare(ratio.getValue(), 0.0) == 0) {
+									if (regressionFactor != null && ("NA".equals(regressionFactor)
+											|| Double.valueOf(-1.0).equals(Double.valueOf(regressionFactor)))) {
+										// check area_ratio value. If the
+										// are_ratio
+										// is < 1, leave it as 0. If the
+										// area_ratio
+										// is > 1,
+										// convert it to +INF.
+										// note that all numbers are not log
+										// numbers.
+										if (mapValues.containsKey(AREA_RATIO + ratioSuffix)) {
+											final double areaRatioValue = QuantUtils
+													.parseCensusRatioValue(mapValues.get(AREA_RATIO + ratioSuffix));
+											if (Double.isInfinite(areaRatioValue) || areaRatioValue > 1) {
+												ratio = new CensusRatio(Double.POSITIVE_INFINITY, false,
+														conditionsByLabels, labelNumerator, labelDenominator,
+														AggregationLevel.PSM, RATIO);
+												if (ratioScore != null) {
+													ratio.setRatioScore(ratioScore);
+												}
 											}
 										}
 									}
 								}
+							} catch (final NumberFormatException e) {
+								// do nothing
 							}
+							// add ratio to PSM
+							quantifiedPSM.addRatio(ratio);
+
 						} catch (final NumberFormatException e) {
-							// do nothing
+							// skip this
 						}
-						// add ratio to PSM
-						quantifiedPSM.addRatio(ratio);
+					}
 
-					} catch (final NumberFormatException e) {
-						// skip this
-					}
-				}
-
-				// PSM AREA RATIO
-				// add PSM ratios from census out
-				if (mapValues.containsKey(AREA_RATIO + ratioSuffix)) {
-					try {
-						final double ratioValue = QuantUtils
-								.parseCensusRatioValue(mapValues.get(AREA_RATIO + ratioSuffix));
-
-						final CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
-								labelDenominator, AggregationLevel.PSM, AREA_RATIO);
-						// profile score
-						// PROFILE SCORE IS NOT SPECIFIC FOR A PAIR OF LABELS
-						if (mapValues.containsKey(PROFILE_SCORE)) {
-							final String scoreValue = mapValues.get(PROFILE_SCORE);
-							if (!"NA".equals(scoreValue)) {
-								final RatioScore ratioScore = new RatioScore(scoreValue, PROFILE_SCORE,
-										"PSM-level quantification confidence metric",
-										"fitting score comparing peak and gaussian distribution");
-								ratio.setRatioScore(ratioScore);
-							}
-						} else if (mapValues.containsKey(SINGLETON_SCORE)) {
-							final String scoreValue = mapValues.get(SINGLETON_SCORE);
-							if (!"NA".equals(scoreValue)) {
-								final RatioScore ratioScore = new RatioScore(scoreValue, SINGLETON_SCORE,
-										"PSM-level quantification confidence metric", "Singleton score");
-								ratio.setRatioScore(ratioScore);
-							}
-						}
-						// add ratio to PSM
-						quantifiedPSM.addRatio(ratio);
-					} catch (final NumberFormatException e) {
-						// skip this
-					}
-				}
-				// PSM AREA RATIO
-				// add PSM ratios from census out
-				if (mapValues.containsKey(NORM_RATIO + ratioSuffix)) {
-					try {
-						final double ratioValue = QuantUtils
-								.parseCensusRatioValue(mapValues.get(NORM_RATIO + ratioSuffix));
-
-						final CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
-								labelDenominator, AggregationLevel.PSM, NORM_RATIO);
-						// profile score
-						// PROFILE SCORE IS NOT SPECIFIC FOR A PAIR OF LABELS
-						if (mapValues.containsKey(PROFILE_SCORE)) {
-							final String scoreValue = mapValues.get(PROFILE_SCORE);
-							if (!"NA".equals(scoreValue)) {
-								final RatioScore ratioScore = new RatioScore(scoreValue, PROFILE_SCORE,
-										"PSM-level quantification confidence metric",
-										"fitting score comparing peak and gaussian distribution");
-								ratio.setRatioScore(ratioScore);
-							}
-						} else if (mapValues.containsKey(SINGLETON_SCORE)) {
-							final String scoreValue = mapValues.get(SINGLETON_SCORE);
-							if (!"NA".equals(scoreValue)) {
-								final RatioScore ratioScore = new RatioScore(scoreValue, SINGLETON_SCORE,
-										"PSM-level quantification confidence metric", "Singleton score");
-								ratio.setRatioScore(ratioScore);
-							}
-						}
-						// add ratio to PSM
-						quantifiedPSM.addRatio(ratio);
-					} catch (final NumberFormatException e) {
-						// skip this
-					}
-				}
-				// TMT
-				if (isTMT(labelNumerator) && isTMT(labelDenominator)) {
-					// numerator
-					Double numeratorIntensity = null;
-					final String headerNumerator = getHeaderForTMTLabel(labelNumerator);
-					if (mapValues.containsKey(headerNumerator)) {
-						numeratorIntensity = Double.valueOf(mapValues.get(headerNumerator));
-						final QuantAmount amount = new QuantAmount(numeratorIntensity, AmountType.NORMALIZED_INTENSITY,
-								conditionsByLabels.get(labelDenominator));
-						quantifiedPSM.addAmount(amount);
-					}
-					// denominator
-					Double denominatorIntensity = null;
-					final String headerDenominator = getHeaderForTMTLabel(labelDenominator);
-					if (mapValues.containsKey(headerDenominator)) {
-						denominatorIntensity = Double.valueOf(mapValues.get(headerDenominator));
-						final QuantAmount amount = new QuantAmount(denominatorIntensity,
-								AmountType.NORMALIZED_INTENSITY, conditionsByLabels.get(labelDenominator));
-						quantifiedPSM.addAmount(amount);
-					}
-					// build the ratio
-					final Double ratioValue = numeratorIntensity / denominatorIntensity;
-					final CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
-							labelDenominator, AggregationLevel.PSM, labelNumerator + "/" + labelDenominator);
-					quantifiedPSM.addRatio(ratio);
-				}
-			} else {
-				// having more than one ratioDescriptor, means that we have L,
-				// M, H
-				for (final RatioDescriptor ratioDescriptor : ratioDescriptors) {
-					final QuantificationLabel labelNumerator = ratioDescriptor.getLabel1();
-					final QuantificationLabel labelDenominator = ratioDescriptor.getLabel2();
-					final String ratioSuffix = ratioDescriptor.getRatioSuffix();
-					if (mapValues.containsKey(RATIO + ratioSuffix)) {
-						final double ratioValue = QuantUtils.parseCensusRatioValue(mapValues.get(RATIO + ratioSuffix));
-						final CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
-								labelDenominator, AggregationLevel.PSM, RATIO);
-						quantifiedPSM.addRatio(ratio);
-					}
-					if (mapValues.containsKey(NORM_RATIO + ratioSuffix)) {
-						final double ratioValue = QuantUtils
-								.parseCensusRatioValue(mapValues.get(NORM_RATIO + ratioSuffix));
-						final CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels, labelNumerator,
-								labelDenominator, AggregationLevel.PSM, NORM_RATIO);
-						quantifiedPSM.addRatio(ratio);
-					}
+					// PSM AREA RATIO
+					// add PSM ratios from census out
 					if (mapValues.containsKey(AREA_RATIO + ratioSuffix)) {
 						try {
 							final double ratioValue = QuantUtils
 									.parseCensusRatioValue(mapValues.get(AREA_RATIO + ratioSuffix));
+
 							final CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels,
 									labelNumerator, labelDenominator, AggregationLevel.PSM, AREA_RATIO);
+							// profile score
+							// PROFILE SCORE IS NOT SPECIFIC FOR A PAIR OF
+							// LABELS
+							if (mapValues.containsKey(PROFILE_SCORE)) {
+								final String scoreValue = mapValues.get(PROFILE_SCORE);
+								if (!"NA".equals(scoreValue)) {
+									final RatioScore ratioScore = new RatioScore(scoreValue, PROFILE_SCORE,
+											"PSM-level quantification confidence metric",
+											"fitting score comparing peak and gaussian distribution");
+									ratio.setRatioScore(ratioScore);
+								}
+							} else if (mapValues.containsKey(SINGLETON_SCORE)) {
+								final String scoreValue = mapValues.get(SINGLETON_SCORE);
+								if (!"NA".equals(scoreValue)) {
+									final RatioScore ratioScore = new RatioScore(scoreValue, SINGLETON_SCORE,
+											"PSM-level quantification confidence metric", "Singleton score");
+									ratio.setRatioScore(ratioScore);
+								}
+							}
 							// add ratio to PSM
 							quantifiedPSM.addRatio(ratio);
 						} catch (final NumberFormatException e) {
 							// skip this
 						}
 					}
+					// PSM AREA RATIO
+					// add PSM ratios from census out
+					if (mapValues.containsKey(NORM_RATIO + ratioSuffix)) {
+						try {
+							final double ratioValue = QuantUtils
+									.parseCensusRatioValue(mapValues.get(NORM_RATIO + ratioSuffix));
+
+							final CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels,
+									labelNumerator, labelDenominator, AggregationLevel.PSM, NORM_RATIO);
+							// profile score
+							// PROFILE SCORE IS NOT SPECIFIC FOR A PAIR OF
+							// LABELS
+							if (mapValues.containsKey(PROFILE_SCORE)) {
+								final String scoreValue = mapValues.get(PROFILE_SCORE);
+								if (!"NA".equals(scoreValue)) {
+									final RatioScore ratioScore = new RatioScore(scoreValue, PROFILE_SCORE,
+											"PSM-level quantification confidence metric",
+											"fitting score comparing peak and gaussian distribution");
+									ratio.setRatioScore(ratioScore);
+								}
+							} else if (mapValues.containsKey(SINGLETON_SCORE)) {
+								final String scoreValue = mapValues.get(SINGLETON_SCORE);
+								if (!"NA".equals(scoreValue)) {
+									final RatioScore ratioScore = new RatioScore(scoreValue, SINGLETON_SCORE,
+											"PSM-level quantification confidence metric", "Singleton score");
+									ratio.setRatioScore(ratioScore);
+								}
+							}
+							// add ratio to PSM
+							quantifiedPSM.addRatio(ratio);
+						} catch (final NumberFormatException e) {
+							// skip this
+						}
+					}
+
+					// TMT6PLEX
+					if (QuantificationLabel.isTMT6PLEX(labelNumerator)
+							&& QuantificationLabel.isTMT6PLEX(labelDenominator)) {
+						// numerator
+						Double numeratorIntensity = null;
+						final String headerNumerator = getHeaderForNormalizedIntensityInTMT6Plex(labelNumerator);
+						if (mapValues.containsKey(headerNumerator)) {
+							numeratorIntensity = Double.valueOf(mapValues.get(headerNumerator));
+						}
+						// denominator
+						Double denominatorIntensity = null;
+						final String headerDenominator = getHeaderForNormalizedIntensityInTMT6Plex(labelDenominator);
+						if (mapValues.containsKey(headerDenominator)) {
+							denominatorIntensity = Double.valueOf(mapValues.get(headerDenominator));
+						}
+						// build the ratio
+						if (numeratorIntensity != null && denominatorIntensity != null) {
+							final Double ratioValue = numeratorIntensity / denominatorIntensity;
+							final CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels,
+									labelNumerator, labelDenominator, AggregationLevel.PSM,
+									labelNumerator + "/" + labelDenominator);
+							quantifiedPSM.addRatio(ratio);
+						}
+					}
+					// TMT10PLEX
+					if (QuantificationLabel.isTMT10PLEX(labelNumerator)
+							&& QuantificationLabel.isTMT10PLEX(labelDenominator)) {
+						// numerator
+						Double numeratorIntensity = null;
+						final String headerNumerator = getHeaderForNormalizedIntensityInTMT10Plex(labelNumerator);
+						if (mapValues.containsKey(headerNumerator)) {
+							numeratorIntensity = Double.valueOf(mapValues.get(headerNumerator));
+						}
+						// denominator
+						Double denominatorIntensity = null;
+						final String headerDenominator = getHeaderForNormalizedIntensityInTMT10Plex(labelDenominator);
+						if (mapValues.containsKey(headerDenominator)) {
+							denominatorIntensity = Double.valueOf(mapValues.get(headerDenominator));
+						}
+						// build the ratio
+						if (numeratorIntensity != null && denominatorIntensity != null) {
+							final Double ratioValue = numeratorIntensity / denominatorIntensity;
+							final CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels,
+									labelNumerator, labelDenominator, AggregationLevel.PSM,
+									labelNumerator + "/" + labelDenominator);
+							quantifiedPSM.addRatio(ratio);
+						}
+					}
+				} else {
+					// having more than one ratioDescriptor, means that we have
+					// L,
+					// M, H
+					for (final RatioDescriptor ratioDescriptor : ratioDescriptors) {
+						final QuantificationLabel labelNumerator = ratioDescriptor.getLabel1();
+						final QuantificationLabel labelDenominator = ratioDescriptor.getLabel2();
+						final String ratioSuffix = ratioDescriptor.getRatioSuffix();
+						if (mapValues.containsKey(RATIO + ratioSuffix)) {
+							final double ratioValue = QuantUtils
+									.parseCensusRatioValue(mapValues.get(RATIO + ratioSuffix));
+							final CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels,
+									labelNumerator, labelDenominator, AggregationLevel.PSM, RATIO);
+							quantifiedPSM.addRatio(ratio);
+						}
+						if (mapValues.containsKey(NORM_RATIO + ratioSuffix)) {
+							final double ratioValue = QuantUtils
+									.parseCensusRatioValue(mapValues.get(NORM_RATIO + ratioSuffix));
+							final CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels,
+									labelNumerator, labelDenominator, AggregationLevel.PSM, NORM_RATIO);
+							quantifiedPSM.addRatio(ratio);
+						}
+						if (mapValues.containsKey(AREA_RATIO + ratioSuffix)) {
+							try {
+								final double ratioValue = QuantUtils
+										.parseCensusRatioValue(mapValues.get(AREA_RATIO + ratioSuffix));
+								final CensusRatio ratio = new CensusRatio(ratioValue, false, conditionsByLabels,
+										labelNumerator, labelDenominator, AggregationLevel.PSM, AREA_RATIO);
+								// add ratio to PSM
+								quantifiedPSM.addRatio(ratio);
+							} catch (final NumberFormatException e) {
+								// skip this
+							}
+						}
+					}
 				}
+			} else {
+				// no ratios
 			}
 			// PSM amounts
+
+			// TMT6PLEX
+			final boolean isTMT6Plex = isTMT6Plex(conditionsByLabels.keySet());
+			if (isTMT6Plex) {
+				for (final QuantificationLabel label : QuantificationLabel.getTMT6PlexLabels()) {
+					Double normalizedIntensity = null;
+					final String header = getHeaderForNormalizedIntensityInTMT6Plex(label);
+					if (mapValues.containsKey(header)) {
+						normalizedIntensity = Double.valueOf(mapValues.get(header));
+						final QuantAmount amount = new QuantAmount(normalizedIntensity, AmountType.NORMALIZED_INTENSITY,
+								conditionsByLabels.get(label));
+						quantifiedPSM.addAmount(amount);
+					}
+				}
+			}
+			// TMT10PLEX
+			final boolean isTMT10Plex = isTMT10Plex(conditionsByLabels.keySet());
+			if (isTMT10Plex) {
+				for (final QuantificationLabel label : QuantificationLabel.getTMT10PlexLabels()) {
+					Double normalizedIntensity = null;
+					final String header = getHeaderForNormalizedIntensityInTMT10Plex(label);
+					if (mapValues.containsKey(header)) {
+						normalizedIntensity = Double.valueOf(mapValues.get(header));
+						final QuantAmount amount = new QuantAmount(normalizedIntensity, AmountType.NORMALIZED_INTENSITY,
+								conditionsByLabels.get(label));
+						quantifiedPSM.addAmount(amount);
+					}
+				}
+			}
 
 			// SAM_INT
 			// light peptide peak area from reconstructed
@@ -821,40 +901,42 @@ public class CensusOutParser extends AbstractQuantParser {
 			}
 
 			// get the peak areas of all the conditions (all the labels)
-			final Set<String> usedSuffixes = new HashSet<String>();
-			for (final RatioDescriptor ratioDescriptor : ratioDescriptors) {
-				final Map<String, QuantCondition> conditionsByIndividualRatioSuffixes = ratioDescriptor
-						.getConditionsByIndividualRatioSuffixes();
-				final Set<String> differentValuesOfPeakArea = new HashSet<String>();
-				for (final String suffix : conditionsByIndividualRatioSuffixes.keySet()) {
-					if (usedSuffixes.contains(suffix)) {
-						continue;
-					}
-					usedSuffixes.add(suffix);
-					final QuantCondition quantCondition = conditionsByIndividualRatioSuffixes.get(suffix);
+			if (ratioDescriptors != null) {
+				final Set<String> usedSuffixes = new HashSet<String>();
+				for (final RatioDescriptor ratioDescriptor : ratioDescriptors) {
+					final Map<String, QuantCondition> conditionsByIndividualRatioSuffixes = ratioDescriptor
+							.getConditionsByIndividualRatioSuffixes();
+					final Set<String> differentValuesOfPeakArea = new HashSet<String>();
+					for (final String suffix : conditionsByIndividualRatioSuffixes.keySet()) {
+						if (usedSuffixes.contains(suffix)) {
+							continue;
+						}
+						usedSuffixes.add(suffix);
+						final QuantCondition quantCondition = conditionsByIndividualRatioSuffixes.get(suffix);
 
-					if (mapValues.containsKey(PEAK_AREA + suffix)) {
-						try {
-							final String stringValue = mapValues.get(PEAK_AREA + suffix);
-							if (isSkipNonResolvedPeaks() && differentValuesOfPeakArea.contains(stringValue)) {
-								log.warn("PSM '" + quantifiedPSM.getIdentifier()
-										+ "' contains not resolved quantitation values (Repeated peak area '"
-										+ stringValue + "'). Skipping it...");
-								// removing it from local and static maps
-								StaticQuantMaps.psmMap.remove(quantifiedPSM);
-								localPsmMap.remove(quantifiedPSM.getKey());
-								return;
+						if (mapValues.containsKey(PEAK_AREA + suffix)) {
+							try {
+								final String stringValue = mapValues.get(PEAK_AREA + suffix);
+								if (isSkipNonResolvedPeaks() && differentValuesOfPeakArea.contains(stringValue)) {
+									log.warn("PSM '" + quantifiedPSM.getIdentifier()
+											+ "' contains not resolved quantitation values (Repeated peak area '"
+											+ stringValue + "'). Skipping it...");
+									// removing it from local and static maps
+									StaticQuantMaps.psmMap.remove(quantifiedPSM);
+									localPsmMap.remove(quantifiedPSM.getKey());
+									return;
+								}
+								differentValuesOfPeakArea.add(stringValue);
+								final double value = Double.valueOf(stringValue);
+								final QuantAmount amount = new QuantAmount(value, AmountType.AREA, quantCondition);
+								if (singleton && amount.getValue() != 0.0) {
+									amount.setSingleton(true);
+								}
+								// add amount to PSM
+								quantifiedPSM.addAmount(amount);
+							} catch (final NumberFormatException e) {
+								// skip this
 							}
-							differentValuesOfPeakArea.add(stringValue);
-							final double value = Double.valueOf(stringValue);
-							final QuantAmount amount = new QuantAmount(value, AmountType.AREA, quantCondition);
-							if (singleton && amount.getValue() != 0.0) {
-								amount.setSingleton(true);
-							}
-							// add amount to PSM
-							quantifiedPSM.addAmount(amount);
-						} catch (final NumberFormatException e) {
-							// skip this
 						}
 					}
 				}
@@ -1004,7 +1086,7 @@ public class CensusOutParser extends AbstractQuantParser {
 			log.info("Error reading line '" + line + "' from file. Skipping it...");
 
 		} catch (final NullPointerException e) {
-			// e.printStackTrace();
+			e.printStackTrace();
 			log.warn(e);
 			log.warn("Error reading line '" + line + "' from file. Skipping it...");
 		} catch (final DBIndexStoreException e) {
@@ -1014,6 +1096,25 @@ public class CensusOutParser extends AbstractQuantParser {
 			log.warn("Error reading line '" + line + "' from file. Skipping it...");
 		}
 
+	}
+
+	private boolean isTMT6Plex(Set<QuantificationLabel> labels) {
+		for (final QuantificationLabel label : labels) {
+			if (QuantificationLabel.isTMT6PLEX(label)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean isTMT10Plex(Set<QuantificationLabel> labels) {
+		for (final QuantificationLabel label : labels) {
+			if (QuantificationLabel.isTMT10PLEX(label)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private boolean isSkipNonResolvedPeaks() {
@@ -1055,23 +1156,13 @@ public class CensusOutParser extends AbstractQuantParser {
 		return null;
 	}
 
-	private boolean isTMT(QuantificationLabel label) {
-		if (QuantificationLabel.TMT_6PLEX_126 == label || QuantificationLabel.TMT_6PLEX_127 == label
-				|| QuantificationLabel.TMT_6PLEX_128 == label || QuantificationLabel.TMT_6PLEX_129 == label
-				|| QuantificationLabel.TMT_6PLEX_130 == label || QuantificationLabel.TMT_6PLEX_131 == label) {
-			return true;
-		}
-		return false;
-	}
-
 	/**
-	 * Gets how the header of the normalized intensity for each channel should
-	 * start
+	 * Gets how the header of the ratio for each channel should start
 	 *
 	 * @param label
 	 * @return
 	 */
-	private String getHeaderForTMTLabel(QuantificationLabel label) {
+	private String getHeaderForNormalizedRatioInTMT6Plex(QuantificationLabel label) {
 		switch (label) {
 		case TMT_6PLEX_126:
 			return "norm_ratio(126.127725)";
@@ -1085,6 +1176,126 @@ public class CensusOutParser extends AbstractQuantParser {
 			return "norm_ratio(130.141141)";
 		case TMT_6PLEX_131:
 			return "norm_ratio(131.138176)";
+		default:
+			return null;
+		}
+	}
+
+	/**
+	 * Gets how the header of the normalized intensity for each channel should
+	 * start
+	 *
+	 * @param label
+	 * @return
+	 */
+	private String getHeaderForNormalizedIntensityInTMT6Plex(QuantificationLabel label) {
+		switch (label) {
+		case TMT_6PLEX_126:
+			return "norm_m/z_126.127725_int";
+		case TMT_6PLEX_127:
+			return "norm_m/z_127.12476_int";
+		case TMT_6PLEX_128:
+			return "norm_m/z_128.134433_int";
+		case TMT_6PLEX_129:
+			return "norm_m/z_129.131468_int";
+		case TMT_6PLEX_130:
+			return "norm_m/z_130.141141_int";
+		case TMT_6PLEX_131:
+			return "norm_m/z_131.138176_int";
+		default:
+			return null;
+		}
+	}
+
+	/**
+	 * Gets how the header of the normalized intensity for each channel should
+	 * start
+	 *
+	 * @param label
+	 * @return
+	 */
+	private String getHeaderForNormalizedIntensityInTMT10Plex(QuantificationLabel label) {
+		switch (label) {
+		case TMT_10PLEX_126_127726:
+			return "norm_m/z_126.127726_int";
+		case TMT_10PLEX_127_124761:
+			return "norm_m/z_127.124761_int";
+		case TMT_10PLEX_127_131081:
+			return "norm_m/z_127.131081_int";
+		case TMT_10PLEX_128_128116:
+			return "norm_m/z_128.128116_int";
+		case TMT_10PLEX_128_134436:
+			return "norm_m/z_128.134436_int";
+		case TMT_10PLEX_129_131471:
+			return "norm_m/z_129.131471_int";
+		case TMT_10PLEX_129_13779:
+			return "norm_m/z_129.13779_int";
+		case TMT_10PLEX_130_134825:
+			return "norm_m/z_130.134825_int";
+		case TMT_10PLEX_130_141145:
+			return "norm_m/z_130.141145_int";
+		case TMT_10PLEX_131_13818:
+			return "norm_m/z_131.13818_int";
+		default:
+			return null;
+		}
+	}
+
+	/**
+	 * Gets how the header of the normalized intensity for each channel should
+	 * start
+	 *
+	 * @param label
+	 * @return
+	 */
+	private String getHeaderForProteinNormalizedIntensityInTMT6Plex(QuantificationLabel label) {
+		switch (label) {
+		case TMT_6PLEX_126:
+			return "norm_total m/z_126.127725";
+		case TMT_6PLEX_127:
+			return "norm_total m/z_127.12476";
+		case TMT_6PLEX_128:
+			return "norm_total m/z_128.134433";
+		case TMT_6PLEX_129:
+			return "norm_total m/z_129.131468";
+		case TMT_6PLEX_130:
+			return "norm_total m/z_130.141141";
+		case TMT_6PLEX_131:
+			return "norm_total m/z_131.138176";
+		default:
+			return null;
+		}
+	}
+
+	/**
+	 * Gets how the header of the normalized intensity for each channel should
+	 * start
+	 *
+	 * @param label
+	 * @return
+	 */
+	private String getHeaderForProteinNormalizedIntensityInTMT10Plex(QuantificationLabel label) {
+		switch (label) {
+		case TMT_10PLEX_126_127726:
+			return "norm_total m/z_126.127726";
+		case TMT_10PLEX_127_124761:
+			return "norm_total m/z_127.124761";
+		case TMT_10PLEX_127_131081:
+			return "norm_total m/z_127.131081";
+		case TMT_10PLEX_128_128116:
+			return "norm_total m/z_128.128116";
+		case TMT_10PLEX_128_134436:
+			return "norm_total m/z_128.134436";
+		case TMT_10PLEX_129_131471:
+			return "norm_total m/z_129.131471";
+		case TMT_10PLEX_129_13779:
+			return "norm_total m/z_129.13779";
+		case TMT_10PLEX_130_134825:
+			return "norm_total m/z_130.134825";
+		case TMT_10PLEX_130_141145:
+			return "norm_total m/z_130.141145";
+		case TMT_10PLEX_131_13818:
+			return "norm_total m/z_131.13818";
 		default:
 			return null;
 		}
@@ -1116,184 +1327,225 @@ public class CensusOutParser extends AbstractQuantParser {
 			}
 		}
 
-		// if we only have one ratio descriptor, it is L over H
-		if (ratioDescriptors.size() == 1) {
-			final QuantificationLabel labelNumerator = ratioDescriptors.get(0).getLabel1();
-			final QuantificationLabel labelDenominator = ratioDescriptors.get(0).getLabel2();
-			final String ratioSuffix = ratioDescriptors.get(0).getRatioSuffix();
-			// add protein ratio
-			// first look if the composite ratio is calculated
-			if (mapValues.containsKey(COMPOSITE_RATIO)) {
-				try {
-					final double ratioValue = Double.valueOf(mapValues.get(COMPOSITE_RATIO));
-					String stdValue = null;
-					if (mapValues.containsKey(COMPOSITE_RATIO_STANDARD_DEVIATION)) {
-						stdValue = mapValues.get(COMPOSITE_RATIO_STANDARD_DEVIATION);
-						if ("".equals(stdValue)) {
-							stdValue = "0.0";
-						}
-					}
-					final QuantRatio ratio = new CensusRatio(ratioValue, stdValue, false, conditionsByLabels,
-							labelNumerator, labelDenominator, AggregationLevel.PROTEIN, COMPOSITE_RATIO);
-					quantifiedProtein.addRatio(ratio);
-				} catch (final NumberFormatException e) {
-					// skip this
-				}
-				// if there is not composite ratio, use the
-				// regular ratio
-			} else if (mapValues.containsKey(COMPOSITE_RATIO + ratioSuffix)) {
-				try {
-					final double ratioValue = Double.valueOf(mapValues.get(COMPOSITE_RATIO + ratioSuffix));
-					String stdValue = null;
-					if (mapValues.containsKey(COMPOSITE_RATIO_STANDARD_DEVIATION + ratioSuffix)) {
-						stdValue = mapValues.get(COMPOSITE_RATIO_STANDARD_DEVIATION + ratioSuffix);
-						if ("".equals(stdValue)) {
-							stdValue = "0.0";
-						}
-					}
-					final QuantRatio ratio = new CensusRatio(ratioValue, stdValue, false, conditionsByLabels,
-							labelNumerator, labelDenominator, AggregationLevel.PROTEIN, COMPOSITE_RATIO);
-					quantifiedProtein.addRatio(ratio);
-				} catch (final NumberFormatException e) {
-					// skip this
-				}
-				// if there is not composite ratio, use the
-				// regular ratio
-			} else if (mapValues.containsKey(AVERAGE_RATIO) || mapValues.containsKey(AREA_RATIO)) {
-				try {
-					if (mapValues.containsKey(AVERAGE_RATIO)) {
-						final double ratioValue = Double.valueOf(mapValues.get(AVERAGE_RATIO));
+		// if we have ratios
+		if (ratioDescriptors != null && !ratioDescriptors.isEmpty()) {
+			// if we only have one ratio descriptor, it is L over H
+			if (ratioDescriptors.size() == 1) {
+				final QuantificationLabel labelNumerator = ratioDescriptors.get(0).getLabel1();
+				final QuantificationLabel labelDenominator = ratioDescriptors.get(0).getLabel2();
+				final String ratioSuffix = ratioDescriptors.get(0).getRatioSuffix();
+				// add protein ratio
+				// first look if the composite ratio is calculated
+				if (mapValues.containsKey(COMPOSITE_RATIO)) {
+					try {
+						final double ratioValue = Double.valueOf(mapValues.get(COMPOSITE_RATIO));
 						String stdValue = null;
-						if (mapValues.containsKey(STANDARD_DEVIATION)) {
-							stdValue = mapValues.get(STANDARD_DEVIATION);
+						if (mapValues.containsKey(COMPOSITE_RATIO_STANDARD_DEVIATION)) {
+							stdValue = mapValues.get(COMPOSITE_RATIO_STANDARD_DEVIATION);
 							if ("".equals(stdValue)) {
 								stdValue = "0.0";
 							}
 						}
 						final QuantRatio ratio = new CensusRatio(ratioValue, stdValue, false, conditionsByLabels,
-								labelNumerator, labelDenominator, AggregationLevel.PROTEIN, AVERAGE_RATIO);
+								labelNumerator, labelDenominator, AggregationLevel.PROTEIN, COMPOSITE_RATIO);
 						quantifiedProtein.addRatio(ratio);
+					} catch (final NumberFormatException e) {
+						// skip this
 					}
-				} catch (final NumberFormatException e) {
-					// skip this
-				}
-				try {
-					if (mapValues.containsKey(AREA_RATIO)) {
-						final double ratioValue = Double.valueOf(mapValues.get(AREA_RATIO));
-						final QuantRatio ratio = new CensusRatio(ratioValue, null, false, conditionsByLabels,
-								labelNumerator, labelDenominator, AggregationLevel.PROTEIN, AREA_RATIO);
-						quantifiedProtein.addRatio(ratio);
-					}
-				} catch (final NumberFormatException e) {
-					// skip this
-				}
-			} else if (mapValues.containsKey(AVERAGE_RATIO + ratioSuffix)
-					|| mapValues.containsKey(AREA_RATIO + ratioSuffix)) {
-				try {
-					if (mapValues.containsKey(AVERAGE_RATIO + ratioSuffix)) {
-						final double ratioValue = Double.valueOf(mapValues.get(AVERAGE_RATIO + ratioSuffix));
+					// if there is not composite ratio, use the
+					// regular ratio
+				} else if (mapValues.containsKey(COMPOSITE_RATIO + ratioSuffix)) {
+					try {
+						final double ratioValue = Double.valueOf(mapValues.get(COMPOSITE_RATIO + ratioSuffix));
 						String stdValue = null;
-						if (mapValues.containsKey(STANDARD_DEVIATION)) {
-							stdValue = mapValues.get(STANDARD_DEVIATION);
+						if (mapValues.containsKey(COMPOSITE_RATIO_STANDARD_DEVIATION + ratioSuffix)) {
+							stdValue = mapValues.get(COMPOSITE_RATIO_STANDARD_DEVIATION + ratioSuffix);
 							if ("".equals(stdValue)) {
 								stdValue = "0.0";
 							}
 						}
 						final QuantRatio ratio = new CensusRatio(ratioValue, stdValue, false, conditionsByLabels,
-								labelNumerator, labelDenominator, AggregationLevel.PROTEIN, AVERAGE_RATIO);
+								labelNumerator, labelDenominator, AggregationLevel.PROTEIN, COMPOSITE_RATIO);
 						quantifiedProtein.addRatio(ratio);
+					} catch (final NumberFormatException e) {
+						// skip this
 					}
-				} catch (final NumberFormatException e) {
-					// skip this
+					// if there is not composite ratio, use the
+					// regular ratio
+				} else if (mapValues.containsKey(AVERAGE_RATIO) || mapValues.containsKey(AREA_RATIO)) {
+					try {
+						if (mapValues.containsKey(AVERAGE_RATIO)) {
+							final double ratioValue = Double.valueOf(mapValues.get(AVERAGE_RATIO));
+							String stdValue = null;
+							if (mapValues.containsKey(STANDARD_DEVIATION)) {
+								stdValue = mapValues.get(STANDARD_DEVIATION);
+								if ("".equals(stdValue)) {
+									stdValue = "0.0";
+								}
+							}
+							final QuantRatio ratio = new CensusRatio(ratioValue, stdValue, false, conditionsByLabels,
+									labelNumerator, labelDenominator, AggregationLevel.PROTEIN, AVERAGE_RATIO);
+							quantifiedProtein.addRatio(ratio);
+						}
+					} catch (final NumberFormatException e) {
+						// skip this
+					}
+					try {
+						if (mapValues.containsKey(AREA_RATIO)) {
+							final double ratioValue = Double.valueOf(mapValues.get(AREA_RATIO));
+							final QuantRatio ratio = new CensusRatio(ratioValue, null, false, conditionsByLabels,
+									labelNumerator, labelDenominator, AggregationLevel.PROTEIN, AREA_RATIO);
+							quantifiedProtein.addRatio(ratio);
+						}
+					} catch (final NumberFormatException e) {
+						// skip this
+					}
+				} else if (mapValues.containsKey(AVERAGE_RATIO + ratioSuffix)
+						|| mapValues.containsKey(AREA_RATIO + ratioSuffix)) {
+					try {
+						if (mapValues.containsKey(AVERAGE_RATIO + ratioSuffix)) {
+							final double ratioValue = Double.valueOf(mapValues.get(AVERAGE_RATIO + ratioSuffix));
+							String stdValue = null;
+							if (mapValues.containsKey(STANDARD_DEVIATION)) {
+								stdValue = mapValues.get(STANDARD_DEVIATION);
+								if ("".equals(stdValue)) {
+									stdValue = "0.0";
+								}
+							}
+							final QuantRatio ratio = new CensusRatio(ratioValue, stdValue, false, conditionsByLabels,
+									labelNumerator, labelDenominator, AggregationLevel.PROTEIN, AVERAGE_RATIO);
+							quantifiedProtein.addRatio(ratio);
+						}
+					} catch (final NumberFormatException e) {
+						// skip this
+					}
+					try {
+						if (mapValues.containsKey(AREA_RATIO + ratioSuffix)) {
+							final double ratioValue = Double.valueOf(mapValues.get(AREA_RATIO + ratioSuffix));
+							final QuantRatio ratio = new CensusRatio(ratioValue, null, false, conditionsByLabels,
+									labelNumerator, labelDenominator, AggregationLevel.PROTEIN, AREA_RATIO);
+							quantifiedProtein.addRatio(ratio);
+						}
+					} catch (final NumberFormatException e) {
+						// skip this
+					}
 				}
-				try {
-					if (mapValues.containsKey(AREA_RATIO + ratioSuffix)) {
-						final double ratioValue = Double.valueOf(mapValues.get(AREA_RATIO + ratioSuffix));
-						final QuantRatio ratio = new CensusRatio(ratioValue, null, false, conditionsByLabels,
-								labelNumerator, labelDenominator, AggregationLevel.PROTEIN, AREA_RATIO);
-						quantifiedProtein.addRatio(ratio);
+			} else {
+				// having more than one ratio descriptor, it is L, M, H
+				for (final RatioDescriptor ratioDescriptor : ratioDescriptors) {
+					final QuantificationLabel labelNumerator = ratioDescriptor.getLabel1();
+					final QuantificationLabel labelDenominator = ratioDescriptor.getLabel2();
+					final String ratioSuffix = ratioDescriptor.getRatioSuffix();
+					// add protein ratio
+					// first look if the normalized composite ratio is
+					// calculated
+					if (mapValues.containsKey(NORM_COMPOSITE_RATIO + ratioSuffix)
+							|| mapValues.containsKey(COMPOSITE_RATIO + ratioSuffix)) {
+						if (mapValues.containsKey(NORM_COMPOSITE_RATIO + ratioSuffix)) {
+							try {
+								final double ratioValue = Double
+										.valueOf(mapValues.get(NORM_COMPOSITE_RATIO + ratioSuffix));
+								String stdValue = null;
+								if (mapValues.containsKey(NORM_COMPOSITE_RATIO_STDEV + ratioSuffix)) {
+									stdValue = mapValues.get(NORM_COMPOSITE_RATIO_STDEV + ratioSuffix);
+									if ("".equals(stdValue)) {
+										stdValue = "0.0";
+									}
+								}
+								final QuantRatio ratio = new CensusRatio(ratioValue, stdValue, false,
+										conditionsByLabels, labelNumerator, labelDenominator, AggregationLevel.PROTEIN,
+										NORM_COMPOSITE_RATIO);
+								quantifiedProtein.addRatio(ratio);
+							} catch (final NumberFormatException e) {
+								// skip this
+							}
+							// if there is not composite ratio, use the
+							// regular composite ratio
+						}
+						if (mapValues.containsKey(COMPOSITE_RATIO + ratioSuffix)) {
+							try {
+								final double ratioValue = Double.valueOf(mapValues.get(COMPOSITE_RATIO + ratioSuffix));
+								String stdValue = null;
+								if (mapValues.containsKey(COMPOSITE_RATIO_STDEV + ratioSuffix)) {
+									stdValue = mapValues.get(COMPOSITE_RATIO_STDEV + ratioSuffix);
+									if ("".equals(stdValue)) {
+										stdValue = "0.0";
+									}
+								}
+								final QuantRatio ratio = new CensusRatio(ratioValue, stdValue, false,
+										conditionsByLabels, labelNumerator, labelDenominator, AggregationLevel.PROTEIN,
+										COMPOSITE_RATIO);
+								quantifiedProtein.addRatio(ratio);
+							} catch (final NumberFormatException e) {
+								// skip this
+							}
+							// if there is not composite ratio, use the
+							// regular composite ratio
+						}
+					} else if (mapValues.containsKey(MEDIAN_NORM_RATIO + ratioSuffix)
+							|| mapValues.containsKey(MEDIAN_AREA_RATIO + ratioSuffix)) {
+						try {
+							if (mapValues.containsKey(MEDIAN_NORM_RATIO + ratioSuffix)) {
+								final double ratioValue = Double
+										.valueOf(mapValues.get(MEDIAN_NORM_RATIO + ratioSuffix));
+								String stdValue = null;
+								if (mapValues.containsKey(NORM_STDEV + ratioSuffix)) {
+									stdValue = mapValues.get(NORM_STDEV + ratioSuffix);
+									if ("".equals(stdValue)) {
+										stdValue = "0.0";
+									}
+								}
+								final QuantRatio ratio = new CensusRatio(ratioValue, stdValue, false,
+										conditionsByLabels, labelNumerator, labelDenominator, AggregationLevel.PROTEIN,
+										NORM_STDEV);
+								quantifiedProtein.addRatio(ratio);
+							}
+						} catch (final NumberFormatException e) {
+							// skip this
+						}
+						try {
+							if (mapValues.containsKey(MEDIAN_AREA_RATIO + ratioSuffix)) {
+								final double ratioValue = Double
+										.valueOf(mapValues.get(MEDIAN_AREA_RATIO + ratioSuffix));
+								final QuantRatio ratio = new CensusRatio(ratioValue, null, false, conditionsByLabels,
+										labelNumerator, labelDenominator, AggregationLevel.PROTEIN, MEDIAN_AREA_RATIO);
+								quantifiedProtein.addRatio(ratio);
+							}
+						} catch (final NumberFormatException e) {
+							// skip this
+						}
 					}
-				} catch (final NumberFormatException e) {
-					// skip this
 				}
 			}
 		} else {
-			// having more than one ratio descriptor, it is L, M, H
-			for (final RatioDescriptor ratioDescriptor : ratioDescriptors) {
-				final QuantificationLabel labelNumerator = ratioDescriptor.getLabel1();
-				final QuantificationLabel labelDenominator = ratioDescriptor.getLabel2();
-				final String ratioSuffix = ratioDescriptor.getRatioSuffix();
-				// add protein ratio
-				// first look if the normalized composite ratio is calculated
-				if (mapValues.containsKey(NORM_COMPOSITE_RATIO + ratioSuffix)
-						|| mapValues.containsKey(COMPOSITE_RATIO + ratioSuffix)) {
-					if (mapValues.containsKey(NORM_COMPOSITE_RATIO + ratioSuffix)) {
-						try {
-							final double ratioValue = Double.valueOf(mapValues.get(NORM_COMPOSITE_RATIO + ratioSuffix));
-							String stdValue = null;
-							if (mapValues.containsKey(NORM_COMPOSITE_RATIO_STDEV + ratioSuffix)) {
-								stdValue = mapValues.get(NORM_COMPOSITE_RATIO_STDEV + ratioSuffix);
-								if ("".equals(stdValue)) {
-									stdValue = "0.0";
-								}
-							}
-							final QuantRatio ratio = new CensusRatio(ratioValue, stdValue, false, conditionsByLabels,
-									labelNumerator, labelDenominator, AggregationLevel.PROTEIN, NORM_COMPOSITE_RATIO);
-							quantifiedProtein.addRatio(ratio);
-						} catch (final NumberFormatException e) {
-							// skip this
-						}
-						// if there is not composite ratio, use the
-						// regular composite ratio
-					}
-					if (mapValues.containsKey(COMPOSITE_RATIO + ratioSuffix)) {
-						try {
-							final double ratioValue = Double.valueOf(mapValues.get(COMPOSITE_RATIO + ratioSuffix));
-							String stdValue = null;
-							if (mapValues.containsKey(COMPOSITE_RATIO_STDEV + ratioSuffix)) {
-								stdValue = mapValues.get(COMPOSITE_RATIO_STDEV + ratioSuffix);
-								if ("".equals(stdValue)) {
-									stdValue = "0.0";
-								}
-							}
-							final QuantRatio ratio = new CensusRatio(ratioValue, stdValue, false, conditionsByLabels,
-									labelNumerator, labelDenominator, AggregationLevel.PROTEIN, COMPOSITE_RATIO);
-							quantifiedProtein.addRatio(ratio);
-						} catch (final NumberFormatException e) {
-							// skip this
-						}
-						// if there is not composite ratio, use the
-						// regular composite ratio
-					}
-				} else if (mapValues.containsKey(MEDIAN_NORM_RATIO + ratioSuffix)
-						|| mapValues.containsKey(MEDIAN_AREA_RATIO + ratioSuffix)) {
-					try {
-						if (mapValues.containsKey(MEDIAN_NORM_RATIO + ratioSuffix)) {
-							final double ratioValue = Double.valueOf(mapValues.get(MEDIAN_NORM_RATIO + ratioSuffix));
-							String stdValue = null;
-							if (mapValues.containsKey(NORM_STDEV + ratioSuffix)) {
-								stdValue = mapValues.get(NORM_STDEV + ratioSuffix);
-								if ("".equals(stdValue)) {
-									stdValue = "0.0";
-								}
-							}
-							final QuantRatio ratio = new CensusRatio(ratioValue, stdValue, false, conditionsByLabels,
-									labelNumerator, labelDenominator, AggregationLevel.PROTEIN, NORM_STDEV);
-							quantifiedProtein.addRatio(ratio);
-						}
-					} catch (final NumberFormatException e) {
-						// skip this
-					}
-					try {
-						if (mapValues.containsKey(MEDIAN_AREA_RATIO + ratioSuffix)) {
-							final double ratioValue = Double.valueOf(mapValues.get(MEDIAN_AREA_RATIO + ratioSuffix));
-							final QuantRatio ratio = new CensusRatio(ratioValue, null, false, conditionsByLabels,
-									labelNumerator, labelDenominator, AggregationLevel.PROTEIN, MEDIAN_AREA_RATIO);
-							quantifiedProtein.addRatio(ratio);
-						}
-					} catch (final NumberFormatException e) {
-						// skip this
-					}
+			// no ratios
+		}
+
+		// TMT6PLEX
+		final boolean isTMT6Plex = isTMT6Plex(conditionsByLabels.keySet());
+		if (isTMT6Plex) {
+			for (final QuantificationLabel label : QuantificationLabel.getTMT6PlexLabels()) {
+				Double normalizedIntensity = null;
+				final String header = getHeaderForProteinNormalizedIntensityInTMT6Plex(label);
+				if (mapValues.containsKey(header)) {
+					normalizedIntensity = Double.valueOf(mapValues.get(header));
+					final QuantAmount amount = new QuantAmount(normalizedIntensity, AmountType.NORMALIZED_INTENSITY,
+							conditionsByLabels.get(label));
+					quantifiedProtein.addAmount(amount);
+				}
+			}
+		}
+		// TMT10PLEX
+		final boolean isTMT10Plex = isTMT10Plex(conditionsByLabels.keySet());
+		if (isTMT10Plex) {
+			for (final QuantificationLabel label : QuantificationLabel.getTMT10PlexLabels()) {
+				Double normalizedIntensity = null;
+				final String header = getHeaderForProteinNormalizedIntensityInTMT10Plex(label);
+				if (mapValues.containsKey(header)) {
+					normalizedIntensity = Double.valueOf(mapValues.get(header));
+					final QuantAmount amount = new QuantAmount(normalizedIntensity, AmountType.NORMALIZED_INTENSITY,
+							conditionsByLabels.get(label));
+					quantifiedProtein.addAmount(amount);
 				}
 			}
 		}
