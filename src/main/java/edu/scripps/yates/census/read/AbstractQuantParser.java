@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -17,6 +19,7 @@ import org.apache.log4j.Logger;
 import edu.scripps.yates.annotations.uniprot.UniprotProteinLocalRetriever;
 import edu.scripps.yates.annotations.uniprot.xml.Entry;
 import edu.scripps.yates.census.analysis.QuantCondition;
+import edu.scripps.yates.census.analysis.util.KeyUtils;
 import edu.scripps.yates.census.read.model.RatioDescriptor;
 import edu.scripps.yates.census.read.model.StaticQuantMaps;
 import edu.scripps.yates.census.read.model.interfaces.QuantParser;
@@ -24,6 +27,7 @@ import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
 import edu.scripps.yates.census.read.util.ProteinSequences;
+import edu.scripps.yates.census.read.util.QuantUtils;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
 import edu.scripps.yates.dbindex.DBIndexInterface;
 import edu.scripps.yates.utilities.fasta.FastaParser;
@@ -34,6 +38,7 @@ import edu.scripps.yates.utilities.progresscounter.ProgressCounter;
 import edu.scripps.yates.utilities.progresscounter.ProgressPrintingType;
 import edu.scripps.yates.utilities.proteomicsmodel.Accession;
 import edu.scripps.yates.utilities.remote.RemoteSSHFileReference;
+import edu.scripps.yates.utilities.sequence.PTMInProtein;
 import edu.scripps.yates.utilities.util.Pair;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
@@ -218,17 +223,17 @@ public abstract class AbstractQuantParser implements QuantParser {
 				}
 			}
 		}
-
-		final RatioDescriptor ratioDescriptor = new RatioDescriptor(labelNumerator, labelDenominator, condition1,
-				condition2);
-		if (ratioDescriptorsByFile.containsKey(remoteFileReference)) {
-			ratioDescriptorsByFile.get(remoteFileReference).add(ratioDescriptor);
-		} else {
-			final List<RatioDescriptor> list = new ArrayList<RatioDescriptor>();
-			list.add(ratioDescriptor);
-			ratioDescriptorsByFile.put(remoteFileReference, list);
+		if (condition1 != null && condition2 != null) {
+			final RatioDescriptor ratioDescriptor = new RatioDescriptor(labelNumerator, labelDenominator, condition1,
+					condition2);
+			if (ratioDescriptorsByFile.containsKey(remoteFileReference)) {
+				ratioDescriptorsByFile.get(remoteFileReference).add(ratioDescriptor);
+			} else {
+				final List<RatioDescriptor> list = new ArrayList<RatioDescriptor>();
+				list.add(ratioDescriptor);
+				ratioDescriptorsByFile.put(remoteFileReference, list);
+			}
 		}
-
 		// numeratorLabelByFile.put(remoteFileReference, labelNumerator);
 		// denominatorLabelByFile.put(remoteFileReference, labelDenominator);
 		remoteFileRetrievers.add(remoteFileReference);
@@ -425,6 +430,51 @@ public abstract class AbstractQuantParser implements QuantParser {
 		mapIPI2Uniprot();
 		// third merge proteins with secondary accessions
 		mergeProteinsWithSecondaryAccessionsInParser();
+		// get ptmsInProteins, which implies to get uniprot annotations
+		createPTMsInProteins();
+	}
+
+	private void createPTMsInProteins() throws IOException {
+
+		if (getPTMInProteinMap) {
+			final Set<String> accs = getProteinMap().keySet();
+			uplr.getAnnotatedProteins(uniprotVersion, accs);
+
+			for (final QuantifiedPSMInterface psm : getPSMMap().values()) {
+				final String sequence = psm.getSequence();
+				String ptmKey = sequence; // by default if no ptms
+				if (!psm.getPtms().isEmpty()) {
+					final List<PTMInProtein> ptmsInProtein = psm.getPTMInProtein(uplr, proteinSequences);
+					ptmKey = getPTMKeyFromPTMsInProtein(ptmsInProtein);
+
+				}
+				final String spectrumKey = KeyUtils.getSpectrumKey(psm, true);
+				addToMap(ptmKey, ptmToSpectraMap, spectrumKey);
+			}
+		}
+
+	}
+
+	private String getPTMKeyFromPTMsInProtein(List<PTMInProtein> ptmsInProtein) {
+		final StringBuilder sb = new StringBuilder();
+		Collections.sort(ptmsInProtein, new Comparator<PTMInProtein>() {
+
+			@Override
+			public int compare(PTMInProtein o1, PTMInProtein o2) {
+				final int ret = o1.getProteinACC().compareTo(o2.getProteinACC());
+				if (ret != 0) {
+					return ret;
+				}
+				return Integer.compare(o1.getPosition(), o2.getPosition());
+			}
+		});
+		for (final PTMInProtein ptmInProtein : ptmsInProtein) {
+			if (!"".equals(sb.toString())) {
+				sb.append(QuantUtils.KEY_SEPARATOR);
+			}
+			sb.append(ptmInProtein.toString());
+		}
+		return sb.toString();
 	}
 
 	protected abstract void process() throws IOException;
