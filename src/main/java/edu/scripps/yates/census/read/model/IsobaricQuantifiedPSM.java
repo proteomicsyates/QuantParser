@@ -91,7 +91,6 @@ public class IsobaricQuantifiedPSM implements QuantifiedPSMInterface, HasIsoRati
 	 * @throws IOException
 	 */
 	public IsobaricQuantifiedPSM(Peptide peptide, Map<QuantCondition, QuantificationLabel> labelsByConditions,
-			Map<String, Set<String>> spectrumToIonsMap, Map<String, Set<String>> peptideToSpectraMap,
 			Collection<IonExclusion> ionExclusions, Set<Character> quantifiedSites) throws IOException {
 		this.peptide = peptide;
 		this.ionExclusions = ionExclusions;

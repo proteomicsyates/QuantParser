@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 import javax.swing.SwingWorker;
 
@@ -22,8 +21,8 @@ import edu.scripps.yates.census.analysis.wrappers.OutlierRemovalResultWrapper;
 import edu.scripps.yates.census.analysis.wrappers.SanXotAnalysisResult;
 import edu.scripps.yates.census.analysis.wrappers.SanxotQuantResult;
 import edu.scripps.yates.census.read.util.FileSplitter;
+import edu.scripps.yates.utilities.exec.CommandLineRunner;
 import edu.scripps.yates.utilities.exec.ProcessExecutor;
-import edu.scripps.yates.utilities.exec.ProcessExecutorHandler;
 import edu.scripps.yates.utilities.files.FileUtils;
 import edu.scripps.yates.utilities.util.Pair;
 import gnu.trove.map.hash.THashMap;
@@ -99,7 +98,7 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 		if (logFileWriter != null) {
 			try {
 				logFileWriter.close();
-			} catch (IOException e) {
+			} catch (final IOException e) {
 				e.printStackTrace();
 			}
 		}
@@ -133,11 +132,11 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 			upperLevel = upperLevelPair.getFirstelement();
 			File relatFile = lowLevelPair.getSecondElement();
 
-			for (String experimentName : experimentAndReplicateNames.keySet()) {
+			for (final String experimentName : experimentAndReplicateNames.keySet()) {
 				log.info("Experiment: " + experimentName);
 				// get the names of the replicates and experiments in order to
 				// split the relation files
-				List<String> dataSetNames = getDataSetNames(experimentAndReplicateNames, experimentName);
+				final List<String> dataSetNames = getDataSetNames(experimentAndReplicateNames, experimentName);
 
 				// split relatFile in many files as replicates
 				// Map<String, File> relatFiles = FileSplitter
@@ -146,10 +145,16 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 				relatFile = fileMappingResults.getFirstLevel().getSecondElement();
 
 				// split dataFile in many files as replicates
-				Map<String, File> dataFiles = FileSplitter.splitFiles(fileMappingResults.getDataFile(), dataSetNames);
+				Map<String, File> dataFiles = null;
+				if (dataSetNames.size() == 1 && dataSetNames.get(0).equals("")) {
+					dataFiles = new THashMap<String, File>();
+					dataFiles.put("", fileMappingResults.getDataFile());
+				} else {
+					dataFiles = FileSplitter.splitFiles(fileMappingResults.getDataFile(), dataSetNames);
+				}
 
-				Map<String, File> calibratedDataFiles = new THashMap<String, File>();
-				for (String datasetName : dataSetNames) {
+				final Map<String, File> calibratedDataFiles = new THashMap<String, File>();
+				for (final String datasetName : dataSetNames) {
 					// relatFile = relatFiles.get(datasetName);
 					dataFile = dataFiles.get(datasetName);
 					// get lowLevels again
@@ -169,10 +174,10 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 					}
 				}
 
-				Map<String, File> lastDataFiles = new THashMap<String, File>();
+				final Map<String, File> lastDataFiles = new THashMap<String, File>();
 				// loop
 				boolean dataMergingNeeded = false;
-				for (String replicateName : dataSetNames) {
+				for (final String replicateName : dataSetNames) {
 					try {
 						log.info("Replicate: " + replicateName);
 						// relatFile = relatFiles.get(replicateName);
@@ -257,7 +262,7 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 								lowLevel = upperLevel;
 							}
 						}
-					} catch (NextLevelException e) {
+					} catch (final NextLevelException e) {
 						log.debug(e);
 						// do nothing
 					}
@@ -270,7 +275,7 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 					if (lastDataFiles.size() > 1) {
 						// merge the latest data files into only one
 						// Concatenate higherlevel result files in a single one
-						File mergedDataFile = new File(fileMappingResults.getWorkingFolder().getAbsolutePath()
+						final File mergedDataFile = new File(fileMappingResults.getWorkingFolder().getAbsolutePath()
 								+ File.separator + experimentName + "_" + lowLevel + "_" + upperLevel + "_merged.tsv");
 						FileUtils.mergeFiles(lastDataFiles.values(), mergedDataFile, true);
 
@@ -281,7 +286,7 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 						// .getNextAvailableLevel(upperLevel);
 						// upperLevel = upperLevelPair.getFirstelement();
 						// relatFile = lowLevelPair.getSecondElement();
-						IntegrationResultWrapper integrationResult = integrate(lowLevel, upperLevel, relatFile,
+						final IntegrationResultWrapper integrationResult = integrate(lowLevel, upperLevel, relatFile,
 								mergedDataFile, null, experimentName, null, true);
 						// keep the results in a Map by experiment name
 						result.addExperimentIntegrationResult(integrationResult, experimentName);
@@ -321,12 +326,13 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 					return;
 				}
 				// merge all higher data files
-				Set<File> higherLevelDataResults = new THashSet<File>();
-				for (IntegrationResultWrapper integrationResult : result.getExperimentIntegrationResults().values()) {
+				final Set<File> higherLevelDataResults = new THashSet<File>();
+				for (final IntegrationResultWrapper integrationResult : result.getExperimentIntegrationResults()
+						.values()) {
 					higherLevelDataResults.add(integrationResult.getHigherLevelDataFile());
 				}
-				File mergedFile = new File(fileMappingResults.getWorkingFolder().getAbsolutePath() + File.separator
-						+ "experiment_data_merged.tsv");
+				final File mergedFile = new File(fileMappingResults.getWorkingFolder().getAbsolutePath()
+						+ File.separator + "experiment_data_merged.tsv");
 				FileUtils.mergeFiles(higherLevelDataResults, mergedFile, true);
 				// integrate that in the next level
 				lowLevelPair = upperLevelPair;
@@ -356,7 +362,7 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 						lastIntegrationResults.getHigherLevelDataFile(), null, "", null, true);
 				result.addIntegrationResult(integrationResult);
 			}
-		} catch (NextLevelException e) {
+		} catch (final NextLevelException e) {
 			// make the last integration
 			final IntegrationResultWrapper lastIntegrationResults = result.getLastIntegrationResults();
 			final IntegrationResultWrapper integrationResult = integrate(lowLevel, upperLevel, null,
@@ -367,12 +373,12 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 
 	private List<String> getDataSetNamesOLD(Map<String, List<String>> experimentAndReplicateNames,
 			String experimentName) {
-		boolean onlyOneExperiment = experimentAndReplicateNames.size() == 1;
+		final boolean onlyOneExperiment = experimentAndReplicateNames.size() == 1;
 		final List<String> replicateNames = experimentAndReplicateNames.get(experimentName);
-		boolean onlyOneReplicate = replicateNames.size() == 1;
+		final boolean onlyOneReplicate = replicateNames.size() == 1;
 
-		List<String> datasetNames = new ArrayList<String>();
-		for (String replicateName : replicateNames) {
+		final List<String> datasetNames = new ArrayList<String>();
+		for (final String replicateName : replicateNames) {
 			String datasetName = onlyOneExperiment ? "" : experimentName;
 			if (!onlyOneReplicate) {
 				if (!"".endsWith(datasetName))
@@ -392,12 +398,14 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 			experimentKey = experimentName;
 		}
 
-		List<String> datasetNames = new ArrayList<String>();
+		final List<String> datasetNames = new ArrayList<String>();
 		if (replicateNames.size() == 1) {
-			String datasetName = experimentKey;
+
+			final String datasetName = experimentKey;
 			datasetNames.add(datasetName);
+
 		} else {
-			for (String replicateName : replicateNames) {
+			for (final String replicateName : replicateNames) {
 				String datasetName = replicateName;
 				if (!"".equals(experimentKey)) {
 					datasetName += "_" + experimentKey;
@@ -414,14 +422,16 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 		final String msg = "Removing outliers data from level " + lowLevel + " to " + upperLevel + "...";
 		log.info(msg);
 		firePropertyChange(OUTLIER_REMOVAL, null, msg);
-		String prefix = OutlierRemovalResultWrapper.DEFAULT_OUTLIER_REMOVAL_PREFIX + lowLevel + "-" + upperLevel;
-		CommandLine removeOutlierCommandLine = getRemoveOutliersCommandLine(relatFile, prefix, dataFile, infoFile,
+		final String prefix = OutlierRemovalResultWrapper.DEFAULT_OUTLIER_REMOVAL_PREFIX + lowLevel + "-" + upperLevel;
+		final CommandLine removeOutlierCommandLine = getRemoveOutliersCommandLine(relatFile, prefix, dataFile, infoFile,
 				fileMappingResults.getWorkingFolder(), quantParameters);
 
-		Long exitCode = runCommand(removeOutlierCommandLine, quantParameters.getTimeout());
-		if (exitCode.longValue() != 0)
-			throw new IllegalArgumentException("Some error happen while outlier removal process");
-		OutlierRemovalResultWrapper outliersRemovalResults = new OutlierRemovalResultWrapper(
+		final CommandLineRunner runner = runCommand(removeOutlierCommandLine, quantParameters.getTimeout());
+		if (runner.getProcessExitCode().longValue() != 0) {
+			throw new IllegalArgumentException(
+					"Some error happen while outlier removal process: " + runner.getErrorMessage());
+		}
+		final OutlierRemovalResultWrapper outliersRemovalResults = new OutlierRemovalResultWrapper(
 				fileMappingResults.getWorkingFolder(), prefix);
 
 		log.info("Outlier removal performed. New relation file at:"
@@ -451,32 +461,34 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 		}
 		log.info("Using data file  " + FilenameUtils.getName(dataFile.getAbsolutePath()));
 		firePropertyChange(INTEGRATING, null, msg);
-		String prefixString = lowLevel + "-" + upperLevel + "_" + prefix;
+		final String prefixString = lowLevel + "-" + upperLevel + "_" + prefix;
 		CommandLine integratingCommandLine = getIntegrationCommandLine(relatFile, dataFile, infoFile, prefixString,
 				forzedVariance, fileMappingResults.getWorkingFolder(), quantParameters);
 
-		final Long exitCode = runCommand(integratingCommandLine, quantParameters.getTimeout());
-		if (exitCode.longValue() != 0) {
-			if (exitCode.longValue() == ProcessExecutor.TIMEOUT_ERROR_CODE) {
+		final CommandLineRunner runner = runCommand(integratingCommandLine, quantParameters.getTimeout());
+		if (runner.getProcessExitCode().longValue() != 0) {
+			if (runner.getProcessExitCode().longValue() == ProcessExecutor.TIMEOUT_ERROR_CODE) {
 				final String message = "The process cound't finish before the timeout of "
 						+ quantParameters.getTimeout() + " ms";
 				log.warn(message);
 				log.info("Trying to fix the problem by forzing variance to 0 (Using -f v0)");
 				integratingCommandLine = getIntegrationCommandLine(relatFile, dataFile, infoFile, prefixString, 0.0,
 						fileMappingResults.getWorkingFolder(), quantParameters);
-				Long newExitCode = runCommand(integratingCommandLine, quantParameters.getTimeout());
-				if (newExitCode.longValue() != 0) {
-					if (newExitCode.longValue() == ProcessExecutor.TIMEOUT_ERROR_CODE) {
+				final CommandLineRunner newRunner = runCommand(integratingCommandLine, quantParameters.getTimeout());
+				if (newRunner.getProcessExitCode().longValue() != 0) {
+					if (newRunner.getProcessExitCode().longValue() == ProcessExecutor.TIMEOUT_ERROR_CODE) {
 						log.warn(message);
-						throw new IllegalArgumentException(message);
+						throw new IllegalArgumentException(message + ": " + newRunner.getErrorMessage());
 					}
-					throw new IllegalArgumentException("Some error happen while integration process");
+					throw new IllegalArgumentException(
+							"Some error happen while integration process: " + newRunner.getErrorMessage());
 				}
 			} else {
-				throw new IllegalArgumentException("Some error happen while integration process");
+				throw new IllegalArgumentException(
+						"Some error happen while integration process: " + runner.getErrorMessage());
 			}
 		}
-		IntegrationResultWrapper integrationResults = new IntegrationResultWrapper(
+		final IntegrationResultWrapper integrationResults = new IntegrationResultWrapper(
 				fileMappingResults.getWorkingFolder(), prefixString, lowLevel, upperLevel, fileMappingResults);
 
 		log.info("Integration performed. Integration file at:"
@@ -503,12 +515,12 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 				.getSanXotQuantResultFromDataFile(dataFile);
 		final Map<String, Set<String>> relationShipsFromRelatFile = IntegrationResultWrapper
 				.getRelationShipsFromRelatFile(relatFile);
-		Set<String> lowerLevelFromRelat = new THashSet<String>();
-		for (String upperLevel : relationShipsFromRelatFile.keySet()) {
+		final Set<String> lowerLevelFromRelat = new THashSet<String>();
+		for (final String upperLevel : relationShipsFromRelatFile.keySet()) {
 			lowerLevelFromRelat.addAll(relationShipsFromRelatFile.get(upperLevel));
 		}
 		// Set<String> upperLevelsMapped = new THashSet<String>();
-		for (String dataFileKey : sanXotQuantResultFromFile.keySet()) {
+		for (final String dataFileKey : sanXotQuantResultFromFile.keySet()) {
 			if (!lowerLevelFromRelat.contains(dataFileKey)) {
 				log.info(dataFileKey + " is  not found as lower level item in the relationship file "
 						+ relatFile.getAbsolutePath());
@@ -543,19 +555,19 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 
 		log.info(msg);
 		firePropertyChange(CALIBRATING, null, msg);
-		String prefix = KalibrateResultWrapper.DEFAULT_CALIBRATED_PREFIX + lowLevel + "-" + upperLevel + key;
-		CommandLine calibratingCommandLine = getCalibratingCommandLine(relatFile, dataFile, prefix,
+		final String prefix = KalibrateResultWrapper.DEFAULT_CALIBRATED_PREFIX + lowLevel + "-" + upperLevel + key;
+		final CommandLine calibratingCommandLine = getCalibratingCommandLine(relatFile, dataFile, prefix,
 				fileMappingResults.getWorkingFolder(), quantParameters);
 
-		Long exitCode = runCommand(calibratingCommandLine, timeout);
-		if (exitCode.longValue() != 0) {
-			throw new SanxotErrorException(
-					"Some error happen while calibration process. You may consider the following actions:\n"
-							+ "-If you are running the software in a remote terminal, make sure that you have X11 activated.\n"
-							+ "-For developers only: Increase the timeout time by saxotInterface.setTimeout(long timeout) method");
+		final CommandLineRunner runner = runCommand(calibratingCommandLine, timeout);
+		if (runner.getProcessExitCode().longValue() != 0) {
+			throw new SanxotErrorException("Some error happen while calibration process:\n" + runner.getErrorMessage()
+					+ "\nYou may consider the following actions:\n"
+					+ "-If you are running the software in a remote terminal, make sure that you have X11 activated.\n"
+					+ "-For developers only: Increase the timeout time by saxotInterface.setTimeout(long timeout) method");
 		}
-		KalibrateResultWrapper calibrationResults = new KalibrateResultWrapper(fileMappingResults.getWorkingFolder(),
-				prefix);
+		final KalibrateResultWrapper calibrationResults = new KalibrateResultWrapper(
+				fileMappingResults.getWorkingFolder(), prefix);
 		if (calibrationResults.getCalibratedDataFile() != null) {
 			log.info("Calibration performed. Calibrated file at:"
 					+ calibrationResults.getCalibratedDataFile().getAbsolutePath());
@@ -583,8 +595,14 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 		}
 		// String dataFileName = FilenameUtils.getName(fileMappingResults
 		// .getDataFile().getAbsolutePath());
-		String dataFileName = FilenameUtils.getName(dataFile.getAbsolutePath());
-		String level1File = FilenameUtils.getName(relatFile.getAbsolutePath());
+		// final String dataFileName =
+		// FilenameUtils.getName(dataFile.getAbsolutePath());
+		final String dataFileName = dataFile.getAbsolutePath();
+
+		// final String level1File =
+		// FilenameUtils.getName(relatFile.getAbsolutePath());
+		final String level1File = relatFile.getAbsolutePath();
+
 		if (quantParameters.isUsePython()) {
 			commandline.addArgument(quantParameters.getSanxotScriptsFolder() + File.separator + KLIBRATE_PY);
 		}
@@ -608,7 +626,7 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 			commandline = new CommandLine(quantParameters.getSanxotScriptsFolder() + File.separator + SANXOT_EXE);
 		}
 
-		String dataFileName = FilenameUtils.getName(dataFile.getAbsolutePath());
+		final String dataFileName = FilenameUtils.getName(dataFile.getAbsolutePath());
 
 		String infoFileName = null;
 		if (infoFile != null)
@@ -618,7 +636,7 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 		}
 		commandline.addArgument("-d" + dataFileName);
 		if (relatFile != null) {
-			String level1FileName = FilenameUtils.getName(relatFile.getAbsolutePath());
+			final String level1FileName = FilenameUtils.getName(relatFile.getAbsolutePath());
 			commandline.addArgument("-r" + level1FileName);
 		} else {
 			commandline.addArgument("-C");
@@ -648,10 +666,10 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 		} else {
 			commandline = new CommandLine(quantParameters.getSanxotScriptsFolder() + File.separator + SANXOT_SIEVE_EXE);
 		}
-		String dataFileName = FilenameUtils.getName(dataFile.getAbsolutePath());
+		final String dataFileName = FilenameUtils.getName(dataFile.getAbsolutePath());
 
-		String level1FileName = FilenameUtils.getName(relatFile.getAbsolutePath());
-		String infoFileName = FilenameUtils.getName(infoFile.getAbsolutePath());
+		final String level1FileName = FilenameUtils.getName(relatFile.getAbsolutePath());
+		final String infoFileName = FilenameUtils.getName(infoFile.getAbsolutePath());
 		if (quantParameters.isUsePython()) {
 			commandline.addArgument(quantParameters.getSanxotScriptsFolder() + File.separator + SANXOT_SIEVE_PY);
 		}
@@ -664,35 +682,41 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 		return commandline;
 	}
 
-	private Long runCommand(CommandLine commandLine, long timeout)
+	private CommandLineRunner runCommand(CommandLine commandLine, long timeout)
 			throws IOException, InterruptedException, ExecutionException {
-		final String commandString = commandLine.toString();
-		log.info("Running: " + commandString);
-		logFileWriter.write(commandString + "\n");
-		firePropertyChange(STARTING_COMMAND, null, commandString);
 
-		ProcessExecutorHandler handler = new ProcessExecutorHandler() {
-
-			@Override
-			public void onStandardOutput(String msg) {
-				log.debug("OUTPUT:" + msg);
-
-			}
-
-			@Override
-			public void onStandardError(String msg) {
-				log.error("ERROR:" + msg);
-
-			}
-		};
-		final Future<Long> runProcess = ProcessExecutor.runProcess(commandLine, handler, timeout);
-		while (!runProcess.isDone() && !runProcess.isCancelled()) {
-			Thread.sleep(1000);
-		}
-		final Long processExitCode = runProcess.get();
+		final CommandLineRunner runner = new CommandLineRunner();
+		runner.runCommand(commandLine, timeout);
+		final Long processExitCode = runner.getProcessExitCode();
+		//
+		// final String commandString = commandLine.toString();
+		// log.info("Running: " + commandString);
+		// logFileWriter.write(commandString + "\n");
+		// firePropertyChange(STARTING_COMMAND, null, commandString);
+		//
+		// final ProcessExecutorHandler handler = new ProcessExecutorHandler() {
+		//
+		// @Override
+		// public void onStandardOutput(String msg) {
+		// log.debug("OUTPUT:" + msg);
+		//
+		// }
+		//
+		// @Override
+		// public void onStandardError(String msg) {
+		// log.error("ERROR:" + msg);
+		//
+		// }
+		// };
+		// final Future<Long> runProcess =
+		// ProcessExecutor.runProcess(commandLine, handler, timeout);
+		// while (!runProcess.isDone() && !runProcess.isCancelled()) {
+		// Thread.sleep(1000);
+		// }
+		// final Long processExitCode = runProcess.get();
 		log.info("Process exitValue: " + processExitCode);
 		firePropertyChange(END_COMMAND, null, processExitCode);
-		return processExitCode;
+		return runner;
 	}
 
 	/**
@@ -709,7 +733,7 @@ public class SanXotInterfaze extends SwingWorker<Object, Void> {
 		}
 		final Map<String, Set<String>> relationShipsFromRelatFile = IntegrationResultWrapper
 				.getRelationShipsFromRelatFile(relatFile);
-		for (String upperLevel : relationShipsFromRelatFile.keySet()) {
+		for (final String upperLevel : relationShipsFromRelatFile.keySet()) {
 			if (relationShipsFromRelatFile.get(upperLevel).size() > 1) {
 				return true;
 			}

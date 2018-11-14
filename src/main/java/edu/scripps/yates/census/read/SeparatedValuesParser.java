@@ -165,6 +165,9 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 				int numLine = 0;
 				while ((line = br.readLine()) != null) {
 					numLine++;
+					if ("".equals(line.trim())) {
+						continue;
+					}
 					if (numLine > 1 && line.contains(separator)) {
 						String psmID = null;
 						String seq = null;
@@ -215,7 +218,6 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 
 				}
 				br.close();
-
 			} catch (final PeptideNotFoundInDBIndexException e) {
 				if (!super.ignoreNotFoundPeptidesInDB) {
 					throw e;
@@ -285,13 +287,14 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 		} catch (final Exception e) {
 		}
 		QuantifiedPSMInterface quantifiedPSM = null;
-		if (!isGetPTMInProteinMap()) {
-			quantifiedPSM = new QuantifiedPSM(sequence, labelsByConditions, peptideToSpectraMap, scanNumber,
-					chargeState, rawFileName, false);
-		} else {
-			quantifiedPSM = new QuantifiedPSM(sequence, labelsByConditions, peptideToSpectraMap, ptmToSpectraMap,
-					scanNumber, chargeState, rawFileName, false, super.uplr, super.proteinSequences);
-		}
+		// if (!isGetPTMInProteinMap()) {
+		// quantifiedPSM = new QuantifiedPSM(sequence, labelsByConditions,
+		// peptideToSpectraMap, scanNumber,
+		// chargeState, rawFileName, false);
+		// } else {
+		quantifiedPSM = new QuantifiedPSM(sequence, labelsByConditions, peptideToSpectraMap, scanNumber, chargeState,
+				rawFileName, false);
+		// }
 		quantifiedPSM.getFileNames().add(inputFileName);
 		final String psmKey = KeyUtils.getSpectrumKey(quantifiedPSM, true);
 		// in case of TMT, the psm may have been created before

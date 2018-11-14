@@ -31,23 +31,24 @@ public class FileSplitter {
 		// ret.put(dataSetNames.iterator().next(), inputFile);
 		// return ret;
 		// }
-		Map<String, BufferedWriter> mapOfFiles = new THashMap<String, BufferedWriter>();
-		Map<String, File> listOfFiles = new THashMap<String, File>();
+
+		final Map<String, BufferedWriter> mapOfFiles = new THashMap<String, BufferedWriter>();
+		final Map<String, File> listOfFiles = new THashMap<String, File>();
 		// create an output file per each dataSetName
-		for (String dataSetName : dataSetNames) {
-			File file = new File(inputFile.getParentFile().getAbsoluteFile() + File.separator
+		for (final String dataSetName : dataSetNames) {
+			final File file = new File(inputFile.getParentFile().getAbsoluteFile() + File.separator
 					+ FilenameUtils.getBaseName(inputFile.getAbsolutePath()) + "_" + dataSetName + "."
 					+ FilenameUtils.getExtension(inputFile.getAbsolutePath()));
 			listOfFiles.put(dataSetName, file);
-			FileWriter fstream = new FileWriter(file);
-			BufferedWriter out = new BufferedWriter(fstream);
+			final FileWriter fstream = new FileWriter(file);
+			final BufferedWriter out = new BufferedWriter(fstream);
 			mapOfFiles.put(dataSetName, out);
 		}
 
 		FileInputStream fis;
 		try {
 			fis = new FileInputStream(inputFile);
-			BufferedReader in = new BufferedReader(new InputStreamReader(fis));
+			final BufferedReader in = new BufferedReader(new InputStreamReader(fis));
 
 			String aLine;
 			String firstLine = null;
@@ -55,19 +56,19 @@ public class FileSplitter {
 				if (firstLine == null) {
 					firstLine = aLine;
 					// write the first line in all the writters
-					Collection<BufferedWriter> outs = mapOfFiles.values();
-					for (BufferedWriter out : outs) {
+					final Collection<BufferedWriter> outs = mapOfFiles.values();
+					for (final BufferedWriter out : outs) {
 						out.write(firstLine);
 						out.newLine();
 					}
 					continue;
 				}
 				final String[] split = aLine.split("\t");
-				for (String dataSetName : dataSetNames) {
+				for (final String dataSetName : dataSetNames) {
 					if (split[0].contains(dataSetName) || split[1].contains(dataSetName)) {
 						// get the file writter corresponding to the dataset
 						// detected as sufix
-						BufferedWriter out = mapOfFiles.get(dataSetName);
+						final BufferedWriter out = mapOfFiles.get(dataSetName);
 						out.write(aLine);
 						out.newLine();
 					}
@@ -76,10 +77,10 @@ public class FileSplitter {
 
 			in.close();
 			// close all file writters
-			for (BufferedWriter out : mapOfFiles.values()) {
+			for (final BufferedWriter out : mapOfFiles.values()) {
 				out.close();
 			}
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			e.printStackTrace();
 		}
 		return listOfFiles;

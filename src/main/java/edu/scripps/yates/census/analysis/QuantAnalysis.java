@@ -741,19 +741,116 @@ public class QuantAnalysis implements PropertyChangeListener {
 		writePTMToAllMap();
 	}
 
-	private void writePTMToAllMap() {
-		// TODO Auto-generated method stub
-
+	private void writePTMToAllMap() throws IOException {
+		final File file = new File(
+				getWorkingPath().getAbsolutePath() + File.separator + FileMappingResults.PTM_TO_ALL_5);
+		if (!overrideFilesIfExists && file.exists()) {
+			return;
+		}
+		final FileWriter writer = new FileWriter(file);
+		final Map<String, Set<String>> map = new THashMap<String, Set<String>>();
+		final String all = "all";
+		for (final QuantExperiment exp : quantExperiments) {
+			for (final QuantReplicate rep : exp.getReplicates()) {
+				final QuantParser parser = rep.getParser();
+				for (final String ptmKey : parser.getPTMToSpectraMap().keySet()) {
+					if (map.containsKey(all)) {
+						map.get(all).add(ptmKey);
+					} else {
+						final Set<String> set = new THashSet<String>();
+						set.add(ptmKey);
+						map.put(all, set);
+					}
+				}
+			}
+		}
+		final String header = "all" + "\t" + "ptm" + "\t" + "all --> ptm";
+		writeMapToFile(header, map, writer);
 	}
 
-	private void writePTMExperimentToPTMMap() {
-		// TODO Auto-generated method stub
+	private void writePTMExperimentToPTMMap() throws IOException {
+		if (quantExperiments.size() == 1)
+			throw new IllegalArgumentException("There is not more than 1 experiment");
 
+		final File file = new File(
+				getWorkingPath().getAbsolutePath() + File.separator + FileMappingResults.PTM_EXPERIMENT_TO_PTM_4);
+		if (!overrideFilesIfExists && file.exists()) {
+			return;
+		}
+		final FileWriter writer = new FileWriter(file);
+		final Map<String, Set<String>> map = new THashMap<String, Set<String>>();
+
+		for (final QuantExperiment exp : quantExperiments) {
+			String expName = "";
+			if (quantExperiments.size() > 1) {
+				expName = exp.getName();
+			}
+			for (final QuantReplicate rep : exp.getReplicates()) {
+				final QuantParser parser = rep.getParser();
+				for (final String ptmKey : parser.getPTMToSpectraMap().keySet()) {
+					if (map.containsKey(ptmKey)) {
+						map.get(ptmKey).add(ptmKey + "_" + expName);
+					} else {
+						final Set<String> set = new THashSet<String>();
+						set.add(ptmKey + "_" + expName);
+						map.put(ptmKey, set);
+					}
+				}
+			}
+		}
+		final String header = "ptm" + "\t" + "ptm+experiment" + "\t" + "ptm --> ptm-experiment";
+		writeMapToFile(header, map, writer);
 	}
 
-	private void writePTMExperimentReplicateToPTMExperimentMap() {
-		// TODO Auto-generated method stub
+	private void writePTMExperimentReplicateToPTMExperimentMap() throws IOException {
+		boolean someReplicates = false;
+		for (final QuantExperiment exp : quantExperiments) {
+			if (exp.getReplicates().size() > 1)
+				someReplicates = true;
+		}
+		if (!someReplicates)
+			throw new IllegalArgumentException("There is not any experiment with some replicates");
 
+		final File file = new File(getWorkingPath().getAbsolutePath() + File.separator
+				+ FileMappingResults.PTM_REPLICATE_EXPERIMENT_TO_PTM_EXPERIMENT_3);
+		if (!overrideFilesIfExists && file.exists()) {
+			return;
+		}
+		final FileWriter writer = new FileWriter(file);
+		final Map<String, Set<String>> map = new THashMap<String, Set<String>>();
+
+		for (final QuantExperiment exp : quantExperiments) {
+			String expName = "";
+			if (quantExperiments.size() > 1) {
+				expName = exp.getName();
+			}
+			for (final QuantReplicate rep : exp.getReplicates()) {
+				String repName = "";
+				if (exp.getReplicates().size() > 1) {
+					repName = rep.getName();
+				}
+				String expRepKey = "";
+				if (!"".equals(repName)) {
+					expRepKey = "_" + repName;
+				}
+				if (!"".equals(expName)) {
+					expRepKey += "_" + expName;
+				}
+				final QuantParser parser = rep.getParser();
+				for (final String ptmKey : parser.getPTMToSpectraMap().keySet()) {
+					if (map.containsKey(ptmKey + "_" + expName)) {
+						map.get(ptmKey + "_" + expName).add(ptmKey + expRepKey);
+					} else {
+						final Set<String> set = new THashSet<String>();
+						set.add(ptmKey + expRepKey);
+						map.put(ptmKey + "_" + expName, set);
+					}
+				}
+			}
+		}
+		final String header = "ptm+experiment" + "\t" + "ptm+replicate+experiment" + "\t"
+				+ "ptm-replicate-experiment --> ptm-experiment";
+		writeMapToFile(header, map, writer);
 	}
 
 	private void writeRelationshipsFilesForQuantSiteOutcome() throws IOException {
@@ -1602,7 +1699,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 	 */
 	private void writeSpectrumToPTMExperimentReplicateMap() throws IOException {
 		final String fileName = getWorkingPath().getAbsolutePath() + File.separator
-				+ FileMappingResults.SPECTRUM_TO_PEPTIDE_REPLICATE_EXPERIMENT_2;
+				+ FileMappingResults.SPECTRUM_TO_PTM_2;
 		final FileWriter writer = new FileWriter(fileName);
 		final Map<String, Set<String>> map = new THashMap<String, Set<String>>();
 

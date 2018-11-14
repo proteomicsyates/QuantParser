@@ -18,6 +18,16 @@ public class FileMappingResults {
 	public static final String DATA_FILE = "dataFile.tsv";
 	public static final String ION_TO_SPECTRUM_1 = "1-ion-spectrum.tsv";
 	public static final String SPECTRUM_TO_PEPTIDE_REPLICATE_EXPERIMENT_2 = "2-spectrum-peptide.tsv";
+	// for PTM outcome
+	public static final String SPECTRUM_TO_PTM_2 = "2-spectrum-ptm.tsv";
+	public static final String PTM_REPLICATE_EXPERIMENT_TO_PTM_EXPERIMENT_3 = "3-ptm_rep_exp-ptm_exp.tsv";
+	public static final String PTM_EXPERIMENT_TO_PTM_4 = "4-ptm_exp-ptm.tsv";
+	public static final String PTM_TO_ALL_5 = "5-ptm-all.tsv";
+	// for Sites outcome
+	public static final String SPECTRUM_TO_SITE_2 = "2-spectrum-site.tsv";
+	public static final String SITE_REPLICATE_EXPERIMENT_TO_SITE_EXPERIMENT_3 = "3-site_rep_exp-site_exp.tsv";
+	public static final String SITE_EXPERIMENT_TO_SITE_4 = "4-site_exp-site.tsv";
+	public static final String SITE_TO_ALL_5 = "5-site-all.tsv";
 	// for peptide outcome
 	public static final String PEPTIDE_REPLICATE_EXPERIMENT_TO_PEPTIDE_EXPERIMENT_3 = "3-peptide_rep_exp-peptide_exp.tsv";
 	public static final String PEPTIDE_EXPERIMENT_TO_PEPTIDE_4 = "4-peptide_exp-peptide.tsv";
@@ -75,6 +85,26 @@ public class FileMappingResults {
 			fileNamesByLevels.put(3, PEPTIDE_REPLICATE_EXPERIMENT_TO_PEPTIDE_EXPERIMENT_3);
 			fileNamesByLevels.put(4, PEPTIDE_EXPERIMENT_TO_PEPTIDE_4);
 			fileNamesByLevels.put(5, PEPTIDE_TO_ALL_5);
+			MAX_LEVEL = 5;
+			break;
+		case QUANTIFIED_PTM:
+			if (quantType == QuantificationType.ISOTOPOLOGUES) {
+				fileNamesByLevels.put(1, ION_TO_SPECTRUM_1);
+			}
+			fileNamesByLevels.put(2, SPECTRUM_TO_PTM_2);
+			fileNamesByLevels.put(3, PTM_REPLICATE_EXPERIMENT_TO_PTM_EXPERIMENT_3);
+			fileNamesByLevels.put(4, PTM_EXPERIMENT_TO_PTM_4);
+			fileNamesByLevels.put(5, PTM_TO_ALL_5);
+			MAX_LEVEL = 5;
+			break;
+		case QUANTIFIED_SITE:
+			if (quantType == QuantificationType.ISOTOPOLOGUES) {
+				fileNamesByLevels.put(1, ION_TO_SPECTRUM_1);
+			}
+			fileNamesByLevels.put(2, SPECTRUM_TO_SITE_2);
+			fileNamesByLevels.put(3, SITE_REPLICATE_EXPERIMENT_TO_SITE_EXPERIMENT_3);
+			fileNamesByLevels.put(4, SITE_EXPERIMENT_TO_SITE_4);
+			fileNamesByLevels.put(5, SITE_TO_ALL_5);
 			MAX_LEVEL = 5;
 			break;
 		case PROTEIN_CLUSTER:
@@ -167,9 +197,9 @@ public class FileMappingResults {
 	 */
 	public Pair<Integer, File> getFirstLevel() {
 		for (int i = 1; i < MAX_LEVEL; i++) {
-			File file = getFileLevel(i);
+			final File file = getFileLevel(i);
 			if (file != null && file.exists()) {
-				Pair<Integer, File> ret = new Pair<Integer, File>(i, file);
+				final Pair<Integer, File> ret = new Pair<Integer, File>(i, file);
 				return ret;
 			}
 		}
@@ -179,7 +209,7 @@ public class FileMappingResults {
 	public Pair<Integer, File> getFilePairLevel(int level) {
 		final File file = new File(workingFolder.getAbsolutePath() + File.separator + fileNamesByLevels.get(level));
 		if (file.exists()) {
-			Pair<Integer, File> ret = new Pair<Integer, File>(level, file);
+			final Pair<Integer, File> ret = new Pair<Integer, File>(level, file);
 			return ret;
 		}
 		return null;
@@ -213,7 +243,7 @@ public class FileMappingResults {
 		} else {
 			// remove all files
 			final File[] listFiles = folder.listFiles();
-			for (File file : listFiles) {
+			for (final File file : listFiles) {
 				file.delete();
 			}
 		}
@@ -230,9 +260,9 @@ public class FileMappingResults {
 	 */
 	public Pair<Integer, File> getNextAvailableLevel(Integer firstelement) throws NextLevelException {
 		for (int i = firstelement + 1; i <= MAX_LEVEL; i++) {
-			File file = getFileLevel(i);
+			final File file = getFileLevel(i);
 			if (file != null && file.exists()) {
-				Pair<Integer, File> ret = new Pair<Integer, File>(i, file);
+				final Pair<Integer, File> ret = new Pair<Integer, File>(i, file);
 				return ret;
 			}
 		}
