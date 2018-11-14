@@ -113,17 +113,6 @@ public enum QuantificationLabel {
 		return sb.toString();
 	}
 
-	public static boolean isTMT(QuantificationLabel label) {
-		if (label != null) {
-			if (label == QuantificationLabel.TMT_6PLEX_126 || label == QuantificationLabel.TMT_6PLEX_127
-					|| label == QuantificationLabel.TMT_6PLEX_128 || label == QuantificationLabel.TMT_6PLEX_129
-					|| label == QuantificationLabel.TMT_6PLEX_130 || label == QuantificationLabel.TMT_6PLEX_131) {
-				return true;
-			}
-		}
-		return false;
-	}
-
 	public static boolean isN15(QuantificationLabel label) {
 		if (label != null) {
 			if (label == QuantificationLabel.N14 || label == QuantificationLabel.N15) {
