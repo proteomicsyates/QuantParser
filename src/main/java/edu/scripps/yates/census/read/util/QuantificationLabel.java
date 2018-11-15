@@ -58,25 +58,8 @@ public enum QuantificationLabel {
 				return quantificationLabel;
 
 		}
-		if (labelName.contains("126")) {
-			return QuantificationLabel.TMT_6PLEX_126;
-		}
-		if (labelName.contains("127")) {
-			return QuantificationLabel.TMT_6PLEX_127;
-		}
-		if (labelName.contains("128")) {
-			return QuantificationLabel.TMT_6PLEX_128;
-		}
-		if (labelName.contains("129")) {
-			return QuantificationLabel.TMT_6PLEX_129;
-		}
-		if (labelName.contains("130")) {
-			return QuantificationLabel.TMT_6PLEX_130;
-		}
-		if (labelName.contains("131")) {
-			return QuantificationLabel.TMT_6PLEX_131;
-		}
-		log.warn("Quantification label '" + labelName + "' not recognized");
+
+		log.error("Quantification label '" + labelName + "' not recognized");
 		return null;
 	}
 
