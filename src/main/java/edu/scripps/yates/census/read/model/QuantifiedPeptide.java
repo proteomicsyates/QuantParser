@@ -58,6 +58,9 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 		sequenceKey = KeyUtils.getSequenceKey(quantPSM, true);
 		sequence = quantPSM.getSequence();
 		fullSequence = quantPSM.getFullSequence();
+		if (fullSequence.equals("0755)ALK(339")) {
+			log.info(this);
+		}
 		this.ignoreTaxonomies = ignoreTaxonomies;
 		addQuantifiedPSM(quantPSM, true);
 
@@ -384,6 +387,67 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 		}
 
 		return ptmsInProtein;
+	}
+
+	@Override
+	public Map<PositionInPeptide, List<PositionInProtein>> getProteinKeysByPeptideKeysForPTMs(
+			UniprotProteinLocalRetriever uplr, Map<String, String> proteinSequences) {
+
+		final Map<PositionInPeptide, List<PositionInProtein>> ret = new THashMap<PositionInPeptide, List<PositionInProtein>>();
+		final Set<String> aas = new HashSet<String>();
+		aas.clear();
+
+		for (final PTMInPeptide positionInPeptide : getPtms()) {
+
+			final List<PositionInProtein> positionsInProtein = new ArrayList<PositionInProtein>();
+
+			final Set<QuantifiedProteinInterface> proteins = getQuantifiedProteins();
+			for (final QuantifiedProteinInterface quantifiedProtein : proteins) {
+				final String acc = quantifiedProtein.getAccession();
+
+				String proteinSequence = null;
+				// it is important that we look for any protein
+				// CONTAINING the accession, so that we can search for
+				// the isoforms and proteoforms
+				if (proteinSequences != null && proteinSequences.containsKey(acc)) {
+					proteinSequence = proteinSequences.get(acc);
+				}
+				if (proteinSequence == null && uplr != null) {
+					final Map<String, Entry> annotatedProtein = uplr.getAnnotatedProtein(null, acc);
+					final Entry entry = annotatedProtein.get(acc);
+					if (entry != null) {
+						proteinSequence = UniprotEntryUtil.getProteinSequence(entry);
+					}
+				}
+				if (proteinSequence != null) {
+
+					final TIntArrayList positionsInProteinSequence = StringUtils.allPositionsOf(proteinSequence,
+							getSequence());
+					for (final int positionInProteinSequence : positionsInProteinSequence.toArray()) {
+						final int positionOfSiteInProtein = positionInProteinSequence + positionInPeptide.getPosition()
+								- 1;
+						final PositionInProtein positionInProtein = new PositionInProtein(positionOfSiteInProtein,
+								proteinSequence.charAt(positionOfSiteInProtein - 1), acc);
+						if (!positionsInProtein.contains(positionInProtein)) {
+							positionsInProtein.add(positionInProtein);
+						}
+					}
+				} else {
+					if (FastaParser.getACC(acc).getSecondElement() == "UNKNOWN") {
+						log.warn("Protein " + acc + " is ignored because we don't have its protein sequence");
+						continue;
+					}
+					throw new IllegalArgumentException("Protein sequence from protein " + acc
+							+ " not found neither in the fasta file nor in Uniprot");
+				}
+
+			}
+			if (!positionsInProtein.isEmpty()) {
+				ret.put(positionInPeptide, positionsInProtein);
+			}
+
+		}
+		return ret;
 	}
 
 	@Override

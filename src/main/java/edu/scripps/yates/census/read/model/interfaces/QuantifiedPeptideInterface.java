@@ -45,6 +45,23 @@ public interface QuantifiedPeptideInterface extends PeptideSequenceInterface, Ha
 	public Map<PositionInPeptide, List<PositionInProtein>> getProteinKeysByPeptideKeysForQuantifiedAAs(
 			char[] quantifiedAAs, UniprotProteinLocalRetriever uplr, Map<String, String> proteinSequences);
 
+	/**
+	 * Get a list of {@link PositionInProtein} for each PTM site in the peptide
+	 * sequence (represented as a {@link PositionInPeptide}).<br>
+	 * Examples:<br>
+	 * "PEPTIDE#4 {PROTEIN1#234, PROTEIN2#123}
+	 * 
+	 * @param quantifiedAAs
+	 * @param uplr
+	 *            used in order to get the protein sequence
+	 * @param proteinSequences
+	 *            map of protein sequences
+	 * @param dBIndex
+	 * @return
+	 */
+	public Map<PositionInPeptide, List<PositionInProtein>> getProteinKeysByPeptideKeysForPTMs(
+			UniprotProteinLocalRetriever uplr, Map<String, String> proteinSequences);
+
 	public Map<Character, List<PositionInProtein>> getPositionInProteinForSites(char[] quantifiedAAs,
 			UniprotProteinLocalRetriever uplr);
 

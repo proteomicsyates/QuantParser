@@ -379,7 +379,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 					throw new PeptideNotFoundInDBIndexException("The peptide " + cleanSeq
 							+ " is not found in Fasta DB.\nReview the default indexing parameters such as the number of allowed misscleavages.");
 				}
-				log.warn("The peptide " + cleanSeq + " is not found in Fasta DB.");
+				log.warn("The peptide " + cleanSeq + " is not found in Fasta DB with current digestion parameters.");
 				// continue;
 			}
 			// create a new Quantified Protein for each

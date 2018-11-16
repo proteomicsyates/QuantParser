@@ -615,7 +615,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 				counter.increment();
 				final String percentage = counter.printIfNecessary();
 				if (!"".equals(percentage)) {
-					log.info(percentage);
+					log.debug(percentage);
 				}
 				final QuantifiedProteinInterface quantifiedProtein = StaticQuantMaps.proteinMap.getItem(accession);
 				final Entry entry = annotatedProteins.get(accession);
