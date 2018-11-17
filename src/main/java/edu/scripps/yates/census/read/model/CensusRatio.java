@@ -37,6 +37,7 @@ public class CensusRatio implements QuantRatio {
 	private final Set<PositionInPeptide> quantifiedSitePositionInPeptide = new THashSet<PositionInPeptide>();
 	private Character quantifiedAA;
 	private int numMeasurements;
+	private double standardDeviationOfLog2Ratios = Double.NaN;
 	private final static HashFunction goodFastHash = Hashing.goodFastHash(256);
 
 	public static CensusRatio getNaNRatio(QuantCondition quantConditionNumerator,
@@ -377,8 +378,18 @@ public class CensusRatio implements QuantRatio {
 		return numMeasurements;
 	}
 
+	@Override
 	public void setNumMeasurements(int numMeasurements) {
 		this.numMeasurements = numMeasurements;
+	}
+
+	public void setStandardDeviationOfLog2Ratio(double stdev) {
+		standardDeviationOfLog2Ratios = stdev;
+	}
+
+	@Override
+	public double getStandardDeviationOfLog2Ratios() {
+		return standardDeviationOfLog2Ratios;
 	}
 
 }

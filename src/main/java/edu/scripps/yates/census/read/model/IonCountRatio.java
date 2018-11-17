@@ -21,8 +21,6 @@ import gnu.trove.set.hash.THashSet;
 public class IonCountRatio implements QuantRatio {
 	public static final IonCountRatio NAN_RATIO = new IonCountRatio(null);
 	private final Map<QuantCondition, Double> ionCountMap = new THashMap<QuantCondition, Double>();
-	private Score score;
-	private CombinationType combinationType;
 	private final AggregationLevel aggregationLevel;
 	private String description = "Rc";
 	private Condition condition2;
@@ -117,20 +115,14 @@ public class IonCountRatio implements QuantRatio {
 
 	@Override
 	public Score getAssociatedConfidenceScore() {
-		return score;
-	}
-
-	public void setAssociatedConfidenceScore(Score score) {
-		this.score = score;
+		throw new IllegalArgumentException(
+				"This is not supported. No confidence score is associated with ion count ratio");
 	}
 
 	@Override
 	public CombinationType getCombinationType() {
-		return combinationType;
-	}
-
-	public void setCombinationType(CombinationType combinationType) {
-		this.combinationType = combinationType;
+		throw new IllegalArgumentException(
+				"This is not supported. No conbination type is associated with ion count ratio");
 	}
 
 	@Override
@@ -230,7 +222,14 @@ public class IonCountRatio implements QuantRatio {
 		return numMeasurements;
 	}
 
+	@Override
 	public void setNumMeasurements(int numMeasurements) {
 		this.numMeasurements = numMeasurements;
+	}
+
+	@Override
+	public double getStandardDeviationOfLog2Ratios() {
+		throw new IllegalArgumentException(
+				"This is not supported. No standard deviation is associated with ion count ratio");
 	}
 }

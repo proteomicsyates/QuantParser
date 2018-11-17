@@ -178,6 +178,7 @@ public class QuantUtils {
 		final RatioScore ratioScore = new RatioScore(String.valueOf(stdev), "STDEV",
 				"Standard deviation of log2 ratios", "Standard deviation of multiple log2 ratios");
 		ret.setRatioScore(ratioScore);
+		ret.setStandardDeviationOfLog2Ratio(stdev);
 		return ret;
 	}
 
