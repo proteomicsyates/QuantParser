@@ -1,10 +1,9 @@
 package edu.scripps.yates.census.read.util;
 
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.log4j.Logger;
-
-import gnu.trove.set.hash.THashSet;
 
 public enum QuantificationLabel {
 
@@ -113,25 +112,25 @@ public enum QuantificationLabel {
 		return getTMT10PlexLabels().contains(label);
 	}
 
-	public static Set<QuantificationLabel> getTMT6PlexLabels() {
+	public static List<QuantificationLabel> getTMT6PlexLabels() {
 		final QuantificationLabel[] array = { QuantificationLabel.TMT_6PLEX_126, QuantificationLabel.TMT_6PLEX_127,
 				QuantificationLabel.TMT_6PLEX_128, QuantificationLabel.TMT_6PLEX_129, QuantificationLabel.TMT_6PLEX_130,
 				QuantificationLabel.TMT_6PLEX_131 };
-		final Set<QuantificationLabel> ret = new THashSet<QuantificationLabel>();
+		final List<QuantificationLabel> ret = new ArrayList<QuantificationLabel>();
 		for (final QuantificationLabel quantificationLabel : array) {
 			ret.add(quantificationLabel);
 		}
 		return ret;
 	}
 
-	public static Set<QuantificationLabel> getTMT10PlexLabels() {
+	public static List<QuantificationLabel> getTMT10PlexLabels() {
 		final QuantificationLabel[] array = { QuantificationLabel.TMT_10PLEX_126_127726,
 				QuantificationLabel.TMT_10PLEX_127_124761, QuantificationLabel.TMT_10PLEX_127_131081,
 				QuantificationLabel.TMT_10PLEX_128_128116, QuantificationLabel.TMT_10PLEX_128_134436,
 				QuantificationLabel.TMT_10PLEX_129_131471, QuantificationLabel.TMT_10PLEX_129_13779,
 				QuantificationLabel.TMT_10PLEX_130_134825, QuantificationLabel.TMT_10PLEX_130_141145,
 				QuantificationLabel.TMT_10PLEX_131_13818 };
-		final Set<QuantificationLabel> ret = new THashSet<QuantificationLabel>();
+		final List<QuantificationLabel> ret = new ArrayList<QuantificationLabel>();
 		for (final QuantificationLabel quantificationLabel : array) {
 			ret.add(quantificationLabel);
 		}
