@@ -20,11 +20,11 @@ import edu.scripps.yates.census.read.model.IsobaricQuantifiedPeptide;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
-import edu.scripps.yates.dbindex.DBIndexInterface;
+import edu.scripps.yates.dbindex.DBIndexImpl;
 import edu.scripps.yates.dbindex.io.DBIndexSearchParamsImpl;
-import edu.scripps.yates.dbindex.model.DBIndexSearchParams;
 import edu.scripps.yates.utilities.alignment.nwalign.NWAlign;
 import edu.scripps.yates.utilities.alignment.nwalign.NWResult;
+import edu.scripps.yates.utilities.fasta.dbindex.DBIndexSearchParams;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
 
@@ -110,13 +110,13 @@ public class ProteinClusterUtils {
 
 		File fastaFile = new File(fastaName);
 
-		DBIndexSearchParams defaultDBIndexParams = DBIndexInterface.getDefaultDBIndexParams(fastaFile);
+		DBIndexSearchParams defaultDBIndexParams = DBIndexImpl.getDefaultDBIndexParams(fastaFile);
 		char[] enzymeArray = { 'K' };
 		((DBIndexSearchParamsImpl) defaultDBIndexParams).setEnzymeArr(enzymeArray, 2, false);
 		((DBIndexSearchParamsImpl) defaultDBIndexParams).setEnzymeOffset(0);
 		((DBIndexSearchParamsImpl) defaultDBIndexParams).setEnzymeNocutResidues("");
 		((DBIndexSearchParamsImpl) defaultDBIndexParams).setH2OPlusProtonAdded(true);
-		DBIndexInterface dbIndex = new DBIndexInterface(defaultDBIndexParams);
+		DBIndexImpl dbIndex = new DBIndexImpl(defaultDBIndexParams);
 		parser.setDbIndex(dbIndex);
 		// gets rid of decoys
 		parser.setDecoyPattern("Reverse");
@@ -138,7 +138,7 @@ public class ProteinClusterUtils {
 		parser.addIonExclusion(IonSerieType.B, 1);
 		parser.addIonExclusion(IonSerieType.Y, 1);
 
-		DBIndexInterface dbIndex = new DBIndexInterface(dbIndexParams);
+		DBIndexImpl dbIndex = new DBIndexImpl(dbIndexParams);
 		parser.setDbIndex(dbIndex);
 		// gets rid of decoys
 		parser.setDecoyPattern("Reverse");
@@ -164,13 +164,13 @@ public class ProteinClusterUtils {
 
 		File fastaFile = new File(fastaName);
 
-		DBIndexSearchParams defaultDBIndexParams = DBIndexInterface.getDefaultDBIndexParams(fastaFile);
+		DBIndexSearchParams defaultDBIndexParams = DBIndexImpl.getDefaultDBIndexParams(fastaFile);
 		char[] enzymeArray = { 'K' };
 		((DBIndexSearchParamsImpl) defaultDBIndexParams).setEnzymeArr(enzymeArray, 2, false);
 		((DBIndexSearchParamsImpl) defaultDBIndexParams).setEnzymeOffset(0);
 		((DBIndexSearchParamsImpl) defaultDBIndexParams).setEnzymeNocutResidues("");
 		((DBIndexSearchParamsImpl) defaultDBIndexParams).setH2OPlusProtonAdded(true);
-		DBIndexInterface dbIndex = new DBIndexInterface(defaultDBIndexParams);
+		DBIndexImpl dbIndex = new DBIndexImpl(defaultDBIndexParams);
 		parser.setDbIndex(dbIndex);
 		// gets rid of decoys
 		parser.setDecoyPattern("Reverse");

@@ -16,8 +16,6 @@ import java.util.regex.PatternSyntaxException;
 
 import org.apache.log4j.Logger;
 
-import edu.scripps.yates.annotations.uniprot.UniprotProteinLocalRetriever;
-import edu.scripps.yates.annotations.uniprot.xml.Entry;
 import edu.scripps.yates.census.analysis.QuantCondition;
 import edu.scripps.yates.census.analysis.util.KeyUtils;
 import edu.scripps.yates.census.read.model.RatioDescriptor;
@@ -29,8 +27,10 @@ import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface
 import edu.scripps.yates.census.read.util.ProteinSequences;
 import edu.scripps.yates.census.read.util.QuantUtils;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
-import edu.scripps.yates.dbindex.DBIndexInterface;
+import edu.scripps.yates.utilities.annotations.UniprotProteinLocalRetrieverInterface;
+import edu.scripps.yates.utilities.annotations.uniprot.xml.Entry;
 import edu.scripps.yates.utilities.fasta.FastaParser;
+import edu.scripps.yates.utilities.fasta.dbindex.DBIndexInterface;
 import edu.scripps.yates.utilities.ipi.IPI2UniprotACCMap;
 import edu.scripps.yates.utilities.model.enums.AccessionType;
 import edu.scripps.yates.utilities.model.factories.AccessionEx;
@@ -82,7 +82,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 	// denominatorLabelByFile = new THashMap<RemoteSSHFileReference,
 	// QuantificationLabel>();
 	protected final Map<RemoteSSHFileReference, List<RatioDescriptor>> ratioDescriptorsByFile = new THashMap<RemoteSSHFileReference, List<RatioDescriptor>>();
-	protected UniprotProteinLocalRetriever uplr;
+	protected UniprotProteinLocalRetrieverInterface uplr;
 	protected String uniprotVersion;
 	protected boolean clearStaticMapsBeforeReading = true;
 	private boolean retrieveFastaIsoforms;
@@ -387,12 +387,12 @@ public abstract class AbstractQuantParser implements QuantParser {
 	}
 
 	/**
-	 * @param dbIndex
+	 * @param dbIndexInterface
 	 *            the dbIndex to set
 	 */
 	@Override
-	public void setDbIndex(DBIndexInterface dbIndex) {
-		this.dbIndex = dbIndex;
+	public void setDbIndex(DBIndexInterface dbIndexInterface) {
+		dbIndex = dbIndexInterface;
 	}
 
 	@Override
@@ -575,7 +575,8 @@ public abstract class AbstractQuantParser implements QuantParser {
 		}
 	}
 
-	public void enableProteinMergingBySecondaryAccessions(UniprotProteinLocalRetriever uplr, String uniprotVersion) {
+	public void enableProteinMergingBySecondaryAccessions(UniprotProteinLocalRetrieverInterface uplr,
+			String uniprotVersion) {
 		this.uplr = uplr;
 		this.uniprotVersion = uniprotVersion;
 	}
@@ -738,11 +739,11 @@ public abstract class AbstractQuantParser implements QuantParser {
 		this.ignoreACCFormat = ignoreACCFormat;
 	}
 
-	public UniprotProteinLocalRetriever getUplr() {
+	public UniprotProteinLocalRetrieverInterface getUplr() {
 		return uplr;
 	}
 
-	public void setUplr(UniprotProteinLocalRetriever uplr) {
+	public void setUplr(UniprotProteinLocalRetrieverInterface uplr) {
 		this.uplr = uplr;
 	}
 

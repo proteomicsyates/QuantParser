@@ -24,10 +24,10 @@ import edu.scripps.yates.census.read.model.QuantifiedPeptide;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
-import edu.scripps.yates.dbindex.DBIndexInterface;
-import edu.scripps.yates.dbindex.DBIndexStoreException;
-import edu.scripps.yates.dbindex.IndexedProtein;
+import edu.scripps.yates.dbindex.DBIndexImpl;
 import edu.scripps.yates.utilities.fasta.FastaParser;
+import edu.scripps.yates.utilities.fasta.dbindex.DBIndexStoreException;
+import edu.scripps.yates.utilities.fasta.dbindex.IndexedProtein;
 import edu.scripps.yates.utilities.grouping.GroupableProtein;
 import edu.scripps.yates.utilities.grouping.PAnalyzer;
 import edu.scripps.yates.utilities.grouping.ProteinGroup;
@@ -57,7 +57,7 @@ public class RawQuantValuesExporter {
 	}
 
 	public void printRawQuantTableValuesAtPSMLevel(BufferedWriter bw, QuantCondition conditionNumerator,
-			QuantCondition conditionDenominator, CensusChroParser parser, DBIndexInterface dbIndex)
+			QuantCondition conditionDenominator, CensusChroParser parser, DBIndexImpl dbIndex)
 			throws IOException, DBIndexStoreException {
 
 		printPSMHeader(bw);
@@ -145,7 +145,7 @@ public class RawQuantValuesExporter {
 	}
 
 	public void printRawQuantTableValuesAtProteinGroupLevel(BufferedWriter bw, QuantCondition conditionNumerator,
-			QuantCondition conditionDenominator, CensusChroParser parser, DBIndexInterface dbIndex)
+			QuantCondition conditionDenominator, CensusChroParser parser, DBIndexImpl dbIndex)
 			throws IOException, DBIndexStoreException {
 
 		printProteinGroupHeader(bw);
@@ -167,7 +167,7 @@ public class RawQuantValuesExporter {
 	}
 
 	public void printRawQuantTableValuesAtPeptideLevel(BufferedWriter bw, QuantCondition conditionNumerator,
-			QuantCondition conditionDenominator, CensusChroParser parser, DBIndexInterface dbIndex)
+			QuantCondition conditionDenominator, CensusChroParser parser, DBIndexImpl dbIndex)
 			throws IOException, DBIndexStoreException {
 
 		printPeptideHeader(bw);
@@ -189,7 +189,7 @@ public class RawQuantValuesExporter {
 
 	private void printStaticQuantInfo(QuantCondition conditionNumerator, QuantCondition conditionDenominator,
 			IsobaricQuantifiedPSM quantifiedPSM, Map<String, QuantValue> finalPeptideQuantValues,
-			DBIndexInterface dbIndex, BufferedWriter bw) throws IOException, DBIndexStoreException {
+			DBIndexImpl dbIndex, BufferedWriter bw) throws IOException, DBIndexStoreException {
 		// experiment name
 		boolean dmdv = false;
 		boolean dvdm = false;
@@ -357,7 +357,7 @@ public class RawQuantValuesExporter {
 
 	private void printStaticQuantInfo(QuantCondition conditionNumerator, QuantCondition conditionDenominator,
 			IsobaricQuantifiedPeptide quantifiedPeptide, Map<String, QuantValue> finalPeptideQuantValues,
-			DBIndexInterface dbIndex, BufferedWriter bw) throws IOException, DBIndexStoreException {
+			DBIndexImpl dbIndex, BufferedWriter bw) throws IOException, DBIndexStoreException {
 		// experiment name
 		boolean dmdv = false;
 		boolean dvdm = false;
@@ -535,7 +535,7 @@ public class RawQuantValuesExporter {
 
 	private void printStaticQuantInfo(QuantCondition conditionNumerator, QuantCondition conditionDenominator,
 			IsobaricQuantifiedProteinGroup quantifiedProteinGroup, Map<String, QuantValue> finalPeptideQuantValues,
-			DBIndexInterface dbIndex, BufferedWriter bw) throws IOException, DBIndexStoreException {
+			DBIndexImpl dbIndex, BufferedWriter bw) throws IOException, DBIndexStoreException {
 		// experiment name
 		boolean dmdv = false;
 		boolean dvdm = false;

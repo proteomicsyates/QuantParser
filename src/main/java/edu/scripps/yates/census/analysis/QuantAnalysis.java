@@ -39,8 +39,8 @@ import edu.scripps.yates.census.read.util.IonExclusion;
 import edu.scripps.yates.census.read.util.ProteinSequences;
 import edu.scripps.yates.census.read.util.QuantUtils;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
-import edu.scripps.yates.dbindex.DBIndexInterface;
-import edu.scripps.yates.dbindex.model.DBIndexSearchParams;
+import edu.scripps.yates.dbindex.DBIndexImpl;
+import edu.scripps.yates.utilities.fasta.dbindex.DBIndexSearchParams;
 import edu.scripps.yates.utilities.grouping.GroupablePeptide;
 import edu.scripps.yates.utilities.grouping.GroupableProtein;
 import edu.scripps.yates.utilities.grouping.PAnalyzer;
@@ -60,7 +60,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 	private FileMappingResults fileMappingResults;
 	private QuantParameters quantParameters = new QuantParameters();
 	private final Map<String, List<String>> replicateAndExperimentNames = new THashMap<String, List<String>>();
-	private DBIndexInterface dbIndex;
+	private DBIndexImpl dbIndex;
 	private final boolean ignorePTMs;
 	private static final String QUANT_FOLDER = "quant";
 	private SanXotAnalysisResult result;
@@ -1884,12 +1884,12 @@ public class QuantAnalysis implements PropertyChangeListener {
 
 	public void setFastaFile(File fastaFile) {
 		log.info("Constructing index from fasta file: " + fastaFile + " using default parameters");
-		setFastaFile(DBIndexInterface.getDefaultDBIndexParams(fastaFile));
+		setFastaFile(DBIndexImpl.getDefaultDBIndexParams(fastaFile));
 	}
 
 	public void setFastaFile(DBIndexSearchParams dbIndexSearchParams) {
 		log.info("Constructing index using provided parameters");
-		dbIndex = DBIndexInterface.getByParam(dbIndexSearchParams);
+		dbIndex = DBIndexImpl.getByParam(dbIndexSearchParams);
 	}
 
 	/**

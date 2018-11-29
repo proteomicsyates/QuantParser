@@ -10,7 +10,7 @@ import java.util.regex.PatternSyntaxException;
 
 import edu.scripps.yates.census.analysis.QuantCondition;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
-import edu.scripps.yates.dbindex.DBIndexInterface;
+import edu.scripps.yates.utilities.fasta.dbindex.DBIndexInterface;
 import edu.scripps.yates.utilities.remote.RemoteSSHFileReference;
 
 public interface QuantParser {
