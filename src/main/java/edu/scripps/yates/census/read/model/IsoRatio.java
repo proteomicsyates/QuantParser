@@ -7,7 +7,7 @@ import edu.scripps.yates.census.read.CensusChroParser;
 import edu.scripps.yates.census.read.model.IonSerie.IonSerieType;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
 import edu.scripps.yates.utilities.maths.Maths;
-import edu.scripps.yates.utilities.model.enums.AggregationLevel;
+import edu.scripps.yates.utilities.proteomicsmodel.enums.AggregationLevel;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.map.hash.THashMap;
 

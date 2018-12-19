@@ -7,81 +7,64 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
-
 import edu.scripps.yates.census.analysis.QuantCondition;
-import edu.scripps.yates.census.analysis.util.KeyUtils;
 import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
+import edu.scripps.yates.census.read.util.QuantKeyUtils;
 import edu.scripps.yates.census.read.util.QuantUtils;
-import edu.scripps.yates.census.read.util.QuantifiedPSMCollectionObserver;
 import edu.scripps.yates.utilities.fasta.FastaParser;
 import edu.scripps.yates.utilities.fasta.dbindex.IndexedProtein;
 import edu.scripps.yates.utilities.grouping.GroupablePeptide;
-import edu.scripps.yates.utilities.grouping.ProteinEvidence;
-import edu.scripps.yates.utilities.grouping.ProteinGroup;
-import edu.scripps.yates.utilities.model.enums.AggregationLevel;
-import edu.scripps.yates.utilities.proteomicsmodel.Amount;
-import edu.scripps.yates.utilities.trove.ObservableTHashSet;
-import edu.scripps.yates.utilities.util.Pair;
+import edu.scripps.yates.utilities.maths.Maths;
+import edu.scripps.yates.utilities.proteomicsmodel.AbstractProtein;
+import edu.scripps.yates.utilities.proteomicsmodel.Accession;
+import edu.scripps.yates.utilities.proteomicsmodel.PSM;
+import edu.scripps.yates.utilities.proteomicsmodel.Ratio;
+import edu.scripps.yates.utilities.proteomicsmodel.enums.AggregationLevel;
+import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.set.hash.THashSet;
 
-public class QuantifiedProteinFromDBIndexEntry extends AbstractContainsQuantifiedPSMs
-		implements QuantifiedProteinInterface {
-	private static final Logger log = Logger.getLogger(QuantifiedProteinFromDBIndexEntry.class);
-
-	private final ObservableTHashSet<QuantifiedPSMInterface> quantifiedPSMs = new ObservableTHashSet<QuantifiedPSMInterface>();
+public class QuantifiedProteinFromDBIndexEntry extends AbstractProtein implements QuantifiedProteinInterface {
 	private boolean distinguishModifiedPeptides;
-	private IndexedProtein indexedProtein;
-	private ProteinEvidence evidence;
-	private String primaryAccession;
-	private ProteinGroup proteinGroup;
-	private String accessionType;
-	private final Set<Amount> amounts = new THashSet<Amount>();
-
-	private String description;
-
-	private String taxonomy;
-
+	private final IndexedProtein indexedProtein;
 	private boolean discarded;
 
 	private String key;
-
-	private final boolean ignoreTaxonomies;
 
 	private final boolean ignoreACCFormat;
 
 	private THashSet<QuantifiedPeptideInterface> quantifiedPeptides = new THashSet<QuantifiedPeptideInterface>();
 
+	private Set<QuantifiedPSMInterface> quantifiedPSMs;
+	private Set<QuantRatio> quantRatios;
+
 	public QuantifiedProteinFromDBIndexEntry(IndexedProtein indexedProtein, boolean ignoreTaxonomies,
 			boolean ignoreACCFormat) throws IOException {
 		this.indexedProtein = indexedProtein;
-		final Pair<String, String> accPair = FastaParser.getACC(indexedProtein.getFastaDefLine());
-		primaryAccession = accPair.getFirstelement();
-		accessionType = accPair.getSecondElement();
-		this.ignoreTaxonomies = ignoreTaxonomies;
+		final Accession primaryAcc = FastaParser.getACC(indexedProtein.getFastaDefLine());
+		setPrimaryAccession(primaryAcc);
+		setIgnoreTaxonomy(ignoreTaxonomies);
 		this.ignoreACCFormat = ignoreACCFormat;
-		quantifiedPSMs.addCollectionObserver(new QuantifiedPSMCollectionObserver(quantifiedPeptides));
 	}
 
 	@Override
 	public String getKey() {
 		if (key == null) {
-			key = KeyUtils.getProteinKey(indexedProtein, ignoreACCFormat);
+			key = QuantKeyUtils.getInstance().getProteinKey(indexedProtein, ignoreACCFormat);
 		}
 		return key;
 	}
 
 	@Override
 	public String getDescription() {
-		if (description == null) {
+		if (getDescription() == null) {
 			if (indexedProtein != null) {
-				description = FastaParser.getDescription(indexedProtein.getFastaDefLine());
+				setDescription(FastaParser.getDescription(indexedProtein.getFastaDefLine()));
 			}
 		}
-		return description;
+		return getDescription();
 	}
 
 	/**
@@ -89,6 +72,15 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractContainsQuantifie
 	 */
 	@Override
 	public Set<QuantifiedPSMInterface> getQuantifiedPSMs() {
+		if (quantifiedPSMs == null) {
+			quantifiedPSMs = new THashSet<QuantifiedPSMInterface>();
+			for (final PSM psm : getPSMs()) {
+				if (psm instanceof QuantifiedPSMInterface) {
+					final QuantifiedPSMInterface quantPSM = (QuantifiedPSMInterface) psm;
+					quantifiedPSMs.add(quantPSM);
+				}
+			}
+		}
 		return quantifiedPSMs;
 	}
 
@@ -109,42 +101,13 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractContainsQuantifie
 	}
 
 	@Override
-	public boolean addPSM(QuantifiedPSMInterface quantifiedPSM, boolean recursive) {
-		if (quantifiedPSMs.contains(quantifiedPSM)) {
-			return false;
-		}
-		quantifiedPSMs.add(quantifiedPSM);
-		if (recursive) {
-			quantifiedPSM.addQuantifiedProtein(this, false);
-		}
-		return true;
+	public boolean addQuantifiedPSM(QuantifiedPSMInterface quantifiedPSM, boolean recursive) {
+		return addPSM(quantifiedPSM, recursive);
 	}
 
 	@Override
-	public int getDBId() {
+	public int getUniqueID() {
 		return hashCode();
-	}
-
-	@Override
-	public String getAccession() {
-		return primaryAccession;
-	}
-
-	@Override
-	public String getAccessionType() {
-		return accessionType;
-	}
-
-	@Override
-	public void setEvidence(ProteinEvidence evidence) {
-		this.evidence = evidence;
-
-	}
-
-	@Override
-	public void setProteinGroup(ProteinGroup proteinGroup) {
-		this.proteinGroup = proteinGroup;
-
 	}
 
 	@Override
@@ -155,33 +118,19 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractContainsQuantifie
 	}
 
 	@Override
-	public ProteinGroup getProteinGroup() {
-		return proteinGroup;
-	}
-
-	@Override
 	public Set<String> getTaxonomies() {
-		if (taxonomy == null && !ignoreTaxonomies) {
+		if ((getTaxonomies() == null || getTaxonomies().isEmpty()) && !isIgnoreTaxonomy()) {
 			String fastaHeader = null;
 
-			if (indexedProtein != null)
+			if (indexedProtein != null) {
 				fastaHeader = indexedProtein.getFastaDefLine();
+			}
 			final String accession = getAccession();
-
 			final String organismNameFromFastaHeader = FastaParser.getOrganismNameFromFastaHeader(fastaHeader,
 					accession);
-			taxonomy = organismNameFromFastaHeader;
+			addTaxonomy(organismNameFromFastaHeader);
 		}
-		final Set<String> set = new THashSet<String>();
-		if (taxonomy != null) {
-			set.add(taxonomy);
-		}
-		return set;
-	}
-
-	@Override
-	public ProteinEvidence getEvidence() {
-		return evidence;
+		return getTaxonomies();
 	}
 
 	/**
@@ -209,7 +158,7 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractContainsQuantifie
 	}
 
 	@Override
-	public boolean addPeptide(QuantifiedPeptideInterface peptide, boolean recursive) {
+	public boolean addQuantifiedPeptide(QuantifiedPeptideInterface peptide, boolean recursive) {
 
 		final Set<QuantifiedPSMInterface> quantifiedPSMs2 = peptide.getQuantifiedPSMs();
 		if (quantifiedPSMs.containsAll(quantifiedPSMs2)) {
@@ -222,53 +171,11 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractContainsQuantifie
 		return true;
 	}
 
-	/**
-	 * @return the primaryAccession
-	 */
-	public String getPrimaryAccession() {
-		return primaryAccession;
-	}
-
-	/**
-	 * @param primaryAccession
-	 *            the primaryAccession to set
-	 */
+	@Override
 	public void setPrimaryAccession(String primaryAccession) {
-		this.primaryAccession = primaryAccession;
-	}
-
-	/**
-	 * @param accessionType
-	 *            the accessionType to set
-	 */
-	public void setAccessionType(String accessionType) {
-		this.accessionType = accessionType;
-	}
-
-	/**
-	 * @param indexedProtein
-	 *            the indexedProtein to set
-	 */
-	public void setIndexedProtein(IndexedProtein indexedProtein) {
-		this.indexedProtein = indexedProtein;
-	}
-
-	@Override
-	public Integer getLength() {
-		return null;
-	}
-
-	@Override
-	public void setAccession(String primaryAccession) {
-		this.primaryAccession = primaryAccession;
+		super.setPrimaryAccession(primaryAccession);
 		// because the key depends on primaryAccession
 		key = primaryAccession;
-	}
-
-	@Override
-	public void setDescription(String description) {
-		this.description = description;
-
 	}
 
 	@Override
@@ -295,30 +202,31 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractContainsQuantifie
 	}
 
 	@Override
-	public void setTaxonomy(String taxonomy) {
-		if (taxonomy != null)
-			this.taxonomy = taxonomy;
+	public boolean addQuantRatio(QuantRatio ratio) {
+		return getQuantRatios().add(ratio);
 	}
 
 	@Override
-	public Set<Amount> getAmounts() {
-		return amounts;
-	}
-
-	@Override
-	public void addAmount(Amount amount) {
-		amounts.add(amount);
-	}
-
-	@Override
-	public void addRatio(QuantRatio ratio) {
-		ratios.add(ratio);
-
+	public boolean addRatio(Ratio ratio) {
+		// dont add it if it is already one ratio with the same value and
+		// description
+		for (final Ratio ratio2 : getRatios()) {
+			if (ratio2.getDescription().equals(ratio.getDescription())) {
+				if (Double.compare(ratio2.getValue(), ratio.getValue()) == 0) {
+					return false;
+				}
+			}
+		}
+		final boolean ret = addRatio(ratio);
+		if (ret) {
+			quantRatios = null;
+		}
+		return ret;
 	}
 
 	@Override
 	public Set<QuantRatio> getNonInfinityRatios() {
-		return QuantUtils.getNonInfinityRatios(getRatios());
+		return QuantUtils.getNonInfinityRatios(getQuantRatios());
 	}
 
 	@Override
@@ -333,12 +241,11 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractContainsQuantifie
 	@Override
 	public QuantRatio getConsensusRatio(QuantCondition quantConditionNumerator,
 			QuantCondition quantConditionDenominator) {
-		return QuantUtils.getAverageRatio(QuantUtils.getNonInfinityRatios(getRatios()), AggregationLevel.PROTEIN);
+		return QuantUtils.getAverageRatio(QuantUtils.getNonInfinityRatios(getQuantRatios()), AggregationLevel.PROTEIN);
 	}
 
 	@Override
 	public boolean isDiscarded() {
-
 		return discarded;
 	}
 
@@ -368,8 +275,40 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractContainsQuantifie
 		return true;
 	}
 
-	// @Override
-	// public int hashCode() {
-	// return Objects.hash(getKey());
-	// }
+	@Override
+	public Set<QuantRatio> getQuantRatios() {
+		if (quantRatios == null) {
+			quantRatios = new THashSet<QuantRatio>();
+
+			final Set<Ratio> ratios = getRatios();
+			for (final Ratio ratio : ratios) {
+				if (ratio instanceof QuantRatio) {
+					quantRatios.add((QuantRatio) ratio);
+				}
+			}
+		}
+		return quantRatios;
+	}
+
+	@Override
+	public double getMeanRatios(QuantCondition quantConditionNumerator, QuantCondition quantConditionDenominator) {
+		final TDoubleArrayList ratioValues = new TDoubleArrayList();
+		for (final QuantifiedPSMInterface psm : getQuantifiedPSMs()) {
+			final QuantRatio ratio = QuantUtils.getRepresentativeRatio(psm);
+			ratioValues.add(ratio.getLog2Ratio(quantConditionNumerator, quantConditionDenominator));
+		}
+		return Maths.mean(ratioValues);
+	}
+
+	@Override
+	public double getSTDRatios(QuantCondition quantConditionNumerator, QuantCondition quantConditionDenominator) {
+		final TDoubleArrayList ratioValues = new TDoubleArrayList();
+
+		for (final QuantifiedPSMInterface psm : getQuantifiedPSMs()) {
+			final QuantRatio ratio = QuantUtils.getRepresentativeRatio(psm);
+			ratioValues.add(ratio.getLog2Ratio(quantConditionNumerator, quantConditionDenominator));
+		}
+
+		return Maths.stddev(ratioValues);
+	}
 }

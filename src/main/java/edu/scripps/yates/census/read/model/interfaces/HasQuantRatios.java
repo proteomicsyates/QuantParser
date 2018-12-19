@@ -4,16 +4,16 @@ import java.util.Set;
 
 import edu.scripps.yates.census.analysis.QuantCondition;
 
-public interface HasRatios {
-
-	public Set<QuantRatio> getRatios();
+public interface HasQuantRatios extends edu.scripps.yates.utilities.proteomicsmodel.HasRatios {
 
 	public QuantRatio getConsensusRatio(QuantCondition quantConditionNumerator,
 			QuantCondition quantConditionDenominator);
 
 	public Set<QuantRatio> getNonInfinityRatios();
 
-	public void addRatio(QuantRatio ratio);
+	public Set<QuantRatio> getQuantRatios();
+
+	public boolean addQuantRatio(QuantRatio quantRatio);
 
 	public double getMeanRatios(QuantCondition quantConditionNumerator, QuantCondition quantConditionDenominator);
 

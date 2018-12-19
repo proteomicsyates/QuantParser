@@ -20,7 +20,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 
 import edu.scripps.yates.census.analysis.QuantCondition;
-import edu.scripps.yates.census.analysis.util.KeyUtils;
 import edu.scripps.yates.census.read.model.CensusRatio;
 import edu.scripps.yates.census.read.model.QuantAmount;
 import edu.scripps.yates.census.read.model.QuantifiedPSM;
@@ -35,14 +34,17 @@ import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
 import edu.scripps.yates.census.read.util.MyHashMap;
+import edu.scripps.yates.census.read.util.QuantKeyUtils;
 import edu.scripps.yates.census.read.util.QuantUtils;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
 import edu.scripps.yates.dbindex.util.PeptideNotFoundInDBIndexException;
 import edu.scripps.yates.utilities.fasta.dbindex.DBIndexStoreException;
 import edu.scripps.yates.utilities.fasta.dbindex.IndexedProtein;
-import edu.scripps.yates.utilities.model.enums.AggregationLevel;
-import edu.scripps.yates.utilities.model.enums.AmountType;
 import edu.scripps.yates.utilities.proteomicsmodel.Amount;
+import edu.scripps.yates.utilities.proteomicsmodel.Ratio;
+import edu.scripps.yates.utilities.proteomicsmodel.enums.AggregationLevel;
+import edu.scripps.yates.utilities.proteomicsmodel.enums.AmountType;
+import edu.scripps.yates.utilities.proteomicsmodel.utils.KeyUtils;
 import edu.scripps.yates.utilities.remote.RemoteSSHFileReference;
 import edu.scripps.yates.utilities.sequence.PositionInPeptide;
 import edu.scripps.yates.utilities.strings.StringUtils;
@@ -427,8 +429,8 @@ public class CensusOutParser extends AbstractQuantParser {
 					}
 				}
 				// xcorr
-				final Float xcorr1 = o1.getXcorr();
-				final Float xcorr2 = o2.getXcorr();
+				final Float xcorr1 = o1.getXCorr();
+				final Float xcorr2 = o2.getXCorr();
 				if (xcorr1 != null && xcorr2 != null) {
 					final int compare = Float.compare(xcorr2, xcorr1);
 					if (compare != 0) {
@@ -440,7 +442,7 @@ public class CensusOutParser extends AbstractQuantParser {
 
 			private Double getRatioScore(String scoreName, QuantifiedPSMInterface o1) {
 				if (o1.getRatios() != null) {
-					for (final QuantRatio quantRatio : o1.getRatios()) {
+					for (final Ratio quantRatio : o1.getRatios()) {
 						if (quantRatio.getAssociatedConfidenceScore() != null) {
 							if (quantRatio.getAssociatedConfidenceScore().getScoreName().equals(scoreName)) {
 								try {
@@ -487,7 +489,7 @@ public class CensusOutParser extends AbstractQuantParser {
 			}
 		}
 
-		sb.append(psm.getSequence()).append("_").append(rawFileName).append("_").append(psm.getCharge());
+		sb.append(psm.getSequence()).append("_").append(rawFileName).append("_").append(psm.getChargeState());
 		return sb.toString();
 	}
 
@@ -534,7 +536,7 @@ public class CensusOutParser extends AbstractQuantParser {
 			if (mapValues.containsKey(XCORR)) {
 				try {
 					xcorr = Float.valueOf(mapValues.get(XCORR));
-					((QuantifiedPSM) quantifiedPSM).setXcorr(xcorr);
+					quantifiedPSM.setXCorr(xcorr);
 				} catch (final NumberFormatException e) {
 
 				}
@@ -544,14 +546,14 @@ public class CensusOutParser extends AbstractQuantParser {
 			if (mapValues.containsKey(DELTACN)) {
 				try {
 					deltaCn = Float.valueOf(mapValues.get(DELTACN));
-					((QuantifiedPSM) quantifiedPSM).setDeltaCN(deltaCn);
+					quantifiedPSM.setDeltaCn(deltaCn);
 				} catch (final NumberFormatException e) {
 
 				}
 			}
 
 			quantifiedPSM.getFileNames().add(inputFileName);
-			final String psmKey = KeyUtils.getSpectrumKey(quantifiedPSM, true);
+			final String psmKey = KeyUtils.getInstance().getSpectrumKey(quantifiedPSM, true);
 			// in case of TMT, the psm may have been created before
 			if (StaticQuantMaps.psmMap.containsKey(psmKey)) {
 				quantifiedPSM = StaticQuantMaps.psmMap.getItem(psmKey);
@@ -975,7 +977,7 @@ public class CensusOutParser extends AbstractQuantParser {
 
 			// create the peptide
 			QuantifiedPeptideInterface quantifiedPeptide = null;
-			final String peptideKey = KeyUtils.getSequenceKey(quantifiedPSM, true);
+			final String peptideKey = KeyUtils.getInstance().getSequenceKey(quantifiedPSM, true);
 			if (StaticQuantMaps.peptideMap.containsKey(peptideKey)) {
 				quantifiedPeptide = StaticQuantMaps.peptideMap.getItem(peptideKey);
 			} else {
@@ -1004,7 +1006,8 @@ public class CensusOutParser extends AbstractQuantParser {
 				// create a new Quantified Protein for each
 				// indexedProtein
 				for (final IndexedProtein indexedProtein : indexedProteins) {
-					final String proteinKey = KeyUtils.getProteinKey(indexedProtein, isIgnoreACCFormat());
+					final String proteinKey = QuantKeyUtils.getInstance().getProteinKey(indexedProtein,
+							isIgnoreACCFormat());
 					QuantifiedProteinInterface newQuantifiedProtein = null;
 					if (StaticQuantMaps.proteinMap.containsKey(proteinKey)) {
 						newQuantifiedProtein = StaticQuantMaps.proteinMap.getItem(proteinKey);
@@ -1029,7 +1032,8 @@ public class CensusOutParser extends AbstractQuantParser {
 					// add to the map (if it was already
 					// there is not a problem, it will be
 					// only once)
-					addToMap(proteinKey, proteinToPeptidesMap, KeyUtils.getSequenceKey(quantifiedPSM, true));
+					addToMap(proteinKey, proteinToPeptidesMap,
+							KeyUtils.getInstance().getSequenceKey(quantifiedPSM, true));
 
 				}
 			}
@@ -1046,7 +1050,7 @@ public class CensusOutParser extends AbstractQuantParser {
 				// add to the map (if it was already there
 				// is not a problem, it will be only once)
 				final String proteinKey = quantifiedProtein.getKey();
-				addToMap(proteinKey, proteinToPeptidesMap, KeyUtils.getSequenceKey(quantifiedPSM, true));
+				addToMap(proteinKey, proteinToPeptidesMap, KeyUtils.getInstance().getSequenceKey(quantifiedPSM, true));
 				// add protein to protein map
 				localProteinMap.put(proteinKey, quantifiedProtein);
 				// add to protein-experiment map
@@ -1056,7 +1060,7 @@ public class CensusOutParser extends AbstractQuantParser {
 			// in case of quantifying sites, set the sites to the ratios in case
 			// of no ambiguities
 			if (!getQuantifiedAAs().isEmpty()) {
-				for (final QuantRatio ratio : quantifiedPSM.getRatios()) {
+				for (final QuantRatio ratio : quantifiedPSM.getQuantRatios()) {
 					for (final Character c : getQuantifiedAAs()) {
 						if (quantifiedPSM.getSequence().contains(String.valueOf(c))) {
 							ratio.setQuantifiedAA(c);

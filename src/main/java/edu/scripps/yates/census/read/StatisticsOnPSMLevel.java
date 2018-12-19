@@ -10,12 +10,12 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import edu.scripps.yates.census.analysis.util.KeyUtils;
 import edu.scripps.yates.census.read.model.IsobaricQuantifiedPSM;
 import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
 import edu.scripps.yates.utilities.maths.Maths;
+import edu.scripps.yates.utilities.proteomicsmodel.utils.KeyUtils;
 import gnu.trove.map.hash.THashMap;
 
 public class StatisticsOnPSMLevel {
@@ -108,7 +108,7 @@ public class StatisticsOnPSMLevel {
 				psmNumber = 0;
 			}
 			currentPeptideSequence = seq;
-			final String psmID = KeyUtils.getSpectrumKey(quantifiedPSM, true);
+			final String psmID = KeyUtils.getInstance().getSpectrumKey(quantifiedPSM, true);
 			if (count++ % 500 == 0) {
 				log.info(df.format(Double.valueOf(count) * 100 / census.getPSMMap().size()) + " % of PSMs...");
 			}
@@ -146,7 +146,7 @@ public class StatisticsOnPSMLevel {
 			if (!quantifiedPSM.getRatios().isEmpty()) {
 				double sum = 0.0;
 				int valid = 0;
-				for (final QuantRatio ratio : quantifiedPSM.getRatios()) {
+				for (final QuantRatio ratio : quantifiedPSM.getQuantRatios()) {
 					if (!Maths.isMaxOrMinValue(ratio.getLog2Ratio(labelNumerator, labelDenominator))
 							&& !Double.isNaN(ratio.getLog2Ratio(labelNumerator, labelDenominator))) {
 						sum += ratio.getLog2Ratio(labelNumerator, labelDenominator);

@@ -2,13 +2,13 @@ package edu.scripps.yates.census.analysis;
 
 import java.util.Set;
 
-import edu.scripps.yates.utilities.model.factories.ProjectEx;
 import edu.scripps.yates.utilities.proteomicsmodel.Condition;
 import edu.scripps.yates.utilities.proteomicsmodel.PSM;
 import edu.scripps.yates.utilities.proteomicsmodel.Peptide;
 import edu.scripps.yates.utilities.proteomicsmodel.Project;
 import edu.scripps.yates.utilities.proteomicsmodel.Protein;
 import edu.scripps.yates.utilities.proteomicsmodel.Sample;
+import edu.scripps.yates.utilities.proteomicsmodel.factories.ProjectEx;
 
 public class QuantCondition implements Condition {
 	private final String name;

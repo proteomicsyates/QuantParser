@@ -26,9 +26,9 @@ public class CensusChroUtil {
 	 */
 	public static boolean containsAnySingletonIon(ProteinGroup proteinGroup, QuantificationLabel label) {
 		if (proteinGroup != null && label != null) {
-			for (GroupableProtein groupableProtein : proteinGroup) {
+			for (final GroupableProtein groupableProtein : proteinGroup) {
 				if (groupableProtein instanceof IsobaricQuantifiedProtein) {
-					IsobaricQuantifiedProtein quantProtein = (IsobaricQuantifiedProtein) groupableProtein;
+					final IsobaricQuantifiedProtein quantProtein = (IsobaricQuantifiedProtein) groupableProtein;
 					if (quantProtein.containsAnySingletonIon(label))
 						return true;
 				}
@@ -53,11 +53,11 @@ public class CensusChroUtil {
 			QuantificationLabel label) {
 		if (proteinGroup != null && label != null) {
 			final QuantificationLabel[] labels = QuantificationLabel.values();
-			for (QuantificationLabel otherLabel : labels) {
+			for (final QuantificationLabel otherLabel : labels) {
 				if (label != otherLabel) {
-					for (GroupableProtein groupableProtein : proteinGroup) {
+					for (final GroupableProtein groupableProtein : proteinGroup) {
 						if (groupableProtein instanceof IsobaricQuantifiedProtein) {
-							IsobaricQuantifiedProtein quantProtein = (IsobaricQuantifiedProtein) groupableProtein;
+							final IsobaricQuantifiedProtein quantProtein = (IsobaricQuantifiedProtein) groupableProtein;
 							if (quantProtein.containsAnySingletonIon(otherLabel))
 								return true;
 						}
@@ -82,9 +82,9 @@ public class CensusChroUtil {
 	 */
 	public static boolean containsAnyIon(ProteinGroup proteinGroup, QuantificationLabel label) {
 		if (proteinGroup != null && label != null) {
-			for (GroupableProtein groupableProtein : proteinGroup) {
+			for (final GroupableProtein groupableProtein : proteinGroup) {
 				if (groupableProtein instanceof IsobaricQuantifiedProtein) {
-					IsobaricQuantifiedProtein quantProtein = (IsobaricQuantifiedProtein) groupableProtein;
+					final IsobaricQuantifiedProtein quantProtein = (IsobaricQuantifiedProtein) groupableProtein;
 					if (quantProtein.containsAnyIon(label))
 						return true;
 				}
@@ -108,11 +108,11 @@ public class CensusChroUtil {
 	public static boolean containsAnyIonWithAnyOtherLabelThan(ProteinGroup proteinGroup, QuantificationLabel label) {
 		if (proteinGroup != null && label != null) {
 			final QuantificationLabel[] labels = QuantificationLabel.values();
-			for (QuantificationLabel otherLabel : labels) {
+			for (final QuantificationLabel otherLabel : labels) {
 				if (label != otherLabel) {
-					for (GroupableProtein groupableProtein : proteinGroup) {
+					for (final GroupableProtein groupableProtein : proteinGroup) {
 						if (groupableProtein instanceof IsobaricQuantifiedProtein) {
-							IsobaricQuantifiedProtein quantProtein = (IsobaricQuantifiedProtein) groupableProtein;
+							final IsobaricQuantifiedProtein quantProtein = (IsobaricQuantifiedProtein) groupableProtein;
 							if (quantProtein.containsAnyIon(otherLabel))
 								return true;
 						}
@@ -139,7 +139,7 @@ public class CensusChroUtil {
 		if (groupableProtein != null && label != null) {
 
 			if (groupableProtein instanceof IsobaricQuantifiedProtein) {
-				IsobaricQuantifiedProtein quantProtein = (IsobaricQuantifiedProtein) groupableProtein;
+				final IsobaricQuantifiedProtein quantProtein = (IsobaricQuantifiedProtein) groupableProtein;
 				if (quantProtein.containsAnySingletonIon(label))
 					return true;
 			}
@@ -164,11 +164,11 @@ public class CensusChroUtil {
 			QuantificationLabel label) {
 		if (groupableProtein != null && label != null) {
 			final QuantificationLabel[] labels = QuantificationLabel.values();
-			for (QuantificationLabel otherLabel : labels) {
+			for (final QuantificationLabel otherLabel : labels) {
 				if (label != otherLabel) {
 
 					if (groupableProtein instanceof IsobaricQuantifiedProtein) {
-						IsobaricQuantifiedProtein quantProtein = (IsobaricQuantifiedProtein) groupableProtein;
+						final IsobaricQuantifiedProtein quantProtein = (IsobaricQuantifiedProtein) groupableProtein;
 						if (quantProtein.containsAnySingletonIon(otherLabel))
 							return true;
 					}
@@ -195,7 +195,7 @@ public class CensusChroUtil {
 		if (groupableProtein != null && label != null) {
 
 			if (groupableProtein instanceof IsobaricQuantifiedProtein) {
-				IsobaricQuantifiedProtein quantProtein = (IsobaricQuantifiedProtein) groupableProtein;
+				final IsobaricQuantifiedProtein quantProtein = (IsobaricQuantifiedProtein) groupableProtein;
 				if (quantProtein.containsAnyIon(label))
 					return true;
 			}
@@ -220,11 +220,11 @@ public class CensusChroUtil {
 			QuantificationLabel label) {
 		if (groupableProtein != null && label != null) {
 			final QuantificationLabel[] labels = QuantificationLabel.values();
-			for (QuantificationLabel otherLabel : labels) {
+			for (final QuantificationLabel otherLabel : labels) {
 				if (label != otherLabel) {
 
 					if (groupableProtein instanceof IsobaricQuantifiedProtein) {
-						IsobaricQuantifiedProtein quantProtein = (IsobaricQuantifiedProtein) groupableProtein;
+						final IsobaricQuantifiedProtein quantProtein = (IsobaricQuantifiedProtein) groupableProtein;
 						if (quantProtein.containsAnyIon(otherLabel))
 							return true;
 					}
@@ -244,14 +244,14 @@ public class CensusChroUtil {
 	 * @return
 	 */
 	public static Set<QuantRatio> getRatiosFromProteinGroup(ProteinGroup proteinGroup) {
-		Set<QuantRatio> ret = new THashSet<QuantRatio>();
-		for (GroupableProtein protein : proteinGroup) {
+		final Set<QuantRatio> ret = new THashSet<QuantRatio>();
+		for (final GroupableProtein protein : proteinGroup) {
 			if (protein instanceof IsobaricQuantifiedProtein) {
-				IsobaricQuantifiedProtein quantProtein = (IsobaricQuantifiedProtein) protein;
-				ret.addAll(quantProtein.getRatios());
+				final IsobaricQuantifiedProtein quantProtein = (IsobaricQuantifiedProtein) protein;
+				ret.addAll(quantProtein.getQuantRatios());
 			} else if (protein instanceof QuantifiedProtein) {
-				QuantifiedProtein quantProtein = (QuantifiedProtein) protein;
-				ret.addAll(quantProtein.getRatios());
+				final QuantifiedProtein quantProtein = (QuantifiedProtein) protein;
+				ret.addAll(quantProtein.getQuantRatios());
 			}
 		}
 		return ret;

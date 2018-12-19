@@ -2,50 +2,37 @@ package edu.scripps.yates.census.read.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import edu.scripps.yates.annotations.uniprot.UniprotProteinLocalRetriever;
-import edu.scripps.yates.annotations.util.UniprotEntryUtil;
 import edu.scripps.yates.census.analysis.QuantCondition;
-import edu.scripps.yates.census.analysis.util.KeyUtils;
 import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
+import edu.scripps.yates.census.read.util.QuantKeyUtils;
 import edu.scripps.yates.census.read.util.QuantUtils;
-import edu.scripps.yates.utilities.annotations.UniprotProteinLocalRetrieverInterface;
-import edu.scripps.yates.utilities.annotations.uniprot.xml.Entry;
-import edu.scripps.yates.utilities.fasta.FastaParser;
-import edu.scripps.yates.utilities.model.enums.AggregationLevel;
+import edu.scripps.yates.utilities.maths.Maths;
+import edu.scripps.yates.utilities.proteomicsmodel.AbstractPeptide;
 import edu.scripps.yates.utilities.proteomicsmodel.Amount;
-import edu.scripps.yates.utilities.sequence.PTMInPeptide;
-import edu.scripps.yates.utilities.sequence.PTMInProtein;
+import edu.scripps.yates.utilities.proteomicsmodel.PSM;
+import edu.scripps.yates.utilities.proteomicsmodel.Peptide;
+import edu.scripps.yates.utilities.proteomicsmodel.Protein;
+import edu.scripps.yates.utilities.proteomicsmodel.Ratio;
+import edu.scripps.yates.utilities.proteomicsmodel.enums.AggregationLevel;
 import edu.scripps.yates.utilities.sequence.PositionInPeptide;
-import edu.scripps.yates.utilities.sequence.PositionInProtein;
-import edu.scripps.yates.utilities.sequence.ProteinSequenceUtils;
-import edu.scripps.yates.utilities.strings.StringUtils;
-import edu.scripps.yates.utilities.util.StringPosition;
-import gnu.trove.list.array.TIntArrayList;
+import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.TCharHashSet;
 import gnu.trove.set.hash.THashSet;
 
-public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements QuantifiedPeptideInterface {
-	private final static Logger log = Logger.getLogger(QuantifiedPeptide.class);
+public class QuantifiedPeptide extends AbstractPeptide implements QuantifiedPeptideInterface {
 	protected String sequenceKey;
-	protected final Set<QuantifiedPSMInterface> psms = new THashSet<QuantifiedPSMInterface>();
-	private final Set<Amount> amounts = new THashSet<Amount>();
 	private boolean discarded;
-	private List<PTMInPeptide> ptms;
-	private final String fullSequence;
-	private final String sequence;
-	private Map<Character, List<PositionInProtein>> positionsInProteinsByQuantifiedAA;
-	private final boolean ignoreTaxonomies;
+	private Set<QuantRatio> quantRatios;
 
 	/**
 	 * Creates a {@link QuantifiedPeptide} object, adding the
@@ -56,14 +43,11 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 	 * @param distinguishModifiedSequences
 	 */
 	public QuantifiedPeptide(QuantifiedPSMInterface quantPSM, boolean ignoreTaxonomies) {
-		sequenceKey = KeyUtils.getSequenceKey(quantPSM, true);
-		sequence = quantPSM.getSequence();
-		fullSequence = quantPSM.getFullSequence();
-		if (fullSequence.equals("0755)ALK(339")) {
-			log.info(this);
-		}
-		this.ignoreTaxonomies = ignoreTaxonomies;
-		addQuantifiedPSM(quantPSM, true);
+		sequenceKey = QuantKeyUtils.getInstance().getSequenceKey(quantPSM, true);
+		super.setSequence(quantPSM.getSequence());
+		setFullSequence(quantPSM.getFullSequence());
+		setIgnoreTaxonomy(ignoreTaxonomies);
+		addPSM(quantPSM, true);
 
 	}
 
@@ -77,17 +61,10 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 	 * distinguishModifiedSequences of the instance
 	 */
 	@Override
-	public boolean addQuantifiedPSM(QuantifiedPSMInterface quantPSM, boolean recursive) {
-		if (sequenceKey.equals(KeyUtils.getSequenceKey(quantPSM, true))) {
-			if (!psms.contains(quantPSM)) {
-				final boolean ret = psms.add(quantPSM);
-				if (recursive) {
-					quantPSM.setQuantifiedPeptide(this, false);
-					final Set<QuantifiedProteinInterface> quantifiedProteins = quantPSM.getQuantifiedProteins();
-					for (final QuantifiedProteinInterface protein : quantifiedProteins) {
-						protein.addPeptide(this, false);
-					}
-				}
+	public boolean addPSM(PSM quantPSM, boolean recursive) {
+		if (sequenceKey.equals(QuantKeyUtils.getInstance().getSequenceKey(quantPSM, true))) {
+			if (!getPSMs().contains(quantPSM)) {
+				final boolean ret = addPSM(quantPSM, recursive);
 				return ret;
 			}
 			return false;
@@ -108,22 +85,13 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 			Collection<QuantifiedPSMInterface> quantifiedPSMs) {
 		final Map<String, QuantifiedPeptideInterface> peptideMap = new THashMap<String, QuantifiedPeptideInterface>();
 		for (final QuantifiedPSMInterface quantifiedPSM : quantifiedPSMs) {
-			final QuantifiedPeptideInterface quantifiedPeptide = quantifiedPSM.getQuantifiedPeptide();
+			final Peptide peptide = quantifiedPSM.getPeptide();
+			final QuantifiedPeptideInterface quantifiedPeptide = (QuantifiedPeptideInterface) peptide;
 			if (!peptideMap.containsKey(quantifiedPeptide.getKey())) {
 				peptideMap.put(quantifiedPeptide.getKey(), quantifiedPeptide);
 			}
 		}
 		return peptideMap;
-	}
-
-	@Override
-	public Set<QuantifiedPSMInterface> getQuantifiedPSMs() {
-		return psms;
-	}
-
-	@Override
-	public String getSequence() {
-		return sequence;
 	}
 
 	/**
@@ -132,21 +100,14 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 	 *         called, because proteins are taken from the psms of the peptide
 	 */
 	@Override
-	public Set<QuantifiedProteinInterface> getQuantifiedProteins() {
-		final Set<QuantifiedProteinInterface> set = new THashSet<QuantifiedProteinInterface>();
-		for (final QuantifiedPSMInterface psm : psms) {
-			for (final QuantifiedProteinInterface quantProtein : psm.getQuantifiedProteins()) {
+	public Set<Protein> getProteins() {
+		final Set<Protein> set = new THashSet<Protein>();
+		for (final PSM psm : getPSMs()) {
+			for (final Protein quantProtein : psm.getProteins()) {
 				set.add(quantProtein);
 			}
 		}
 		return set;
-	}
-
-	@Override
-	public Float getCalcMHplus() {
-		if (!psms.isEmpty())
-			return psms.iterator().next().getCalcMHplus();
-		return null;
 	}
 
 	/**
@@ -155,7 +116,8 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 	@Override
 	public Set<String> getRawFileNames() {
 		final Set<String> ret = new THashSet<String>();
-		for (final QuantifiedPSMInterface quantPSM : psms) {
+		for (final PSM psm : getPSMs()) {
+			final QuantifiedPSMInterface quantPSM = (QuantifiedPSMInterface) psm;
 			ret.addAll(quantPSM.getRawFileNames());
 		}
 		return ret;
@@ -163,63 +125,47 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 
 	@Override
 	public String toString() {
-		return getKey() + "(x" + getQuantifiedPSMs().size() + ")";
-	}
-
-	@Override
-	public String getFullSequence() {
-		return fullSequence;
+		return getKey() + "(x" + getPSMs().size() + ")";
 	}
 
 	@Override
 	public Set<String> getTaxonomies() {
 		final Set<String> ret = new THashSet<String>();
-		if (!ignoreTaxonomies) {
-			for (final QuantifiedPSMInterface quantifiedPSM : psms) {
-				ret.addAll(quantifiedPSM.getTaxonomies());
+		if (!isIgnoreTaxonomy()) {
+			for (final PSM psm : getPSMs()) {
+				if (psm instanceof QuantifiedPSMInterface) {
+					final QuantifiedPSMInterface quantPSM = (QuantifiedPSMInterface) psm;
+					ret.addAll(quantPSM.getTaxonomies());
+				}
 			}
 		}
 		return ret;
 	}
 
 	@Override
-	public Float getMHplus() {
-		if (!psms.isEmpty()) {
-			return psms.iterator().next().getMHplus();
-		}
-		return null;
-	}
-
-	@Override
 	public Set<Amount> getAmounts() {
-		if (amounts.isEmpty()) {
-			for (final QuantifiedPSMInterface psm : getQuantifiedPSMs()) {
-				amounts.addAll(psm.getAmounts());
+		if (getAmounts().isEmpty()) {
+			for (final PSM psm : getPSMs()) {
+				if (psm.getAmounts() != null) {
+					for (final Amount amount : psm.getAmounts()) {
+						addAmount(amount);
+					}
+				}
 			}
 		}
-		return amounts;
-	}
-
-	@Override
-	public void addAmount(Amount amount) {
-		amounts.add(amount);
-
-	}
-
-	@Override
-	public void addRatio(QuantRatio ratio) {
-		ratios.add(ratio);
+		return getAmounts();
 	}
 
 	@Override
 	public Set<QuantRatio> getNonInfinityRatios() {
-		return QuantUtils.getNonInfinityRatios(getRatios());
+		return QuantUtils.getNonInfinityRatios(getQuantRatios());
 	}
 
 	@Override
 	public Set<String> getFileNames() {
 		final Set<String> ret = new THashSet<String>();
-		for (final QuantifiedPSMInterface quantPSM : psms) {
+		for (final PSM psm : getPSMs()) {
+			final QuantifiedPSMInterface quantPSM = (QuantifiedPSMInterface) psm;
 			ret.addAll(quantPSM.getFileNames());
 		}
 		return ret;
@@ -231,21 +177,22 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 		final List<QuantRatio> ratios = new ArrayList<QuantRatio>();
 		final Set<PositionInPeptide> quantPositionsInPeptides = new THashSet<PositionInPeptide>();
 		final TCharHashSet chars = new TCharHashSet();
-		for (final QuantifiedPSMInterface psm : getQuantifiedPSMs()) {
-			final QuantRatio ratio = QuantUtils.getRepresentativeRatio(psm);
-			if (ratio != null) {
-				if (ratio.getCondition1().getName().equals(quantConditionNumerator.getName())) {
-					if (ratio.getCondition2().getName().equals(quantConditionDenominator.getName())) {
-						ratios.add(ratio);
-						if (ratio.getQuantifiedAA() != null) {
-							chars.add(ratio.getQuantifiedAA());
-						}
-						if (ratio.getQuantifiedSitePositionInPeptide() != null) {
-							quantPositionsInPeptides.addAll(ratio.getQuantifiedSitePositionInPeptide());
+		for (final PSM psm : getPSMs()) {
+			if (psm instanceof QuantifiedPSMInterface) {
+				final QuantRatio ratio = QuantUtils.getRepresentativeRatio((QuantifiedPSMInterface) psm);
+				if (ratio != null) {
+					if (ratio.getCondition1().getName().equals(quantConditionNumerator.getName())) {
+						if (ratio.getCondition2().getName().equals(quantConditionDenominator.getName())) {
+							ratios.add(ratio);
+							if (ratio.getQuantifiedAA() != null) {
+								chars.add(ratio.getQuantifiedAA());
+							}
+							if (ratio.getQuantifiedSitePositionInPeptide() != null) {
+								quantPositionsInPeptides.addAll(ratio.getQuantifiedSitePositionInPeptide());
+							}
 						}
 					}
 				}
-
 			}
 		}
 
@@ -270,8 +217,9 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 	@Override
 	public void setDiscarded(boolean discarded) {
 		this.discarded = discarded;
-		final Set<QuantifiedPSMInterface> quantifiedPSMs = getQuantifiedPSMs();
-		for (final QuantifiedPSMInterface quantifiedPSMInterface : quantifiedPSMs) {
+		final List<PSM> psms = getPSMs();
+		for (final PSM psm : psms) {
+			final QuantifiedPSMInterface quantifiedPSMInterface = (QuantifiedPSMInterface) psm;
 			quantifiedPSMInterface.setDiscarded(discarded);
 		}
 	}
@@ -279,9 +227,12 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 	@Override
 	public Set<QuantifiedProteinInterface> getNonDiscardedQuantifiedProteins() {
 		final Set<QuantifiedProteinInterface> ret = new THashSet<QuantifiedProteinInterface>();
-		for (final QuantifiedProteinInterface protein : getQuantifiedProteins()) {
-			if (!protein.isDiscarded()) {
-				ret.add(protein);
+		for (final Protein protein : getProteins()) {
+			if (protein instanceof QuantifiedProteinInterface) {
+				final QuantifiedProteinInterface quantProtein = (QuantifiedProteinInterface) protein;
+				if (!quantProtein.isDiscarded()) {
+					ret.add(quantProtein);
+				}
 			}
 		}
 		return ret;
@@ -291,283 +242,125 @@ public class QuantifiedPeptide extends AbstractContainsQuantifiedPSMs implements
 	@Override
 	public boolean containsPTMs() {
 
-		return !getPtms().isEmpty();
-	}
-
-	/**
-	 * @return the ptms
-	 */
-	@Override
-	public List<PTMInPeptide> getPtms() {
-		if (ptms == null) {
-			ptms = new ArrayList<PTMInPeptide>();
-			final List<StringPosition> tmp = FastaParser.getInside(getFullSequence());
-			for (final StringPosition stringPosition : tmp) {
-				final int position = stringPosition.position;
-				final char aa = getSequence().charAt(position - 1);
-				Double deltaMass = null;
-				try {
-					deltaMass = Double.valueOf(stringPosition.string);
-				} catch (final NumberFormatException e) {
-
-				}
-				final PTMInPeptide ptm = new PTMInPeptide(position, aa, getSequence(), deltaMass);
-				ptms.add(ptm);
-			}
-		}
-		return ptms;
-	}
-
-	@Override
-	public boolean addQuantifiedProtein(QuantifiedProteinInterface protein, boolean recursive) {
-		for (final QuantifiedPSMInterface psm : psms) {
-			psm.addQuantifiedProtein(protein, false);
-		}
-		if (recursive) {
-			protein.addPeptide(this, false);
-		}
-		return true;
+		return !getPTMsInPeptide().isEmpty();
 	}
 
 	@Override
 	public boolean isQuantified() {
-		for (final QuantifiedPSMInterface psm : getQuantifiedPSMs()) {
-			if (psm.isQuantified()) {
-				return true;
+		for (final PSM psm : getPSMs()) {
+			if (psm instanceof QuantifiedPSMInterface) {
+				final QuantifiedPSMInterface quantPSM = (QuantifiedPSMInterface) psm;
+				if (quantPSM.isQuantified()) {
+					return true;
+				}
 			}
 		}
 		return false;
 	}
 
 	@Override
-	public List<PTMInProtein> getPTMInProtein(UniprotProteinLocalRetrieverInterface uplr,
-			Map<String, String> proteinSequences) {
-		final List<PTMInProtein> ptmsInProtein = new ArrayList<PTMInProtein>();
-		final List<PTMInPeptide> ptms = getPtms();
-		if (ptms.isEmpty()) {
-			return ptmsInProtein;
-		}
-
-		for (final PTMInPeptide ptmInPeptide : ptms) {
-			final int positionInPeptide = ptmInPeptide.getPosition();
-
-			final Set<QuantifiedProteinInterface> proteins = getQuantifiedProteins();
-			for (final QuantifiedProteinInterface quantifiedProtein : proteins) {
-				final String acc = quantifiedProtein.getAccession();
-				String proteinSequence = null;
-				// it is important that we look for any protein
-				// CONTAINING the accession, so that we can search for
-				// the isoforms and proteoforms
-				if (proteinSequences != null && proteinSequences.containsKey(acc)) {
-					proteinSequence = proteinSequences.get(acc);
-				}
-				if (proteinSequence == null && uplr != null) {
-					final Map<String, Entry> annotatedProtein = uplr.getAnnotatedProtein(null, acc);
-					final Entry entry = annotatedProtein.get(acc);
-					if (entry != null) {
-						proteinSequence = UniprotEntryUtil.getProteinSequence(entry);
-					}
-				}
-				if (proteinSequence != null) {
-					final TIntArrayList positionsInProteinSequence = StringUtils.allPositionsOf(proteinSequence,
-							getSequence());
-					for (final int positionInProteinSequence : positionsInProteinSequence.toArray()) {
-						final int positionOfSiteInProtein = positionInProteinSequence + positionInPeptide - 1;
-						final PTMInProtein ptmInProtein = new PTMInProtein(positionOfSiteInProtein,
-								proteinSequence.charAt(positionOfSiteInProtein - 1), acc, ptmInPeptide.getDeltaMass());
-						if (!ptmsInProtein.contains(ptmInProtein)) {
-							ptmsInProtein.add(ptmInProtein);
-						}
-					}
-				} else {
-					throw new IllegalArgumentException("Protein sequence from protein " + acc
-							+ " not found neither in the fasta file nor in Uniprot");
-				}
-
-			}
-
-		}
-
-		return ptmsInProtein;
+	public boolean addQuantifiedPSM(QuantifiedPSMInterface quantifiedPSM, boolean b) {
+		return addPSM(quantifiedPSM, b);
 	}
 
 	@Override
-	public Map<PositionInPeptide, List<PositionInProtein>> getProteinKeysByPeptideKeysForPTMs(
-			UniprotProteinLocalRetriever uplr, Map<String, String> proteinSequences) {
+	public Set<QuantifiedProteinInterface> getQuantifiedProteins() {
 
-		final Map<PositionInPeptide, List<PositionInProtein>> ret = new THashMap<PositionInPeptide, List<PositionInProtein>>();
-		final Set<String> aas = new HashSet<String>();
-		aas.clear();
-
-		for (final PTMInPeptide positionInPeptide : getPtms()) {
-
-			final List<PositionInProtein> positionsInProtein = new ArrayList<PositionInProtein>();
-
-			final Set<QuantifiedProteinInterface> proteins = getQuantifiedProteins();
-			for (final QuantifiedProteinInterface quantifiedProtein : proteins) {
-				final String acc = quantifiedProtein.getAccession();
-
-				String proteinSequence = null;
-				// it is important that we look for any protein
-				// CONTAINING the accession, so that we can search for
-				// the isoforms and proteoforms
-				if (proteinSequences != null && proteinSequences.containsKey(acc)) {
-					proteinSequence = proteinSequences.get(acc);
-				}
-				if (proteinSequence == null && uplr != null) {
-					final Map<String, Entry> annotatedProtein = uplr.getAnnotatedProtein(null, acc);
-					final Entry entry = annotatedProtein.get(acc);
-					if (entry != null) {
-						proteinSequence = UniprotEntryUtil.getProteinSequence(entry);
-					}
-				}
-				if (proteinSequence != null) {
-
-					final TIntArrayList positionsInProteinSequence = StringUtils.allPositionsOf(proteinSequence,
-							getSequence());
-					for (final int positionInProteinSequence : positionsInProteinSequence.toArray()) {
-						final int positionOfSiteInProtein = positionInProteinSequence + positionInPeptide.getPosition()
-								- 1;
-						final PositionInProtein positionInProtein = new PositionInProtein(positionOfSiteInProtein,
-								proteinSequence.charAt(positionOfSiteInProtein - 1), acc);
-						if (!positionsInProtein.contains(positionInProtein)) {
-							positionsInProtein.add(positionInProtein);
-						}
-					}
-				} else {
-					if (FastaParser.getACC(acc).getSecondElement() == "UNKNOWN") {
-						log.warn("Protein " + acc + " is ignored because we don't have its protein sequence");
-						continue;
-					}
-					throw new IllegalArgumentException("Protein sequence from protein " + acc
-							+ " not found neither in the fasta file nor in Uniprot");
-				}
-
-			}
-			if (!positionsInProtein.isEmpty()) {
-				ret.put(positionInPeptide, positionsInProtein);
-			}
-
-		}
-		return ret;
-	}
-
-	@Override
-	public Map<PositionInPeptide, List<PositionInProtein>> getProteinKeysByPeptideKeysForQuantifiedAAs(
-			char[] quantifiedAAs, UniprotProteinLocalRetriever uplr, Map<String, String> proteinSequences) {
-
-		final Map<PositionInPeptide, List<PositionInProtein>> ret = new THashMap<PositionInPeptide, List<PositionInProtein>>();
-		final Set<String> aas = new HashSet<String>();
-		aas.clear();
-		for (final char c : quantifiedAAs) {
-			final String aa = String.valueOf(c).toUpperCase();
-			if (!aas.contains(aa)) {
-				aas.add(aa);
-				final TIntArrayList positionsInPeptideSequence = StringUtils.allPositionsOf(getSequence(), aa);
-				for (final int positionInPeptide : positionsInPeptideSequence.toArray()) {
-					final PositionInPeptide positionInPeptideObj = new PositionInPeptide(positionInPeptide,
-							getSequence().charAt(positionInPeptide - 1), getSequence());
-					final List<PositionInProtein> positionsInProtein = new ArrayList<PositionInProtein>();
-
-					final Set<QuantifiedProteinInterface> proteins = getQuantifiedProteins();
-					for (final QuantifiedProteinInterface quantifiedProtein : proteins) {
-						final String acc = quantifiedProtein.getAccession();
-
-						String proteinSequence = null;
-						// it is important that we look for any protein
-						// CONTAINING the accession, so that we can search for
-						// the isoforms and proteoforms
-						if (proteinSequences != null && proteinSequences.containsKey(acc)) {
-							proteinSequence = proteinSequences.get(acc);
-						}
-						if (proteinSequence == null && uplr != null) {
-							final Map<String, Entry> annotatedProtein = uplr.getAnnotatedProtein(null, acc);
-							final Entry entry = annotatedProtein.get(acc);
-							if (entry != null) {
-								proteinSequence = UniprotEntryUtil.getProteinSequence(entry);
-							}
-						}
-						if (proteinSequence != null) {
-							final TIntArrayList positionsInProteinSequence = StringUtils.allPositionsOf(proteinSequence,
-									getSequence());
-							for (final int positionInProteinSequence : positionsInProteinSequence.toArray()) {
-								final int positionOfSiteInProtein = positionInProteinSequence + positionInPeptide - 1;
-								final PositionInProtein positionInProtein = new PositionInProtein(
-										positionOfSiteInProtein, proteinSequence.charAt(positionOfSiteInProtein - 1),
-										acc);
-								if (!positionsInProtein.contains(positionInProtein)) {
-									positionsInProtein.add(positionInProtein);
-								}
-							}
-						} else {
-							if (FastaParser.getACC(acc).getSecondElement() == "UNKNOWN") {
-								log.warn("Protein " + acc + " is ignored because we don't have its protein sequence");
-								continue;
-							}
-							throw new IllegalArgumentException("Protein sequence from protein " + acc
-									+ " not found neither in the fasta file nor in Uniprot");
-						}
-
-					}
-					if (!positionsInProtein.isEmpty()) {
-						ret.put(positionInPeptideObj, positionsInProtein);
-					}
-				}
+		final Set<QuantifiedProteinInterface> ret = new THashSet<QuantifiedProteinInterface>();
+		for (final Protein protein : getProteins()) {
+			if (protein instanceof QuantifiedProteinInterface) {
+				ret.add((QuantifiedProteinInterface) protein);
 			}
 		}
 		return ret;
 	}
 
 	@Override
-	public Map<Character, List<PositionInProtein>> getPositionInProteinForSites(char[] quantifiedAAs,
-			UniprotProteinLocalRetriever uplr) {
-		if (positionsInProteinsByQuantifiedAA == null) {
-			positionsInProteinsByQuantifiedAA = new THashMap<Character, List<PositionInProtein>>();
-		}
-
-		final Set<QuantifiedProteinInterface> proteins = getQuantifiedProteins();
-		for (final QuantifiedProteinInterface quantifiedProtein : proteins) {
-			for (final char quantifiedAA : quantifiedAAs) {
-				if (positionsInProteinsByQuantifiedAA.containsKey(quantifiedAA)) {
-					continue;
-				}
-				final List<PositionInProtein> list = new ArrayList<PositionInProtein>();
-				final String acc = quantifiedProtein.getAccession();
-				final Map<String, Entry> annotatedProtein = uplr.getAnnotatedProtein(null, acc);
-				final Entry entry = annotatedProtein.get(acc);
-				if (entry != null) {
-					final String proteinSequence = UniprotEntryUtil.getProteinSequence(entry);
-					if (proteinSequence != null) {
-						list.addAll(ProteinSequenceUtils.getPositionsInProteinForSites(quantifiedAAs, getSequence(),
-								proteinSequence, acc));
-						positionsInProteinsByQuantifiedAA.put(quantifiedAA, list);
-					}
-				}
-			}
-		}
-
-		return positionsInProteinsByQuantifiedAA;
+	public boolean addQuantifiedProtein(QuantifiedProteinInterface protein, boolean recursively) {
+		return addProtein(protein, recursively);
 	}
 
 	@Override
-	public List<PositionInProtein> getStartingPositionsInProtein(String proteinACC, UniprotProteinLocalRetriever uplr) {
-		final List<PositionInProtein> ret = new ArrayList<PositionInProtein>();
-
-		final Map<String, Entry> annotatedProtein = uplr.getAnnotatedProtein(null, proteinACC);
-		final Entry entry = annotatedProtein.get(proteinACC);
-		if (entry != null) {
-			final String proteinSequence = UniprotEntryUtil.getProteinSequence(entry);
-			if (proteinSequence != null) {
-				ret.addAll(ProteinSequenceUtils.getPositionsOfPeptideSequenceInProteinSequence(getSequence(),
-						proteinSequence, proteinACC));
+	public Set<QuantifiedPSMInterface> getQuantifiedPSMs() {
+		final Set<QuantifiedPSMInterface> ret = new THashSet<QuantifiedPSMInterface>();
+		for (final PSM psm : getPSMs()) {
+			if (psm instanceof QuantifiedPSMInterface) {
+				ret.add((QuantifiedPSMInterface) psm);
 			}
 		}
-
 		return ret;
 	}
 
-	// @Override
-	// public int hashCode() {
-	// return Objects.hashCode(getKey());
-	// }
+	@Override
+	public Set<QuantRatio> getQuantRatios() {
+		if (quantRatios == null) {
+			quantRatios = new THashSet<QuantRatio>();
+
+			final Set<Ratio> ratios = getRatios();
+			for (final Ratio ratio : ratios) {
+				if (ratio instanceof QuantRatio) {
+					quantRatios.add((QuantRatio) ratio);
+				}
+			}
+		}
+		return quantRatios;
+	}
+
+	@Override
+	public boolean addRatio(Ratio ratio) {
+		// dont add it if it is already one ratio with the same value and
+		// description
+		for (final Ratio ratio2 : getRatios()) {
+			if (ratio2.getDescription().equals(ratio.getDescription())) {
+				if (Double.compare(ratio2.getValue(), ratio.getValue()) == 0) {
+					return false;
+				}
+			}
+		}
+		final boolean ret = addRatio(ratio);
+		if (ret) {
+			quantRatios = null;
+		}
+		return ret;
+	}
+
+	@Override
+	public boolean addQuantRatio(QuantRatio ratio) {
+		return getQuantRatios().add(ratio);
+	}
+
+	@Override
+	public double getMeanRatios(QuantCondition quantConditionNumerator, QuantCondition quantConditionDenominator) {
+		final TDoubleArrayList ratioValues = new TDoubleArrayList();
+		for (final QuantifiedPSMInterface psm : getQuantifiedPSMs()) {
+			final QuantRatio ratio = QuantUtils.getRepresentativeRatio(psm);
+			ratioValues.add(ratio.getLog2Ratio(quantConditionNumerator, quantConditionDenominator));
+		}
+		return Maths.mean(ratioValues);
+	}
+
+	@Override
+	public double getSTDRatios(QuantCondition quantConditionNumerator, QuantCondition quantConditionDenominator) {
+		final TDoubleArrayList ratioValues = new TDoubleArrayList();
+
+		for (final QuantifiedPSMInterface psm : getQuantifiedPSMs()) {
+			final QuantRatio ratio = QuantUtils.getRepresentativeRatio(psm);
+			ratioValues.add(ratio.getLog2Ratio(quantConditionNumerator, quantConditionDenominator));
+		}
+
+		return Maths.stddev(ratioValues);
+	}
+
+	@Override
+	public int hashCode() {
+		return HashCodeBuilder.reflectionHashCode(getKey(), false);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof QuantifiedPeptide) {
+			return ((QuantifiedPeptide) obj).getKey().equals(getKey());
+		}
+		return super.equals(obj);
+	}
 }

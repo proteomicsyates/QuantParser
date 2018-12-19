@@ -14,7 +14,7 @@ import edu.scripps.yates.census.read.util.QuantUtils;
 import edu.scripps.yates.utilities.fasta.FastaParser;
 import edu.scripps.yates.utilities.grouping.GroupableProtein;
 import edu.scripps.yates.utilities.grouping.ProteinGroup;
-import edu.scripps.yates.utilities.model.enums.AggregationLevel;
+import edu.scripps.yates.utilities.proteomicsmodel.enums.AggregationLevel;
 import gnu.trove.set.hash.THashSet;
 
 public class QuantifiedProteinGroup extends AbstractContainsQuantifiedPSMs {
@@ -119,23 +119,10 @@ public class QuantifiedProteinGroup extends AbstractContainsQuantifiedPSMs {
 	}
 
 	@Override
-	public void addRatio(QuantRatio ratio) {
-		ratios.add(ratio);
-	}
-
-	@Override
-	public Set<QuantRatio> getNonInfinityRatios() {
-		return QuantUtils.getNonInfinityRatios(getRatios());
-	}
-
-	@Override
 	public QuantRatio getConsensusRatio(QuantCondition quantConditionNumerator,
 			QuantCondition quantConditionDenominator) {
-		return QuantUtils.getAverageRatio(QuantUtils.getNonInfinityRatios(getRatios()), AggregationLevel.PROTEINGROUP);
+		return QuantUtils.getAverageRatio(QuantUtils.getNonInfinityRatios(getQuantRatios()),
+				AggregationLevel.PROTEINGROUP);
 	}
 
-	// @Override
-	// public int hashCode() {
-	// return Objects.hash(getAccessionString());
-	// }
 }

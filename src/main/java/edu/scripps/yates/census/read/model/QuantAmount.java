@@ -3,10 +3,10 @@ package edu.scripps.yates.census.read.model;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import edu.scripps.yates.census.analysis.QuantCondition;
-import edu.scripps.yates.utilities.model.enums.AmountType;
-import edu.scripps.yates.utilities.model.enums.CombinationType;
 import edu.scripps.yates.utilities.proteomicsmodel.Amount;
 import edu.scripps.yates.utilities.proteomicsmodel.Condition;
+import edu.scripps.yates.utilities.proteomicsmodel.enums.AmountType;
+import edu.scripps.yates.utilities.proteomicsmodel.enums.CombinationType;
 
 public class QuantAmount implements Amount {
 	private double value;

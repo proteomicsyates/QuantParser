@@ -1,9 +1,6 @@
 package edu.scripps.yates.census.read.model.interfaces;
 
-import java.util.Set;
-
-import edu.scripps.yates.utilities.grouping.GroupablePeptide;
-import edu.scripps.yates.utilities.proteomicsmodel.HasAmounts;
+import edu.scripps.yates.utilities.proteomicsmodel.PSM;
 
 /**
  * A quantified psm that is quantified in a particular MS Run (one fileName)
@@ -12,25 +9,7 @@ import edu.scripps.yates.utilities.proteomicsmodel.HasAmounts;
  *
  */
 public interface QuantifiedPSMInterface
-		extends HasKey, PeptideSequenceInterface, GroupablePeptide, HasRatios, HasAmounts, QuantifiedItem {
-
-	public void setQuantifiedPeptide(QuantifiedPeptideInterface quantifiedPeptide, boolean recursive);
-
-	public QuantifiedPeptideInterface getQuantifiedPeptide();
-
-	public Integer getCharge();
-
-	public boolean addQuantifiedProtein(QuantifiedProteinInterface quantifiedProtein, boolean recursive);
-
-	public Set<QuantifiedProteinInterface> getQuantifiedProteins();
-
-	public String getScan();
-
-	public Float getDeltaCN();
-
-	public Float getXcorr();
-
-	public Float getDeltaMass();
+		extends PSM, HasKey, QuantifiedItem, HasQuantRatios, HasQuantifiedPeptide, HasQuantifiedProteins {
 
 	/**
 	 * Gets the peak twith more intensity
@@ -40,5 +19,7 @@ public interface QuantifiedPSMInterface
 	public Double getMaxPeak();
 
 	public boolean isSingleton();
+
+	public void setSingleton(boolean singleton);
 
 }

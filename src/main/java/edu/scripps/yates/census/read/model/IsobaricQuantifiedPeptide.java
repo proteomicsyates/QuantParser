@@ -3,13 +3,10 @@ package edu.scripps.yates.census.read.model;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-
 import edu.scripps.yates.census.analysis.QuantCondition;
 import edu.scripps.yates.census.read.model.interfaces.HasIsoRatios;
 import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
-import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface;
 import edu.scripps.yates.census.read.util.QuantUtils;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
 import edu.scripps.yates.utilities.maths.Maths;
@@ -17,7 +14,7 @@ import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
 
-public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements QuantifiedPeptideInterface, HasIsoRatios {
+public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements HasIsoRatios {
 
 	private final Map<String, IonCountRatio> countRatiosByConditionKey = new THashMap<String, IonCountRatio>();
 	private Map<QuantCondition, Set<Ion>> ionsByConditions;
@@ -36,7 +33,7 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements Quan
 
 	public Set<IsobaricQuantifiedPSM> getIsobaricQuantifiedPSMs() {
 		final Set<IsobaricQuantifiedPSM> isoPsms = new THashSet<IsobaricQuantifiedPSM>();
-		for (final QuantifiedPSMInterface quantifiedPSM : psms) {
+		for (final QuantifiedPSMInterface quantifiedPSM : getQuantifiedPSMs()) {
 			if (quantifiedPSM instanceof IsobaricQuantifiedPSM) {
 				isoPsms.add((IsobaricQuantifiedPSM) quantifiedPSM);
 			}
@@ -385,8 +382,4 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements Quan
 		return getIonCountRatio(quantConditionNumerator, quantConditionDenominator);
 	}
 
-	@Override
-	public int hashCode() {
-		return HashCodeBuilder.reflectionHashCode(getKey(), false);
-	}
 }

@@ -15,7 +15,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 
 import edu.scripps.yates.census.analysis.QuantCondition;
-import edu.scripps.yates.census.analysis.util.KeyUtils;
 import edu.scripps.yates.census.read.model.CensusRatio;
 import edu.scripps.yates.census.read.model.QuantifiedPSM;
 import edu.scripps.yates.census.read.model.QuantifiedPeptide;
@@ -31,7 +30,8 @@ import edu.scripps.yates.dbindex.util.PeptideNotFoundInDBIndexException;
 import edu.scripps.yates.utilities.fasta.FastaParser;
 import edu.scripps.yates.utilities.fasta.dbindex.DBIndexStoreException;
 import edu.scripps.yates.utilities.fasta.dbindex.IndexedProtein;
-import edu.scripps.yates.utilities.model.enums.AggregationLevel;
+import edu.scripps.yates.utilities.proteomicsmodel.enums.AggregationLevel;
+import edu.scripps.yates.utilities.proteomicsmodel.utils.KeyUtils;
 import edu.scripps.yates.utilities.remote.RemoteSSHFileReference;
 import edu.scripps.yates.utilities.sequence.PositionInPeptide;
 import edu.scripps.yates.utilities.strings.StringUtils;
@@ -296,7 +296,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 				rawFileName, false);
 		// }
 		quantifiedPSM.getFileNames().add(inputFileName);
-		final String psmKey = KeyUtils.getSpectrumKey(quantifiedPSM, true);
+		final String psmKey = KeyUtils.getInstance().getSpectrumKey(quantifiedPSM, true);
 		// in case of TMT, the psm may have been created before
 		if (StaticQuantMaps.psmMap.containsKey(psmKey)) {
 			quantifiedPSM = StaticQuantMaps.psmMap.getItem(psmKey);
@@ -358,7 +358,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 
 		// create the peptide
 		QuantifiedPeptideInterface quantifiedPeptide = null;
-		final String peptideKey = KeyUtils.getSequenceKey(quantifiedPSM, true);
+		final String peptideKey = KeyUtils.getInstance().getSequenceKey(quantifiedPSM, true);
 		if (StaticQuantMaps.peptideMap.containsKey(peptideKey)) {
 			quantifiedPeptide = StaticQuantMaps.peptideMap.getItem(peptideKey);
 		} else {
@@ -385,7 +385,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 			// create a new Quantified Protein for each
 			// indexedProtein
 			for (final IndexedProtein indexedProtein : indexedProteins) {
-				final String proteinKey = KeyUtils.getProteinKey(indexedProtein, isIgnoreACCFormat());
+				final String proteinKey = KeyUtils.getInstance().getProteinKey(indexedProtein, isIgnoreACCFormat());
 				QuantifiedProteinInterface quantifiedProtein = null;
 				if (StaticQuantMaps.proteinMap.containsKey(proteinKey)) {
 					quantifiedProtein = StaticQuantMaps.proteinMap.getItem(proteinKey);
@@ -403,7 +403,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 				quantifiedProtein.addPeptide(quantifiedPeptide, true);
 				// add to the map (if it was already there
 				// is not a problem, it will be only once)
-				addToMap(proteinKey, proteinToPeptidesMap, KeyUtils.getSequenceKey(quantifiedPSM, true));
+				addToMap(proteinKey, proteinToPeptidesMap, KeyUtils.getInstance().getSequenceKey(quantifiedPSM, true));
 				// add protein to protein map
 				localProteinMap.put(proteinKey, quantifiedProtein);
 				// add to protein-experiment map
@@ -429,7 +429,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 			quantifiedProtein.addPeptide(quantifiedPeptide, true);
 			// add to the map (if it was already there
 			// is not a problem, it will be only once)
-			addToMap(proteinKey, proteinToPeptidesMap, KeyUtils.getSequenceKey(quantifiedPSM, true));
+			addToMap(proteinKey, proteinToPeptidesMap, KeyUtils.getInstance().getSequenceKey(quantifiedPSM, true));
 			// add protein to protein map
 			localProteinMap.put(proteinKey, quantifiedProtein);
 			// add to protein-experiment map

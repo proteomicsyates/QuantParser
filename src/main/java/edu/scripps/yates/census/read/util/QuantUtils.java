@@ -15,9 +15,7 @@ import org.apache.log4j.Logger;
 
 import edu.scripps.yates.annotations.uniprot.UniprotProteinLocalRetriever;
 import edu.scripps.yates.annotations.uniprot.UniprotProteinRetriever;
-import edu.scripps.yates.annotations.util.UniprotEntryUtil;
 import edu.scripps.yates.census.analysis.QuantCondition;
-import edu.scripps.yates.census.analysis.util.KeyUtils;
 import edu.scripps.yates.census.read.CensusOutParser;
 import edu.scripps.yates.census.read.model.CensusRatio;
 import edu.scripps.yates.census.read.model.Ion;
@@ -28,17 +26,18 @@ import edu.scripps.yates.census.read.model.IsobaricQuantifiedPeptide;
 import edu.scripps.yates.census.read.model.QuantifiedPSM;
 import edu.scripps.yates.census.read.model.QuantifiedPeptide;
 import edu.scripps.yates.census.read.model.RatioScore;
-import edu.scripps.yates.census.read.model.interfaces.HasRatios;
+import edu.scripps.yates.census.read.model.interfaces.HasQuantRatios;
 import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
+import edu.scripps.yates.utilities.annotations.uniprot.UniprotEntryUtil;
 import edu.scripps.yates.utilities.annotations.uniprot.xml.Entry;
 import edu.scripps.yates.utilities.maths.Maths;
-import edu.scripps.yates.utilities.model.enums.AggregationLevel;
-import edu.scripps.yates.utilities.model.enums.AmountType;
-import edu.scripps.yates.utilities.model.enums.CombinationType;
 import edu.scripps.yates.utilities.proteomicsmodel.Amount;
+import edu.scripps.yates.utilities.proteomicsmodel.enums.AggregationLevel;
+import edu.scripps.yates.utilities.proteomicsmodel.enums.AmountType;
+import edu.scripps.yates.utilities.proteomicsmodel.enums.CombinationType;
 import edu.scripps.yates.utilities.sequence.PTMInPeptide;
 import edu.scripps.yates.utilities.sequence.PTMInProtein;
 import edu.scripps.yates.utilities.sequence.PositionInPeptide;
@@ -57,7 +56,7 @@ public class QuantUtils {
 
 	public static void addToPeptideMap(QuantifiedPSMInterface quantifiedPSM, Map<String, QuantifiedPeptide> map,
 			boolean ignoreTaxonomies) {
-		final String sequenceKey = KeyUtils.getSequenceKey(quantifiedPSM, true);
+		final String sequenceKey = QuantKeyUtils.getInstance().getSequenceKey(quantifiedPSM, true);
 		QuantifiedPeptide quantifiedPeptide = null;
 		if (map.containsKey(sequenceKey)) {
 			quantifiedPeptide = map.get(sequenceKey);
@@ -72,7 +71,7 @@ public class QuantUtils {
 
 	public static void addToIsobaricPeptideMap(IsobaricQuantifiedPSM quantifiedPSM,
 			Map<String, IsobaricQuantifiedPeptide> map, boolean ignoreTaxonomies) {
-		final String sequenceKey = KeyUtils.getSequenceKey(quantifiedPSM, true);
+		final String sequenceKey = QuantKeyUtils.getInstance().getSequenceKey(quantifiedPSM, true);
 		IsobaricQuantifiedPeptide quantifiedPeptide = null;
 		if (map.containsKey(sequenceKey)) {
 			quantifiedPeptide = map.get(sequenceKey);
@@ -267,7 +266,7 @@ public class QuantUtils {
 		}
 	}
 
-	public static QuantRatio getRatioByName(HasRatios quantifiedPSMorPeptideOrProtein, String ratioDescription) {
+	public static QuantRatio getRatioByName(HasQuantRatios quantifiedPSMorPeptideOrProtein, String ratioDescription) {
 		final List<QuantRatio> ratiosByName = getRatiosByName(quantifiedPSMorPeptideOrProtein, ratioDescription);
 		if (ratiosByName.isEmpty()) {
 			return null;
@@ -275,9 +274,10 @@ public class QuantUtils {
 		return ratiosByName.get(0);
 	}
 
-	public static List<QuantRatio> getRatiosByName(HasRatios quantifiedPSMorPeptideOrProtein, String ratioDescription) {
-		if (quantifiedPSMorPeptideOrProtein != null && quantifiedPSMorPeptideOrProtein.getRatios() != null) {
-			return getRatiosByName(quantifiedPSMorPeptideOrProtein.getRatios(), ratioDescription);
+	public static List<QuantRatio> getRatiosByName(HasQuantRatios quantifiedPSMorPeptideOrProtein,
+			String ratioDescription) {
+		if (quantifiedPSMorPeptideOrProtein != null && quantifiedPSMorPeptideOrProtein.getQuantRatios() != null) {
+			return getRatiosByName(quantifiedPSMorPeptideOrProtein.getQuantRatios(), ratioDescription);
 		}
 		return Collections.emptyList();
 	}
@@ -566,7 +566,7 @@ public class QuantUtils {
 					peptide.getSequence());
 			if (!positionsInProteinSequence.isEmpty()) {
 				for (final int startingPosition : positionsInProteinSequence.toArray()) {
-					final List<PTMInPeptide> ptms = peptide.getPtms();
+					final List<PTMInPeptide> ptms = peptide.getPTMsInPeptide();
 					for (final PTMInPeptide ptmInPeptide : ptms) {
 						final int positionInPeptide = ptmInPeptide.getPosition();
 						final PTMInProtein ptmInProtein = new PTMInProtein(positionInPeptide + startingPosition - 1,

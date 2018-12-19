@@ -19,7 +19,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 
 import edu.scripps.yates.census.analysis.QuantCondition;
-import edu.scripps.yates.census.analysis.util.KeyUtils;
 import edu.scripps.yates.census.quant.xml.ProteinType;
 import edu.scripps.yates.census.quant.xml.ProteinType.Peptide;
 import edu.scripps.yates.census.quant.xml.RelexChro;
@@ -30,11 +29,13 @@ import edu.scripps.yates.census.read.model.QuantifiedProteinFromDBIndexEntry;
 import edu.scripps.yates.census.read.model.StaticQuantMaps;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
+import edu.scripps.yates.census.read.util.QuantKeyUtils;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
 import edu.scripps.yates.dbindex.util.PeptideNotFoundInDBIndexException;
 import edu.scripps.yates.utilities.fasta.FastaParser;
 import edu.scripps.yates.utilities.fasta.dbindex.DBIndexStoreException;
 import edu.scripps.yates.utilities.fasta.dbindex.IndexedProtein;
+import edu.scripps.yates.utilities.proteomicsmodel.utils.KeyUtils;
 import edu.scripps.yates.utilities.remote.RemoteSSHFileReference;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
@@ -186,7 +187,7 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 					// that the protein has been already created if we are
 					// processing different census chro files in the same parser
 					QuantifiedProteinInterface quantifiedProtein = null;
-					final String proteinKey = KeyUtils.getProteinKey(protein, isIgnoreACCFormat());
+					final String proteinKey = QuantKeyUtils.getInstance().getProteinKey(protein, isIgnoreACCFormat());
 					if (StaticQuantMaps.proteinMap.containsKey(proteinKey)) {
 						quantifiedProtein = StaticQuantMaps.proteinMap.getItem(proteinKey);
 					} else {
@@ -202,7 +203,7 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 							if (peptide.getFrag() != null && peptide.getFrag().getBr() != null
 									&& !"".equals(peptide.getFrag().getBr())) {
 								IsobaricQuantifiedPSM quantifiedPSM = null;
-								final String spectrumKey = KeyUtils.getSpectrumKey(peptide, true);
+								final String spectrumKey = QuantKeyUtils.getInstance().getSpectrumKey(peptide, true);
 								if (StaticQuantMaps.psmMap.containsKey(spectrumKey)) {
 									quantifiedPSM = (IsobaricQuantifiedPSM) StaticQuantMaps.psmMap.getItem(spectrumKey);
 								} else {
@@ -210,8 +211,8 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 											labelsByConditionsByFile.get(remoteFileRetriever), ionExclusions,
 											getQuantifiedAAs());
 								}
-								final String spectrumKey2 = KeyUtils.getSpectrumKey(quantifiedPSM, true);
-								final String peptideKey = KeyUtils.getSequenceKey(quantifiedPSM, true);
+								final String spectrumKey2 = KeyUtils.getInstance().getSpectrumKey(quantifiedPSM, true);
+								final String peptideKey = KeyUtils.getInstance().getSequenceKey(quantifiedPSM, true);
 								quantifiedPSM.addSpectrumToIonsMaps(spectrumKey2, spectrumToIonsMap, ionKeys);
 								addToMap(peptideKey, peptideToSpectraMap, spectrumKey2);
 								StaticQuantMaps.psmMap.addItem(quantifiedPSM);
@@ -275,8 +276,8 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 												continue;
 											}
 										}
-										final String proteinKey2 = KeyUtils.getProteinKey(indexedProtein,
-												isIgnoreACCFormat());
+										final String proteinKey2 = QuantKeyUtils.getInstance()
+												.getProteinKey(indexedProtein, isIgnoreACCFormat());
 
 										QuantifiedProteinInterface newQuantifiedProtein = null;
 										if (StaticQuantMaps.proteinMap.containsKey(proteinKey2)) {

@@ -13,7 +13,6 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 
-import edu.scripps.yates.census.analysis.util.KeyUtils;
 import edu.scripps.yates.census.read.model.IsobaricQuantifiedPSM;
 import edu.scripps.yates.census.read.model.IsobaricQuantifiedProtein;
 import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
@@ -27,6 +26,7 @@ import edu.scripps.yates.utilities.grouping.PAnalyzer;
 import edu.scripps.yates.utilities.grouping.PanalyzerStats;
 import edu.scripps.yates.utilities.grouping.ProteinGroup;
 import edu.scripps.yates.utilities.maths.Maths;
+import edu.scripps.yates.utilities.proteomicsmodel.utils.KeyUtils;
 import edu.scripps.yates.utilities.taxonomy.UniprotOrganism;
 import edu.scripps.yates.utilities.taxonomy.UniprotSpeciesCodeMap;
 import gnu.trove.map.hash.THashMap;
@@ -211,7 +211,7 @@ public class StatisticsOnProteinGroupLevel {
 	}
 
 	private void addGroup(ProteinGroup proteinGroup, Map<String, ProteinGroup> map) {
-		map.put(KeyUtils.getGroupKey(proteinGroup), proteinGroup);
+		map.put(KeyUtils.getInstance().getGroupKey(proteinGroup), proteinGroup);
 
 	}
 
@@ -264,7 +264,7 @@ public class StatisticsOnProteinGroupLevel {
 
 		for (final QuantifiedProteinInterface quantifiedProtein : quantifiedProteins) {
 			final ProteinGroup group = quantifiedProtein.getProteinGroup();
-			map.put(KeyUtils.getGroupKey(group), group);
+			map.put(KeyUtils.getInstance().getGroupKey(group), group);
 		}
 
 	}
@@ -540,7 +540,7 @@ public class StatisticsOnProteinGroupLevel {
 				psmNumber = 0;
 			}
 			currentPeptideSequence = seq;
-			final String psmID = KeyUtils.getSpectrumKey(quantifiedPSM, true);
+			final String psmID = KeyUtils.getInstance().getSpectrumKey(quantifiedPSM, true);
 			if (count++ % 500 == 0) {
 				log.info(df.format(Double.valueOf(count) * 100 / census.getPSMMap().size()) + " % of PSMs...");
 			}
@@ -577,7 +577,7 @@ public class StatisticsOnProteinGroupLevel {
 			if (!quantifiedPSM.getRatios().isEmpty()) {
 				double sum = 0.0;
 				int valid = 0;
-				for (final QuantRatio ratio : quantifiedPSM.getRatios()) {
+				for (final QuantRatio ratio : quantifiedPSM.getQuantRatios()) {
 					if (!Maths.isMaxOrMinValue(ratio.getLog2Ratio(labelNumerator, labelDenominator))
 							&& !Double.isNaN(ratio.getLog2Ratio(labelNumerator, labelDenominator))) {
 						sum += ratio.getLog2Ratio(labelNumerator, labelDenominator);

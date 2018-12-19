@@ -10,7 +10,7 @@ import edu.scripps.yates.census.read.model.IonSerie;
 import edu.scripps.yates.census.read.model.IsoRatio;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
 
-public interface HasIsoRatios extends HasRatios {
+public interface HasIsoRatios extends HasQuantRatios {
 
 	public Set<IsoRatio> getIsoRatios();
 

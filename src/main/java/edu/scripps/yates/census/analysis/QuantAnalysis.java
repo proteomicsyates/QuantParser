@@ -18,7 +18,6 @@ import org.apache.log4j.Logger;
 import edu.scripps.yates.annotations.uniprot.UniprotProteinLocalRetriever;
 import edu.scripps.yates.census.analysis.clustering.ProteinCluster;
 import edu.scripps.yates.census.analysis.clustering.ProteinClusterUtils;
-import edu.scripps.yates.census.analysis.util.KeyUtils;
 import edu.scripps.yates.census.analysis.wrappers.IntegrationResultWrapper;
 import edu.scripps.yates.census.analysis.wrappers.OutStatsLine;
 import edu.scripps.yates.census.analysis.wrappers.SanXotAnalysisResult;
@@ -37,6 +36,7 @@ import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
 import edu.scripps.yates.census.read.util.IonExclusion;
 import edu.scripps.yates.census.read.util.ProteinSequences;
+import edu.scripps.yates.census.read.util.QuantKeyUtils;
 import edu.scripps.yates.census.read.util.QuantUtils;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
 import edu.scripps.yates.dbindex.DBIndexImpl;
@@ -45,7 +45,8 @@ import edu.scripps.yates.utilities.grouping.GroupablePeptide;
 import edu.scripps.yates.utilities.grouping.GroupableProtein;
 import edu.scripps.yates.utilities.grouping.PAnalyzer;
 import edu.scripps.yates.utilities.grouping.ProteinGroup;
-import edu.scripps.yates.utilities.model.enums.AmountType;
+import edu.scripps.yates.utilities.proteomicsmodel.enums.AmountType;
+import edu.scripps.yates.utilities.proteomicsmodel.utils.KeyUtils;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
 
@@ -433,8 +434,8 @@ public class QuantAnalysis implements PropertyChangeListener {
 
 									final IsoRatio isoRatio = (IsoRatio) ratio;
 
-									key = KeyUtils.getIonKey(isoRatio,
-											((IsobaricQuantifiedPSM) quantifiedPSM).getPeptide(), true) + expRepKey;
+									key = QuantKeyUtils.getInstance().getIonKey(isoRatio,
+											((IsobaricQuantifiedPSM) quantifiedPSM).getPeptide()) + expRepKey;
 
 									fittingWeight = null;
 
@@ -503,7 +504,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 								}
 							}
 
-							key = KeyUtils.getSpectrumKey(quantifiedPSM, true) + expRepKey;
+							key = QuantKeyUtils.getInstance().getSpectrumKey(quantifiedPSM, true) + expRepKey;
 
 							// in case of not having isobaric isotopologues, we
 							// have one ratio per PSM in the replicate, not
@@ -1170,7 +1171,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 				groupableProteins.addAll(parser.getProteinMap().values());
 				final List<ProteinGroup> proteinGroups = getProteinGroups(groupableProteins);
 				for (final ProteinGroup proteinGroup : proteinGroups) {
-					final String proteinKey = KeyUtils.getGroupKey(proteinGroup);
+					final String proteinKey = KeyUtils.getInstance().getGroupKey(proteinGroup);
 					if (map.containsKey(all)) {
 						map.get(all).add(proteinKey);
 					} else {
@@ -1296,7 +1297,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 				groupableProteins.addAll(parser.getProteinMap().values());
 				final List<ProteinGroup> proteinGroups = getProteinGroups(groupableProteins);
 				for (final ProteinGroup proteinGroup : proteinGroups) {
-					final String proteinGroupKey = KeyUtils.getGroupKey(proteinGroup);
+					final String proteinGroupKey = KeyUtils.getInstance().getGroupKey(proteinGroup);
 					if (map.containsKey(proteinGroupKey)) {
 						map.get(proteinGroupKey).add(proteinGroupKey + "_" + expName);
 					} else {
@@ -1480,7 +1481,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 				groupableProteins.addAll(parser.getProteinMap().values());
 				final List<ProteinGroup> proteinGroups = getProteinGroups(groupableProteins);
 				for (final ProteinGroup proteinGroup : proteinGroups) {
-					final String proteinGroupKey = KeyUtils.getGroupKey(proteinGroup);
+					final String proteinGroupKey = KeyUtils.getInstance().getGroupKey(proteinGroup);
 					if (map.containsKey(proteinGroupKey + "_" + expName)) {
 						map.get(proteinGroupKey + "_" + expName).add(proteinGroupKey + expRepKey);
 					} else {
@@ -1602,7 +1603,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 						if (quantifiedPSM.isDiscarded()) {
 							continue;
 						}
-						final String peptideKey = KeyUtils.getSequenceKey(quantifiedPSM, true);
+						final String peptideKey = KeyUtils.getInstance().getSequenceKey(quantifiedPSM, true);
 						if (map2.containsKey(proteinKey)) {
 							map2.get(proteinKey).add(peptideKey);
 						} else {
@@ -1625,13 +1626,13 @@ public class QuantAnalysis implements PropertyChangeListener {
 	private Map<String, Set<String>> getProteinGroupToPeptideMap(List<ProteinGroup> proteinGroups) {
 		final Map<String, Set<String>> ret = new THashMap<String, Set<String>>();
 		for (final ProteinGroup proteinGroup : proteinGroups) {
-			final String groupKey = KeyUtils.getGroupKey(proteinGroup);
+			final String groupKey = KeyUtils.getInstance().getGroupKey(proteinGroup);
 			final Set<String> set = new THashSet<String>();
 			final List<GroupablePeptide> psMs = proteinGroup.getPSMs();
 			for (final GroupablePeptide groupablePSM : psMs) {
 				if (groupablePSM instanceof QuantifiedPSMInterface) {
 					final QuantifiedPSMInterface psm = (QuantifiedPSMInterface) groupablePSM;
-					final String peptideKey = KeyUtils.getSequenceKey(psm, true);
+					final String peptideKey = KeyUtils.getInstance().getSequenceKey(psm, true);
 					set.add(peptideKey);
 				}
 			}

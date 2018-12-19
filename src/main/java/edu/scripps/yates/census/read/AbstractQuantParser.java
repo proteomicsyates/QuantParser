@@ -17,7 +17,6 @@ import java.util.regex.PatternSyntaxException;
 import org.apache.log4j.Logger;
 
 import edu.scripps.yates.census.analysis.QuantCondition;
-import edu.scripps.yates.census.analysis.util.KeyUtils;
 import edu.scripps.yates.census.read.model.RatioDescriptor;
 import edu.scripps.yates.census.read.model.StaticQuantMaps;
 import edu.scripps.yates.census.read.model.interfaces.QuantParser;
@@ -32,11 +31,12 @@ import edu.scripps.yates.utilities.annotations.uniprot.xml.Entry;
 import edu.scripps.yates.utilities.fasta.FastaParser;
 import edu.scripps.yates.utilities.fasta.dbindex.DBIndexInterface;
 import edu.scripps.yates.utilities.ipi.IPI2UniprotACCMap;
-import edu.scripps.yates.utilities.model.enums.AccessionType;
-import edu.scripps.yates.utilities.model.factories.AccessionEx;
 import edu.scripps.yates.utilities.progresscounter.ProgressCounter;
 import edu.scripps.yates.utilities.progresscounter.ProgressPrintingType;
 import edu.scripps.yates.utilities.proteomicsmodel.Accession;
+import edu.scripps.yates.utilities.proteomicsmodel.enums.AccessionType;
+import edu.scripps.yates.utilities.proteomicsmodel.factories.AccessionEx;
+import edu.scripps.yates.utilities.proteomicsmodel.utils.KeyUtils;
 import edu.scripps.yates.utilities.remote.RemoteSSHFileReference;
 import edu.scripps.yates.utilities.sequence.PTMInProtein;
 import edu.scripps.yates.utilities.util.Pair;
@@ -443,12 +443,12 @@ public abstract class AbstractQuantParser implements QuantParser {
 			for (final QuantifiedPSMInterface psm : getPSMMap().values()) {
 				final String sequence = psm.getSequence();
 				String ptmKey = sequence; // by default if no ptms
-				if (!psm.getPtms().isEmpty()) {
-					final List<PTMInProtein> ptmsInProtein = psm.getPTMInProtein(uplr, proteinSequences);
+				if (!psm.getPTMsInPeptide().isEmpty()) {
+					final List<PTMInProtein> ptmsInProtein = psm.getPTMsInProtein(uplr, proteinSequences);
 					ptmKey = getPTMKeyFromPTMsInProtein(ptmsInProtein);
 
 				}
-				final String spectrumKey = KeyUtils.getSpectrumKey(psm, true);
+				final String spectrumKey = KeyUtils.getInstance().getSpectrumKey(psm, true);
 				addToMap(ptmKey, ptmToSpectraMap, spectrumKey);
 			}
 		}
@@ -541,8 +541,8 @@ public abstract class AbstractQuantParser implements QuantParser {
 			final Map<String, QuantifiedProteinInterface> newMap = new THashMap<String, QuantifiedProteinInterface>();
 			for (final String accession : localProteinMap.keySet()) {
 
-				final Pair<String, String> acc = FastaParser.getACC(accession);
-				if (acc.getSecondElement().equals("IPI")) {
+				final Accession acc = FastaParser.getACC(accession);
+				if (acc.getAccessionType() == AccessionType.IPI) {
 					final QuantifiedProteinInterface quantProtein = localProteinMap.get(accession);
 					Accession primaryAccession = new AccessionEx(accession, AccessionType.IPI);
 					final Pair<Accession, Set<Accession>> pair = IPI2UniprotACCMap.getInstance()
@@ -625,7 +625,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 					if (!accession.equals(primaryAccession) && !accession.contains(primaryAccession)) {
 						log.info("Replacing accession " + quantifiedProtein.getAccession() + " by primary accession "
 								+ primaryAccession);
-						quantifiedProtein.setAccession(primaryAccession);
+						quantifiedProtein.setPrimaryAccession(primaryAccession);
 						if (StaticQuantMaps.proteinMap.containsKey(primaryAccession)) {
 							// there was already a protein with that
 							// primaryAccession

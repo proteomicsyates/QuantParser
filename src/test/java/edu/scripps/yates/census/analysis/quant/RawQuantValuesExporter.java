@@ -188,8 +188,8 @@ public class RawQuantValuesExporter {
 	}
 
 	private void printStaticQuantInfo(QuantCondition conditionNumerator, QuantCondition conditionDenominator,
-			IsobaricQuantifiedPSM quantifiedPSM, Map<String, QuantValue> finalPeptideQuantValues,
-			DBIndexImpl dbIndex, BufferedWriter bw) throws IOException, DBIndexStoreException {
+			IsobaricQuantifiedPSM quantifiedPSM, Map<String, QuantValue> finalPeptideQuantValues, DBIndexImpl dbIndex,
+			BufferedWriter bw) throws IOException, DBIndexStoreException {
 		// experiment name
 		boolean dmdv = false;
 		boolean dvdm = false;
@@ -209,7 +209,7 @@ public class RawQuantValuesExporter {
 		bw.write(TAB);
 
 		// scan #
-		bw.write(quantifiedPSM.getScan() + TAB);
+		bw.write(quantifiedPSM.getScanNumber() + TAB);
 		// psmID
 		bw.write(quantifiedPSM.getIdentifier() + TAB);
 
@@ -229,8 +229,8 @@ public class RawQuantValuesExporter {
 
 			@Override
 			public int compare(IndexedProtein o1, IndexedProtein o2) {
-				final String accession1 = FastaParser.getACC(o1.getAccession()).getFirstelement();
-				final String accession2 = FastaParser.getACC(o2.getAccession()).getFirstelement();
+				final String accession1 = FastaParser.getACC(o1.getAccession()).getAccession();
+				final String accession2 = FastaParser.getACC(o2.getAccession()).getAccession();
 				return accession1.compareTo(accession2);
 			}
 		});
@@ -265,7 +265,7 @@ public class RawQuantValuesExporter {
 		bw.write(TAB);
 		// accessions
 		for (final IndexedProtein indexedProtein : proteins) {
-			bw.write(FastaParser.getACC(indexedProtein.getAccession()).getFirstelement() + SEPARATOR);
+			bw.write(FastaParser.getACC(indexedProtein.getAccession()).getAccession() + SEPARATOR);
 		}
 		bw.write(TAB);
 		// protein descriptions
@@ -293,12 +293,12 @@ public class RawQuantValuesExporter {
 		bw.write(quantifiedPSM.getSequence() + TAB);
 		if (quantifiedPSM instanceof QuantifiedPSMInterface) {
 			// charge
-			bw.write(((QuantifiedPSMInterface) quantifiedPSM).getCharge() + TAB);
+			bw.write(((QuantifiedPSMInterface) quantifiedPSM).getChargeState() + TAB);
 			// M+H
-			bw.write(((QuantifiedPSMInterface) quantifiedPSM).getMHplus() + TAB);
+			bw.write(((QuantifiedPSMInterface) quantifiedPSM).getExperimentalMH() + TAB);
 		}
 		// Theor M+H
-		bw.write(quantifiedPSM.getCalcMHplus() + TAB);
+		bw.write(quantifiedPSM.getCalcMH() + TAB);
 		// max peak
 		bw.write(quantifiedPSM.getMaxPeak() + TAB);
 
@@ -396,8 +396,8 @@ public class RawQuantValuesExporter {
 
 			@Override
 			public int compare(IndexedProtein o1, IndexedProtein o2) {
-				final String accession1 = FastaParser.getACC(o1.getAccession()).getFirstelement();
-				final String accession2 = FastaParser.getACC(o2.getAccession()).getFirstelement();
+				final String accession1 = FastaParser.getACC(o1.getAccession()).getAccession();
+				final String accession2 = FastaParser.getACC(o2.getAccession()).getAccession();
 				return accession1.compareTo(accession2);
 			}
 		});
@@ -433,7 +433,7 @@ public class RawQuantValuesExporter {
 		bw.write(TAB);
 		// accessions
 		for (final IndexedProtein indexedProtein : proteins) {
-			bw.write(FastaParser.getACC(indexedProtein.getAccession()).getFirstelement() + SEPARATOR);
+			bw.write(FastaParser.getACC(indexedProtein.getAccession()).getAccession() + SEPARATOR);
 		}
 		bw.write(TAB);
 		// protein descriptions
@@ -464,12 +464,13 @@ public class RawQuantValuesExporter {
 		bw.write(quantifiedPeptide.getSequence() + TAB);
 		if (quantifiedPeptide instanceof QuantifiedPSMInterface) {
 			// charge
-			bw.write(((QuantifiedPSMInterface) quantifiedPeptide).getCharge() + TAB);
+			bw.write(((QuantifiedPSMInterface) quantifiedPeptide).getChargeState() + TAB);
 			// M+H
-			bw.write(((QuantifiedPSMInterface) quantifiedPeptide).getMHplus() + TAB);
+			bw.write(((QuantifiedPSMInterface) quantifiedPeptide).getExperimentalMH() + TAB);
+			// Theor M+H
+			bw.write(((QuantifiedPSMInterface) quantifiedPeptide).getCalcMH() + TAB);
 		}
-		// Theor M+H
-		bw.write(quantifiedPeptide.getCalcMHplus() + TAB);
+
 		// max peak
 		bw.write(quantifiedPeptide.getMaxPeak() + TAB);
 
