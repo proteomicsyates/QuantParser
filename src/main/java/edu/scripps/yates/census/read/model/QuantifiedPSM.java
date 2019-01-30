@@ -93,16 +93,17 @@ public class QuantifiedPSM extends AbstractPSM implements QuantifiedPSMInterface
 	public boolean addProtein(Protein protein, boolean recursive) {
 		super.addProtein(protein, recursive);
 		// get the taxonomy
-		if (protein instanceof QuantifiedProteinInterface) {
-			final Set<String> taxonomies = ((QuantifiedProteinInterface) protein).getTaxonomies();
-			taxonomies.addAll(taxonomies);
+		final Set<String> taxonomies = protein.getTaxonomies();
+		for (final String tax : taxonomies) {
+			addTaxonomy(tax);
 		}
+
 		return true;
 	}
 
 	/**
-	 * Gets the labels that this {@link QuantifiedPSM} has been labeled ONLY
-	 * with some label.<br>
+	 * Gets the labels that this {@link QuantifiedPSM} has been labeled ONLY with
+	 * some label.<br>
 	 * So, may happen that contains any ratio and it is not labeled
 	 *
 	 * @return the labels

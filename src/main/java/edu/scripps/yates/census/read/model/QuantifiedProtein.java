@@ -273,8 +273,8 @@ public class QuantifiedProtein extends AbstractProtein implements QuantifiedProt
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof QuantifiedPeptide) {
-			return ((QuantifiedPeptide) obj).getKey().equals(getKey());
+		if (obj instanceof QuantifiedProtein) {
+			return ((QuantifiedProtein) obj).getKey().equals(getKey());
 		}
 		return super.equals(obj);
 	}

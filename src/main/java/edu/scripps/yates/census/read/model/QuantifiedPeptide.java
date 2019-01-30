@@ -36,8 +36,7 @@ public class QuantifiedPeptide extends AbstractPeptide implements QuantifiedPept
 
 	/**
 	 * Creates a {@link QuantifiedPeptide} object, adding the
-	 * {@link QuantifiedPSMInterface} to its list of
-	 * {@link QuantifiedPSMInterface}s
+	 * {@link QuantifiedPSMInterface} to its list of {@link QuantifiedPSMInterface}s
 	 *
 	 * @param quantPSM
 	 * @param distinguishModifiedSequences
@@ -64,7 +63,7 @@ public class QuantifiedPeptide extends AbstractPeptide implements QuantifiedPept
 	public boolean addPSM(PSM quantPSM, boolean recursive) {
 		if (sequenceKey.equals(QuantKeyUtils.getInstance().getSequenceKey(quantPSM, true))) {
 			if (!getPSMs().contains(quantPSM)) {
-				final boolean ret = addPSM(quantPSM, recursive);
+				final boolean ret = super.addPSM(quantPSM, recursive);
 				return ret;
 			}
 			return false;
