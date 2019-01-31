@@ -292,7 +292,7 @@ public class QuantifiedPeptide extends AbstractPeptide implements QuantifiedPept
 
 	@Override
 	public Set<QuantRatio> getQuantRatios() {
-		if (quantRatios == null) {
+		if (quantRatios == null || quantRatios.isEmpty()) {
 			quantRatios = new THashSet<QuantRatio>();
 
 			final Set<Ratio> ratios = getRatios();

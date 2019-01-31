@@ -221,7 +221,7 @@ public class QuantifiedPSM extends AbstractPSM implements QuantifiedPSMInterface
 
 	@Override
 	public Set<QuantRatio> getQuantRatios() {
-		if (quantRatios == null) {
+		if (quantRatios == null || quantRatios.isEmpty()) {
 			quantRatios = new THashSet<QuantRatio>();
 
 			final Set<Ratio> ratios = getRatios();

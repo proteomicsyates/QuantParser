@@ -64,7 +64,7 @@ public class QuantifiedProtein extends AbstractProtein implements QuantifiedProt
 	 */
 	@Override
 	public Set<QuantifiedPSMInterface> getQuantifiedPSMs() {
-		if (quantifiedPSMs == null) {
+		if (quantifiedPSMs == null || quantifiedPSMs.isEmpty()) {
 			quantifiedPSMs = new THashSet<QuantifiedPSMInterface>();
 			for (final PSM psm : getPSMs()) {
 				if (psm instanceof QuantifiedPSMInterface) {
@@ -81,7 +81,7 @@ public class QuantifiedProtein extends AbstractProtein implements QuantifiedProt
 	 */
 	@Override
 	public Set<QuantifiedPeptideInterface> getQuantifiedPeptides() {
-		if (quantifiedPeptides == null) {
+		if (quantifiedPeptides == null || quantifiedPeptides.isEmpty()) {
 			quantifiedPeptides = new THashSet<QuantifiedPeptideInterface>();
 			for (final QuantifiedPSMInterface psm : getQuantifiedPSMs()) {
 				if (psm.getQuantifiedPeptide() != null) {
@@ -220,7 +220,7 @@ public class QuantifiedProtein extends AbstractProtein implements QuantifiedProt
 
 	@Override
 	public Set<QuantRatio> getQuantRatios() {
-		if (quantRatios == null) {
+		if (quantRatios == null || quantRatios.isEmpty()) {
 			quantRatios = new THashSet<QuantRatio>();
 
 			final Set<Ratio> ratios = getRatios();
