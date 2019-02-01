@@ -112,8 +112,6 @@ public class StatisticsOnPSMLevel {
 			if (count++ % 500 == 0) {
 				log.info(df.format(Double.valueOf(count) * 100 / census.getPSMMap().size()) + " % of PSMs...");
 			}
-			if ("3504-DmDv_10e_each_071214_02".equals(psmID))
-				System.out.println("asdf");
 
 			// PEP SEQ
 			psmTableString.append(seq + SEPARATOR);
@@ -189,8 +187,8 @@ public class StatisticsOnPSMLevel {
 	}
 
 	/**
-	 * Prints a table with the number of protein identified in each tag (light
-	 * or heavy) for each species.
+	 * Prints a table with the number of protein identified in each tag (light or
+	 * heavy) for each species.
 	 *
 	 * @return
 	 */
