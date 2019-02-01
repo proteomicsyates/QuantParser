@@ -126,7 +126,7 @@ public class IsobaricQuantifiedProtein extends QuantifiedProtein implements HasI
 
 	@Override
 	public Float getMw() {
-		if (getMw() == null && protein != null) {
+		if (super.getMw() == null && protein != null) {
 			try {
 				setMw(Float.valueOf(protein.getMolwt()));
 			} catch (final NumberFormatException e) {
@@ -145,7 +145,7 @@ public class IsobaricQuantifiedProtein extends QuantifiedProtein implements HasI
 	@Override
 	public Float getPi() {
 
-		if (getPi() == null && protein != null) {
+		if (super.getPi() == null && protein != null) {
 			try {
 				setPi(Float.valueOf(protein.getPi()));
 			} catch (final NumberFormatException e) {
@@ -187,7 +187,7 @@ public class IsobaricQuantifiedProtein extends QuantifiedProtein implements HasI
 
 	@Override
 	public Set<String> getTaxonomies() {
-		if (getTaxonomies() == null || getTaxonomies().isEmpty()) {
+		if (super.getTaxonomies() == null || super.getTaxonomies().isEmpty()) {
 			String fastaHeader = null;
 			final String accession = getAccession();
 			if (protein != null) {
@@ -208,8 +208,7 @@ public class IsobaricQuantifiedProtein extends QuantifiedProtein implements HasI
 	}
 
 	/**
-	 * @param distinguishModifiedPeptides
-	 *            the distinguishModifiedPeptides to set
+	 * @param distinguishModifiedPeptides the distinguishModifiedPeptides to set
 	 */
 	public void setDistinguishModifiedPeptides(boolean distinguishModifiedPeptides) {
 		this.distinguishModifiedPeptides = distinguishModifiedPeptides;
@@ -265,8 +264,8 @@ public class IsobaricQuantifiedProtein extends QuantifiedProtein implements HasI
 	}
 
 	/**
-	 * Returns true if the protein contains any {@link Ion} labeled with a
-	 * certain {@link QuantificationLabel} not paired with any other label
+	 * Returns true if the protein contains any {@link Ion} labeled with a certain
+	 * {@link QuantificationLabel} not paired with any other label
 	 *
 	 * @param label
 	 * @return
@@ -281,9 +280,9 @@ public class IsobaricQuantifiedProtein extends QuantifiedProtein implements HasI
 	}
 
 	/**
-	 * Returns true if the protein contains any {@link Ion} labeled with a
-	 * certain {@link QuantificationLabel} not matter if they are paired with
-	 * any other label or not (getting ratios or not)
+	 * Returns true if the protein contains any {@link Ion} labeled with a certain
+	 * {@link QuantificationLabel} not matter if they are paired with any other
+	 * label or not (getting ratios or not)
 	 *
 	 * @param label
 	 * @return

@@ -59,12 +59,12 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractProtein implement
 
 	@Override
 	public String getDescription() {
-		if (getDescription() == null) {
+		if (super.getDescription() == null) {
 			if (indexedProtein != null) {
 				setDescription(FastaParser.getDescription(indexedProtein.getFastaDefLine()));
 			}
 		}
-		return getDescription();
+		return super.getDescription();
 	}
 
 	/**
@@ -119,7 +119,7 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractProtein implement
 
 	@Override
 	public Set<String> getTaxonomies() {
-		if ((getTaxonomies() == null || getTaxonomies().isEmpty()) && !isIgnoreTaxonomy()) {
+		if ((super.getTaxonomies() == null || super.getTaxonomies().isEmpty()) && !isIgnoreTaxonomy()) {
 			String fastaHeader = null;
 
 			if (indexedProtein != null) {
@@ -130,7 +130,7 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractProtein implement
 					accession);
 			addTaxonomy(organismNameFromFastaHeader);
 		}
-		return getTaxonomies();
+		return super.getTaxonomies();
 	}
 
 	/**
@@ -141,8 +141,7 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractProtein implement
 	}
 
 	/**
-	 * @param distinguishModifiedPeptides
-	 *            the distinguishModifiedPeptides to set
+	 * @param distinguishModifiedPeptides the distinguishModifiedPeptides to set
 	 */
 	public void setDistinguishModifiedPeptides(boolean distinguishModifiedPeptides) {
 		this.distinguishModifiedPeptides = distinguishModifiedPeptides;
