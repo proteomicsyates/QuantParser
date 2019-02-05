@@ -63,10 +63,8 @@ public class IsobaricQuantifiedPSM extends AbstractPSM implements QuantifiedPSMI
 	/**
 	 *
 	 * @param peptide
-	 * @param labelNumerator
-	 *            for writing data file. Otherwise, it can be null
-	 * @param labelDenominator
-	 *            for writing data file. Otherwise it can be null
+	 * @param labelNumerator      for writing data file. Otherwise, it can be null
+	 * @param labelDenominator    for writing data file. Otherwise it can be null
 	 * @param spectrumToIonsMap
 	 * @param peptideToSpectraMap
 	 * @param ionKeys
@@ -238,8 +236,7 @@ public class IsobaricQuantifiedPSM extends AbstractPSM implements QuantifiedPSMI
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see
-	 * edu.scripps.yates.census.quant.xml.RelexChro.Protein.Peptide#getFrag()
+	 * @see edu.scripps.yates.census.quant.xml.RelexChro.Protein.Peptide#getFrag()
 	 */
 
 	public Frag getFrag() {
@@ -250,8 +247,7 @@ public class IsobaricQuantifiedPSM extends AbstractPSM implements QuantifiedPSMI
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see
-	 * edu.scripps.yates.census.quant.xml.RelexChro.Protein.Peptide#getUnique()
+	 * @see edu.scripps.yates.census.quant.xml.RelexChro.Protein.Peptide#getUnique()
 	 */
 
 	public String getUnique() {
@@ -340,8 +336,8 @@ public class IsobaricQuantifiedPSM extends AbstractPSM implements QuantifiedPSMI
 	}
 
 	/**
-	 * Returns true if the peptide contains any {@link Ion} labeled with a
-	 * certain {@link QuantificationLabel} and not composing any ratio.
+	 * Returns true if the peptide contains any {@link Ion} labeled with a certain
+	 * {@link QuantificationLabel} and not composing any ratio.
 	 *
 	 * @param label
 	 * @return
@@ -353,9 +349,9 @@ public class IsobaricQuantifiedPSM extends AbstractPSM implements QuantifiedPSMI
 	}
 
 	/**
-	 * Returns true if the peptide contains any {@link Ion} labeled with a
-	 * certain {@link QuantificationLabel}, not matter if they are composing any
-	 * ratio or not.
+	 * Returns true if the peptide contains any {@link Ion} labeled with a certain
+	 * {@link QuantificationLabel}, not matter if they are composing any ratio or
+	 * not.
 	 *
 	 * @param label
 	 * @return
@@ -367,9 +363,9 @@ public class IsobaricQuantifiedPSM extends AbstractPSM implements QuantifiedPSMI
 	}
 
 	/**
-	 * Returns true if the peptide contains any {@link Ion} labeled with a
-	 * certain {@link QuantificationLabel}, no matter if they are composing any
-	 * ratio or not.
+	 * Returns true if the peptide contains any {@link Ion} labeled with a certain
+	 * {@link QuantificationLabel}, no matter if they are composing any ratio or
+	 * not.
 	 *
 	 * @param label
 	 * @return
@@ -382,8 +378,8 @@ public class IsobaricQuantifiedPSM extends AbstractPSM implements QuantifiedPSMI
 	}
 
 	/**
-	 * Returns true if the peptide contains any {@link Ion} labeled with a
-	 * certain {@link QuantificationLabel} and not composing any ratio.
+	 * Returns true if the peptide contains any {@link Ion} labeled with a certain
+	 * {@link QuantificationLabel} and not composing any ratio.
 	 *
 	 * @param label
 	 * @return
@@ -605,8 +601,8 @@ public class IsobaricQuantifiedPSM extends AbstractPSM implements QuantifiedPSMI
 	}
 
 	/**
-	 * Gets the labels that this {@link IsobaricQuantifiedPSM} has been labeled
-	 * ONLY with some label.<br>
+	 * Gets the labels that this {@link IsobaricQuantifiedPSM} has been labeled ONLY
+	 * with some label.<br>
 	 * So, may happen that contains any ratio and it is not labeled
 	 *
 	 * @return the labels
@@ -848,7 +844,7 @@ public class IsobaricQuantifiedPSM extends AbstractPSM implements QuantifiedPSMI
 				}
 			}
 		}
-		final boolean ret = addRatio(ratio);
+		final boolean ret = super.addRatio(ratio);
 		if (ret) {
 			quantRatios = null;
 		}

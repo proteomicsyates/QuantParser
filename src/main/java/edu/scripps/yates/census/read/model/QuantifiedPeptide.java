@@ -152,7 +152,7 @@ public class QuantifiedPeptide extends AbstractPeptide implements QuantifiedPept
 				}
 			}
 		}
-		return getAmounts();
+		return super.getAmounts();
 	}
 
 	@Override
@@ -316,7 +316,7 @@ public class QuantifiedPeptide extends AbstractPeptide implements QuantifiedPept
 				}
 			}
 		}
-		final boolean ret = addRatio(ratio);
+		final boolean ret = super.addRatio(ratio);
 		if (ret) {
 			quantRatios = null;
 		}

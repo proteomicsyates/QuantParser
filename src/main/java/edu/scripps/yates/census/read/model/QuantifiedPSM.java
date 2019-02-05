@@ -151,7 +151,7 @@ public class QuantifiedPSM extends AbstractPSM implements QuantifiedPSMInterface
 				}
 			}
 		}
-		final boolean ret = addRatio(ratio);
+		final boolean ret = super.addRatio(ratio);
 		if (ret) {
 			quantRatios = null;
 		}
