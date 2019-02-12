@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import edu.scripps.yates.census.analysis.QuantCondition;
 import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
@@ -273,4 +275,16 @@ public class QuantifiedPSM extends AbstractPSM implements QuantifiedPSMInterface
 		return addProtein(protein, recursively);
 	}
 
+	@Override
+	public int hashCode() {
+		return HashCodeBuilder.reflectionHashCode(getKey(), false);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof QuantifiedPSM) {
+			return ((QuantifiedPSM) obj).getKey().equals(getKey());
+		}
+		return super.equals(obj);
+	}
 }
