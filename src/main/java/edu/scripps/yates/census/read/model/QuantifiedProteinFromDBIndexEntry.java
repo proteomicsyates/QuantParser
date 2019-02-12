@@ -216,7 +216,7 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractProtein implement
 				}
 			}
 		}
-		final boolean ret = addRatio(ratio);
+		final boolean ret = super.addRatio(ratio);
 		if (ret) {
 			quantRatios = null;
 		}
