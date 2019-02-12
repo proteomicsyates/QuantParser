@@ -10,6 +10,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.log4j.Logger;
 
 import edu.scripps.yates.census.analysis.QuantCondition;
+import edu.scripps.yates.census.read.model.interfaces.HasKey;
 import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface;
@@ -273,9 +274,10 @@ public class QuantifiedProtein extends AbstractProtein implements QuantifiedProt
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof QuantifiedProtein) {
-			return ((QuantifiedProtein) obj).getKey().equals(getKey());
+		if (obj instanceof HasKey) {
+			return ((HasKey) obj).getKey().equals(getKey());
 		}
 		return super.equals(obj);
 	}
+
 }

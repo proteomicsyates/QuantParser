@@ -7,7 +7,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import edu.scripps.yates.census.analysis.QuantCondition;
+import edu.scripps.yates.census.read.model.interfaces.HasKey;
 import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface;
@@ -309,5 +312,18 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractProtein implement
 		}
 
 		return Maths.stddev(ratioValues);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof HasKey) {
+			return ((HasKey) obj).getKey().equals(getKey());
+		}
+		return super.equals(obj);
+	}
+
+	@Override
+	public int hashCode() {
+		return HashCodeBuilder.reflectionHashCode(getKey(), false);
 	}
 }
