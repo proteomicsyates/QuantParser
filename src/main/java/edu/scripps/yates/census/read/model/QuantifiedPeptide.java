@@ -296,9 +296,19 @@ public class QuantifiedPeptide extends AbstractPeptide implements QuantifiedPept
 			quantRatios = new THashSet<QuantRatio>();
 
 			final Set<Ratio> ratios = getRatios();
-			for (final Ratio ratio : ratios) {
-				if (ratio instanceof QuantRatio) {
-					quantRatios.add((QuantRatio) ratio);
+			if (ratios.isEmpty()) {
+				final Set<QuantifiedPSMInterface> quantifiedPSMs = getQuantifiedPSMs();
+				for (final QuantifiedPSMInterface quantPSM : quantifiedPSMs) {
+					final Set<QuantRatio> quantRatiosFromPSM = quantPSM.getQuantRatios();
+					for (final QuantRatio ratio : quantRatiosFromPSM) {
+						quantRatios.add(ratio);
+					}
+				}
+			} else {
+				for (final Ratio ratio : ratios) {
+					if (ratio instanceof QuantRatio) {
+						quantRatios.add((QuantRatio) ratio);
+					}
 				}
 			}
 		}
