@@ -226,13 +226,8 @@ public abstract class AbstractQuantParser implements QuantParser {
 		if (condition1 != null && condition2 != null) {
 			final RatioDescriptor ratioDescriptor = new RatioDescriptor(labelNumerator, labelDenominator, condition1,
 					condition2);
-			if (ratioDescriptorsByFile.containsKey(remoteFileReference)) {
-				ratioDescriptorsByFile.get(remoteFileReference).add(ratioDescriptor);
-			} else {
-				final List<RatioDescriptor> list = new ArrayList<RatioDescriptor>();
-				list.add(ratioDescriptor);
-				ratioDescriptorsByFile.put(remoteFileReference, list);
-			}
+			addRatioDescriptor(remoteFileReference, ratioDescriptor);
+
 		}
 		// numeratorLabelByFile.put(remoteFileReference, labelNumerator);
 		// denominatorLabelByFile.put(remoteFileReference, labelDenominator);
@@ -299,8 +294,8 @@ public abstract class AbstractQuantParser implements QuantParser {
 	 * {@link QuantifiedProteinInterface} and {@link QuantifiedPSMInterface}
 	 * classes.<br>
 	 * This method should be called at the beggining of an analysis in order to
-	 * create just one {@link QuantifiedProteinInterface} for all the replicates
-	 * and experiments for a given accession.
+	 * create just one {@link QuantifiedProteinInterface} for all the replicates and
+	 * experiments for a given accession.
 	 */
 	private void clearStaticInfo() {
 	}
@@ -387,8 +382,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 	}
 
 	/**
-	 * @param dbIndexInterface
-	 *            the dbIndex to set
+	 * @param dbIndexInterface the dbIndex to set
 	 */
 	@Override
 	public void setDbIndex(DBIndexInterface dbIndexInterface) {
@@ -499,8 +493,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 	}
 
 	/**
-	 * @param ignoreNotFoundPeptidesInDB
-	 *            the ignoreNotFoundPeptidesInDB to set
+	 * @param ignoreNotFoundPeptidesInDB the ignoreNotFoundPeptidesInDB to set
 	 */
 	@Override
 	public void setIgnoreNotFoundPeptidesInDB(boolean ignoreNotFoundPeptidesInDB) {
@@ -508,9 +501,8 @@ public abstract class AbstractQuantParser implements QuantParser {
 	}
 
 	/**
-	 * Gets a set of Uniprot Accessions from the protein set in the parser. If
-	 * the accessions are not Uniprot formatted, they are not retrieved here.
-	 * <br>
+	 * Gets a set of Uniprot Accessions from the protein set in the parser. If the
+	 * accessions are not Uniprot formatted, they are not retrieved here. <br>
 	 * This function is used for getting annotations in uniprot for the proteins
 	 * that are actually from uniprot.
 	 *
@@ -531,8 +523,8 @@ public abstract class AbstractQuantParser implements QuantParser {
 
 	/**
 	 * To be called after process().<br>
-	 * If proteins have IPI accessions, look for the mapping from IPI 2 Uniprot.
-	 * It adds new entries to the map, but it doesn't create any new
+	 * If proteins have IPI accessions, look for the mapping from IPI 2 Uniprot. It
+	 * adds new entries to the map, but it doesn't create any new
 	 * {@link QuantifiedProteinInterface}
 	 */
 	private void mapIPI2Uniprot() {

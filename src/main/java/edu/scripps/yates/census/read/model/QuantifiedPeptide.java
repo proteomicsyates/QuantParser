@@ -143,7 +143,7 @@ public class QuantifiedPeptide extends AbstractPeptide implements QuantifiedPept
 
 	@Override
 	public Set<Amount> getAmounts() {
-		if (getAmounts().isEmpty()) {
+		if (super.getAmounts().isEmpty()) {
 			for (final PSM psm : getPSMs()) {
 				if (psm.getAmounts() != null) {
 					for (final Amount amount : psm.getAmounts()) {

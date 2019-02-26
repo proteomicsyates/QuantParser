@@ -34,6 +34,7 @@ public class QuantCondition implements Condition {
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
@@ -43,6 +44,7 @@ public class QuantCondition implements Condition {
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
@@ -55,10 +57,12 @@ public class QuantCondition implements Condition {
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see java.lang.Object#hashCode()
 	 */
 	@Override
 	public int hashCode() {
+//		return HashCodeBuilder.reflectionHashCode(getName());
 		return -1;
 	}
 

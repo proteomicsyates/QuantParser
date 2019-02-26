@@ -21,6 +21,8 @@ import edu.scripps.yates.utilities.proteomicsmodel.Amount;
 import edu.scripps.yates.utilities.proteomicsmodel.Protein;
 import edu.scripps.yates.utilities.proteomicsmodel.Ratio;
 import edu.scripps.yates.utilities.proteomicsmodel.enums.AggregationLevel;
+import edu.scripps.yates.utilities.proteomicsmodel.factories.MSRunEx;
+import edu.scripps.yates.utilities.proteomicsmodel.staticstorage.StaticProteomicsModelStorage;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
@@ -51,10 +53,17 @@ public class QuantifiedPSM extends AbstractPSM implements QuantifiedPSMInterface
 		setChargeState(chargeState);
 		// remove the H of HEAVY
 		if (rawFileName != null && rawFileName.startsWith("H")) {
-			rawFileNames.add(rawFileName.substring(1));
-		} else {
-			rawFileNames.add(rawFileName);
+			rawFileName = rawFileName.substring(1);
 		}
+		rawFileNames.add(rawFileName);
+
+		if (StaticProteomicsModelStorage.containsMSRun(rawFileName)) {
+			setMSRun(StaticProteomicsModelStorage.getMSRun(rawFileName));
+		} else {
+			setMSRun(new MSRunEx(rawFileName, "-"));
+			StaticProteomicsModelStorage.addMSRun(getMSRun());
+		}
+
 		this.singleton = singleton;
 		final String peptideKey = QuantKeyUtils.getInstance().getSequenceKey(this, true);
 		final String spectrumKey = QuantKeyUtils.getInstance().getSpectrumKey(this, true);

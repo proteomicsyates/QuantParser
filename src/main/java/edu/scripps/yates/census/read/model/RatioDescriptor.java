@@ -3,6 +3,8 @@ package edu.scripps.yates.census.read.model;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang.builder.HashCodeBuilder;
+
 import edu.scripps.yates.census.analysis.QuantCondition;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
 
@@ -38,15 +40,41 @@ public class RatioDescriptor {
 		return condition2;
 	}
 
+	@Override
+	public int hashCode() {
+		return HashCodeBuilder.reflectionHashCode(this);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof RatioDescriptor) {
+			final RatioDescriptor rd = (RatioDescriptor) obj;
+			if (rd.getLabel1() != getLabel1()) {
+				return false;
+			}
+			if (rd.getLabel2() != getLabel2()) {
+				return false;
+			}
+			if (!rd.getQuantCondition1().getName().equals(getQuantCondition1().getName())) {
+				return false;
+			}
+			if (!rd.getQuantCondition2().getName().equals(getQuantCondition2().getName())) {
+				return false;
+			}
+			return true;
+		}
+		return super.equals(obj);
+	}
+
 	/**
-	 * This returns _L_H for a light over heavy ratio, _L_M for a medium over
-	 * heavy ratio, and so on
+	 * This returns _L_H for a light over heavy ratio, _L_M for a medium over heavy
+	 * ratio, and so on
 	 *
 	 * @return
 	 */
 	public String getRatioSuffix() {
-		String letter1 = getLetterForLabel(label1);
-		String letter2 = getLetterForLabel(label2);
+		final String letter1 = getLetterForLabel(label1);
+		final String letter2 = getLetterForLabel(label2);
 
 		return "_" + letter1 + "_" + letter2;
 	}
@@ -58,7 +86,7 @@ public class RatioDescriptor {
 	 * @return
 	 */
 	public Map<String, QuantCondition> getConditionsByIndividualRatioSuffixes() {
-		Map<String, QuantCondition> ret = new HashMap<String, QuantCondition>();
+		final Map<String, QuantCondition> ret = new HashMap<String, QuantCondition>();
 		ret.put("_" + getLetterForLabel(label1), condition1);
 		ret.put("_" + getLetterForLabel(label2), condition2);
 		return ret;
