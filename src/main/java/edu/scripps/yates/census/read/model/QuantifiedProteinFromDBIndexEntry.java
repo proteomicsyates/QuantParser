@@ -38,8 +38,7 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractProtein implement
 
 	private final boolean ignoreACCFormat;
 
-	private THashSet<QuantifiedPeptideInterface> quantifiedPeptides = new THashSet<QuantifiedPeptideInterface>();
-
+	private Set<QuantifiedPeptideInterface> quantifiedPeptides;
 	private Set<QuantifiedPSMInterface> quantifiedPSMs;
 	private Set<QuantRatio> quantRatios;
 
@@ -75,7 +74,7 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractProtein implement
 	 */
 	@Override
 	public Set<QuantifiedPSMInterface> getQuantifiedPSMs() {
-		if (quantifiedPSMs == null) {
+		if (quantifiedPSMs == null || quantifiedPSMs.isEmpty()) {
 			quantifiedPSMs = new THashSet<QuantifiedPSMInterface>();
 			for (final PSM psm : getPSMs()) {
 				if (psm instanceof QuantifiedPSMInterface) {
@@ -92,9 +91,9 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractProtein implement
 	 */
 	@Override
 	public Set<QuantifiedPeptideInterface> getQuantifiedPeptides() {
-		if (quantifiedPeptides == null) {
+		if (quantifiedPeptides == null || quantifiedPeptides.isEmpty()) {
 			quantifiedPeptides = new THashSet<QuantifiedPeptideInterface>();
-			for (final QuantifiedPSMInterface psm : quantifiedPSMs) {
+			for (final QuantifiedPSMInterface psm : getQuantifiedPSMs()) {
 				if (psm.getQuantifiedPeptide() != null) {
 					quantifiedPeptides.add(psm.getQuantifiedPeptide());
 				}
@@ -279,7 +278,7 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractProtein implement
 
 	@Override
 	public Set<QuantRatio> getQuantRatios() {
-		if (quantRatios == null) {
+		if (quantRatios == null || quantRatios.isEmpty()) {
 			quantRatios = new THashSet<QuantRatio>();
 
 			final Set<Ratio> ratios = getRatios();
