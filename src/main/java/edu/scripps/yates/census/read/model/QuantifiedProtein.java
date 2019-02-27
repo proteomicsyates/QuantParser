@@ -6,11 +6,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.log4j.Logger;
 
 import edu.scripps.yates.census.analysis.QuantCondition;
-import edu.scripps.yates.census.read.model.interfaces.HasKey;
 import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface;
@@ -30,7 +28,6 @@ public class QuantifiedProtein extends AbstractProtein implements QuantifiedProt
 	private static final Logger log = Logger.getLogger(QuantifiedProtein.class);
 
 	private boolean discarded;
-	private final String key;
 
 	private Set<QuantifiedPSMInterface> quantifiedPSMs;
 	private Set<QuantifiedPeptideInterface> quantifiedPeptides;
@@ -41,23 +38,16 @@ public class QuantifiedProtein extends AbstractProtein implements QuantifiedProt
 	}
 
 	public QuantifiedProtein(String proteinACC, boolean ignoreTaxonomies) {
-		this(proteinACC, null, ignoreTaxonomies);
+		this(proteinACC, FastaParser.getACC(proteinACC).getAccession(), ignoreTaxonomies);
 
 	}
 
 	public QuantifiedProtein(String proteinACC, String key, boolean ignoreTaxonomy) {
-		final Accession accPair = FastaParser.getACC(proteinACC);
-		super.setPrimaryAccession(accPair);
+		setKey(key);
+		final Accession acc = FastaParser.getACC(proteinACC);
+		super.setPrimaryAccession(acc);
 		setIgnoreTaxonomy(ignoreTaxonomy);
-		this.key = key;
-	}
 
-	@Override
-	public String getKey() {
-		if (key != null) {
-			return key;
-		}
-		return getAccession();
 	}
 
 	/**
@@ -265,19 +255,6 @@ public class QuantifiedProtein extends AbstractProtein implements QuantifiedProt
 	@Override
 	public boolean addQuantifiedPSM(QuantifiedPSMInterface psm, boolean recursively) {
 		return addPSM(psm, recursively);
-	}
-
-	@Override
-	public int hashCode() {
-		return HashCodeBuilder.reflectionHashCode(getKey(), false);
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof HasKey) {
-			return ((HasKey) obj).getKey().equals(getKey());
-		}
-		return super.equals(obj);
 	}
 
 }

@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-
 import edu.scripps.yates.census.analysis.QuantCondition;
 import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
@@ -30,7 +28,6 @@ import gnu.trove.set.hash.TCharHashSet;
 import gnu.trove.set.hash.THashSet;
 
 public class QuantifiedPeptide extends AbstractPeptide implements QuantifiedPeptideInterface {
-	protected String sequenceKey;
 	private boolean discarded;
 	private Set<QuantRatio> quantRatios;
 
@@ -42,17 +39,12 @@ public class QuantifiedPeptide extends AbstractPeptide implements QuantifiedPept
 	 * @param distinguishModifiedSequences
 	 */
 	public QuantifiedPeptide(QuantifiedPSMInterface quantPSM, boolean ignoreTaxonomies) {
-		sequenceKey = QuantKeyUtils.getInstance().getSequenceKey(quantPSM, true);
+		setKey(QuantKeyUtils.getInstance().getSequenceKey(quantPSM, true));
 		super.setSequence(quantPSM.getSequence());
 		setFullSequence(quantPSM.getFullSequence());
 		setIgnoreTaxonomy(ignoreTaxonomies);
 		addPSM(quantPSM, true);
 
-	}
-
-	@Override
-	public String getKey() {
-		return sequenceKey;
 	}
 
 	/**
@@ -61,7 +53,7 @@ public class QuantifiedPeptide extends AbstractPeptide implements QuantifiedPept
 	 */
 	@Override
 	public boolean addPSM(PSM quantPSM, boolean recursive) {
-		if (sequenceKey.equals(QuantKeyUtils.getInstance().getSequenceKey(quantPSM, true))) {
+		if (getKey().equals(QuantKeyUtils.getInstance().getSequenceKey(quantPSM, true))) {
 			if (!getPSMs().contains(quantPSM)) {
 				final boolean ret = super.addPSM(quantPSM, recursive);
 				return ret;
@@ -134,7 +126,9 @@ public class QuantifiedPeptide extends AbstractPeptide implements QuantifiedPept
 			for (final PSM psm : getPSMs()) {
 				if (psm instanceof QuantifiedPSMInterface) {
 					final QuantifiedPSMInterface quantPSM = (QuantifiedPSMInterface) psm;
-					ret.addAll(quantPSM.getTaxonomies());
+					if (quantPSM.getTaxonomies() != null) {
+						ret.addAll(quantPSM.getTaxonomies());
+					}
 				}
 			}
 		}
@@ -358,11 +352,6 @@ public class QuantifiedPeptide extends AbstractPeptide implements QuantifiedPept
 		}
 
 		return Maths.stddev(ratioValues);
-	}
-
-	@Override
-	public int hashCode() {
-		return HashCodeBuilder.reflectionHashCode(getKey(), false);
 	}
 
 	@Override

@@ -1,5 +1,6 @@
 package edu.scripps.yates.census.read.model.interfaces;
 
+import edu.scripps.yates.utilities.proteomicsmodel.HasKey;
 import edu.scripps.yates.utilities.proteomicsmodel.PSM;
 
 /**

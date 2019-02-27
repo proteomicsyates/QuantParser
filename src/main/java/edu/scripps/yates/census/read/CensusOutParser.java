@@ -174,8 +174,8 @@ public class CensusOutParser extends AbstractQuantParser {
 
 	/**
 	 *
-	 * @param writeFiles
-	 *            whether to write output files necessary to run SanXot program
+	 * @param writeFiles whether to write output files necessary to run SanXot
+	 *                   program
 	 */
 	@Override
 	protected void process() {
@@ -1019,7 +1019,9 @@ public class CensusOutParser extends AbstractQuantParser {
 					}
 					StaticQuantMaps.proteinMap.addItem(newQuantifiedProtein);
 					// add protein to protein map
-					taxonomies.addAll(newQuantifiedProtein.getTaxonomies());
+					if (newQuantifiedProtein.getTaxonomies() != null) {
+						taxonomies.addAll(newQuantifiedProtein.getTaxonomies());
+					}
 					localProteinMap.put(proteinKey, newQuantifiedProtein);
 					// add to protein-experiment map
 					addToMap(experimentKey, experimentToProteinsMap, proteinKey);
@@ -1186,8 +1188,7 @@ public class CensusOutParser extends AbstractQuantParser {
 	}
 
 	/**
-	 * Gets how the header of the normalized intensity for each channel should
-	 * start
+	 * Gets how the header of the normalized intensity for each channel should start
 	 *
 	 * @param label
 	 * @return
@@ -1212,8 +1213,7 @@ public class CensusOutParser extends AbstractQuantParser {
 	}
 
 	/**
-	 * Gets how the header of the normalized intensity for each channel should
-	 * start
+	 * Gets how the header of the normalized intensity for each channel should start
 	 *
 	 * @param label
 	 * @return
@@ -1246,8 +1246,7 @@ public class CensusOutParser extends AbstractQuantParser {
 	}
 
 	/**
-	 * Gets how the header of the normalized intensity for each channel should
-	 * start
+	 * Gets how the header of the normalized intensity for each channel should start
 	 *
 	 * @param label
 	 * @return
@@ -1272,8 +1271,7 @@ public class CensusOutParser extends AbstractQuantParser {
 	}
 
 	/**
-	 * Gets how the header of the normalized intensity for each channel should
-	 * start
+	 * Gets how the header of the normalized intensity for each channel should start
 	 *
 	 * @param label
 	 * @return
@@ -1642,8 +1640,9 @@ public class CensusOutParser extends AbstractQuantParser {
 	}
 
 	/**
-	 * @param onlyOneSpectrumPerChromatographicPeakAndPerSaltStep
-	 *            the onlyOneSpectrumPerChromatographicPeakAndPerSaltStep to set
+	 * @param onlyOneSpectrumPerChromatographicPeakAndPerSaltStep the
+	 *                                                            onlyOneSpectrumPerChromatographicPeakAndPerSaltStep
+	 *                                                            to set
 	 */
 	public void setOnlyOneSpectrumPerChromatographicPeakAndPerSaltStep(
 			boolean onlyOneSpectrumPerChromatographicPeakAndPerSaltStep) {
@@ -1658,8 +1657,7 @@ public class CensusOutParser extends AbstractQuantParser {
 	}
 
 	/**
-	 * @param skipSingletons
-	 *            the skipSingletons to set
+	 * @param skipSingletons the skipSingletons to set
 	 */
 	public void setSkipSingletons(boolean skipSingletons) {
 		this.skipSingletons = skipSingletons;

@@ -70,7 +70,9 @@ public class QuantifiedProteinGroup extends AbstractContainsQuantifiedPSMs {
 	public List<String> getTaxonomies() {
 		final List<String> ret = new ArrayList<String>();
 		for (final QuantifiedProteinInterface quantifiedProtein : getProteins()) {
-			ret.addAll(quantifiedProtein.getTaxonomies());
+			if (quantifiedProtein.getTaxonomies() != null) {
+				ret.addAll(quantifiedProtein.getTaxonomies());
+			}
 		}
 		return ret;
 	}

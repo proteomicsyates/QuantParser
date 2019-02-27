@@ -2,6 +2,7 @@ package edu.scripps.yates.census.read.model.interfaces;
 
 import java.util.Set;
 
+import edu.scripps.yates.utilities.proteomicsmodel.HasKey;
 import edu.scripps.yates.utilities.proteomicsmodel.Peptide;
 
 /**

@@ -85,8 +85,8 @@ public class QuantUtils {
 	}
 
 	/**
-	 * Create a Map of {@link IsobaricQuantifiedPeptide} getting the peptides
-	 * from the {@link QuantifiedPSMInterface}
+	 * Create a Map of {@link IsobaricQuantifiedPeptide} getting the peptides from
+	 * the {@link QuantifiedPSMInterface}
 	 *
 	 * @param quantifiedPSMs
 	 * @param distringuishModifiedPeptides
@@ -309,8 +309,8 @@ public class QuantUtils {
 	}
 
 	/**
-	 * Get a CVS list of peptide sequences after sorting them alphabetically by
-	 * the sequence
+	 * Get a CVS list of peptide sequences after sorting them alphabetically by the
+	 * sequence
 	 *
 	 * @param peptides
 	 * @return
@@ -400,8 +400,8 @@ public class QuantUtils {
 	/**
 	 * Gets a consensus {@link IonCountRatio} from a set of
 	 * {@link IsobaricQuantifiedPeptide} where the ions from each
-	 * {@link QuantCondition} are pulled together and normalized by the number
-	 * of {@link QuantifiedPSMInterface} per {@link QuantifiedPeptideInterface}
+	 * {@link QuantCondition} are pulled together and normalized by the number of
+	 * {@link QuantifiedPSMInterface} per {@link QuantifiedPeptideInterface}
 	 *
 	 * @param isobaricQuantifiedPeptides
 	 * @param cond1
@@ -416,8 +416,8 @@ public class QuantUtils {
 	/**
 	 * Gets a consensus {@link IonCountRatio} from a set of
 	 * {@link IsobaricQuantifiedPeptide} where the ions from each
-	 * {@link QuantCondition} are pulled together and normalized by the number
-	 * of {@link QuantifiedPSMInterface} per {@link QuantifiedPeptideInterface}
+	 * {@link QuantCondition} are pulled together and normalized by the number of
+	 * {@link QuantifiedPSMInterface} per {@link QuantifiedPeptideInterface}
 	 *
 	 * @param isobaricQuantifiedPeptides
 	 * @param cond1
@@ -456,9 +456,8 @@ public class QuantUtils {
 	/**
 	 * Gets a consensus {@link IonCountRatio} from a set of
 	 * {@link IsobaricQuantifiedPeptide} where the ions from each
-	 * {@link QuantCondition} are pulled together and normalized by the number
-	 * of {@link QuantifiedPSMInterface} per
-	 * {@link QuantifiedPeptideInterface}.<br>
+	 * {@link QuantCondition} are pulled together and normalized by the number of
+	 * {@link QuantifiedPSMInterface} per {@link QuantifiedPeptideInterface}.<br>
 	 * The ions are used are only the ones that can distinguish the particular
 	 * aminoacids that are quantified (aas)
 	 *
@@ -507,8 +506,8 @@ public class QuantUtils {
 	/**
 	 * Gets a consensus {@link IonCountRatio} from a set of
 	 * {@link IsobaricQuantifiedPeptide} where the ions from each
-	 * {@link QuantCondition} are pulled together and normalized by the number
-	 * of {@link QuantifiedPSMInterface} per {@link QuantifiedPeptideInterface}
+	 * {@link QuantCondition} are pulled together and normalized by the number of
+	 * {@link QuantifiedPSMInterface} per {@link QuantifiedPeptideInterface}
 	 *
 	 * @param isobaricQuantifiedPeptides
 	 * @param cond1
@@ -523,8 +522,8 @@ public class QuantUtils {
 	/**
 	 * Gets a consensus {@link IonCountRatio} from a set of
 	 * {@link IsobaricQuantifiedPeptide} where the ions from each
-	 * {@link QuantCondition} are pulled together and normalized by the number
-	 * of {@link QuantifiedPSMInterface} per {@link QuantifiedPeptideInterface}
+	 * {@link QuantCondition} are pulled together and normalized by the number of
+	 * {@link QuantifiedPSMInterface} per {@link QuantifiedPeptideInterface}
 	 *
 	 * @param isobaricQuantifiedPeptides
 	 * @param cond1
@@ -687,7 +686,7 @@ public class QuantUtils {
 		if (proteinACCs == null && (positionsInProtein == null || positionsInProtein.isEmpty())) {
 			log.info(proteinACCs);
 		}
-		if (proteinACCs != null && positionsInProtein == null || positionsInProtein.isEmpty()) {
+		if (proteinACCs != null && (positionsInProtein == null || positionsInProtein.isEmpty())) {
 			positionsInProtein = new ArrayList<PositionInProtein>();
 			for (final String proteinAcc : proteinACCs) {
 				positionsInProtein.add(new PositionInProtein(0, PositionInProtein.NULL_CHAR, proteinAcc));

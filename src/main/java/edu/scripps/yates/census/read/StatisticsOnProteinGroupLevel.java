@@ -239,12 +239,14 @@ public class StatisticsOnProteinGroupLevel {
 
 		final Set<String> taxonomies = quantifiedPSM.getTaxonomies();
 		final Set<String> ret = new THashSet<String>();
-		for (final String taxonomy : taxonomies) {
-			final UniprotOrganism uniprotOrganism = UniprotSpeciesCodeMap.getInstance().get(taxonomy);
-			if (uniprotOrganism != null) {
-				ret.add(uniprotOrganism.getCode());
-			} else {
-				ret.add(taxonomy);
+		if (taxonomies != null) {
+			for (final String taxonomy : taxonomies) {
+				final UniprotOrganism uniprotOrganism = UniprotSpeciesCodeMap.getInstance().get(taxonomy);
+				if (uniprotOrganism != null) {
+					ret.add(uniprotOrganism.getCode());
+				} else {
+					ret.add(taxonomy);
+				}
 			}
 		}
 		return ret;
@@ -252,9 +254,9 @@ public class StatisticsOnProteinGroupLevel {
 	}
 
 	/**
-	 * This function will add all the accessions of the proteins that the
-	 * quantified psm belongs by using two different approaches depending on the
-	 * constructor used for this class
+	 * This function will add all the accessions of the proteins that the quantified
+	 * psm belongs by using two different approaches depending on the constructor
+	 * used for this class
 	 *
 	 * @param psm
 	 * @param map
@@ -293,8 +295,8 @@ public class StatisticsOnProteinGroupLevel {
 	}
 
 	/**
-	 * Prints a table with the number of protein identified in each tag (light
-	 * or heavy) for each species.
+	 * Prints a table with the number of protein identified in each tag (light or
+	 * heavy) for each species.
 	 *
 	 * @return
 	 */
@@ -552,7 +554,7 @@ public class StatisticsOnProteinGroupLevel {
 			// taxonomies
 			for (final String taxonomy : taxonomyList) {
 				final Set<String> taxonomies = quantifiedPSM.getTaxonomies();
-				if (taxonomies.contains(taxonomy)) {
+				if (taxonomies != null && taxonomies.contains(taxonomy)) {
 					psmTableString.append(YES + SEPARATOR);
 					peptideIdentifiedBySpecie.put(taxonomy, true);
 				} else {

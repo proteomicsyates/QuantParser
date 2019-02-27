@@ -5,6 +5,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
+import edu.scripps.yates.utilities.proteomicsmodel.HasKey;
 import gnu.trove.map.hash.THashMap;
 
 public class StaticItemStorage<T extends HasKey> {

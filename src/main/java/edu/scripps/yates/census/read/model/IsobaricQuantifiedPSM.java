@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.log4j.Logger;
 
 import edu.scripps.yates.census.analysis.QuantCondition;
@@ -57,7 +56,6 @@ public class IsobaricQuantifiedPSM extends AbstractPSM implements QuantifiedPSMI
 	private final Map<String, IonCountRatio> countRatiosByConditionKey = new THashMap<String, IonCountRatio>();
 	private final Set<String> fileNames = new THashSet<String>();
 	private boolean discarded;
-	private String key;
 	private final Set<Character> quantifiedSites;
 
 	/**
@@ -89,15 +87,7 @@ public class IsobaricQuantifiedPSM extends AbstractPSM implements QuantifiedPSMI
 		}
 
 		process();
-	}
-
-	@Override
-	public String getKey() {
-		if (key != null) {
-			return key;
-		}
-		return QuantKeyUtils.getInstance().getSpectrumKey(this, true);
-		// return KeyUtils.getSpectrumKey(peptide, chargeStateSensible);
+		setKey(QuantKeyUtils.getInstance().getSpectrumKey(this, true));
 	}
 
 	/**
@@ -315,8 +305,10 @@ public class IsobaricQuantifiedPSM extends AbstractPSM implements QuantifiedPSMI
 		final boolean ret = addProtein(quantifiedProtein, recursive);
 		// get the taxonomy
 		final Set<String> taxonomies = quantifiedProtein.getTaxonomies();
-		for (final String taxonomy : taxonomies) {
-			addTaxonomy(taxonomy);
+		if (taxonomies != null) {
+			for (final String taxonomy : taxonomies) {
+				addTaxonomy(taxonomy);
+			}
 		}
 		return ret;
 	}
@@ -1189,11 +1181,6 @@ public class IsobaricQuantifiedPSM extends AbstractPSM implements QuantifiedPSMI
 			}
 		}
 		return ret;
-	}
-
-	@Override
-	public int hashCode() {
-		return HashCodeBuilder.reflectionHashCode(getKey(), false);
 	}
 
 	@Override

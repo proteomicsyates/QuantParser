@@ -7,10 +7,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-
 import edu.scripps.yates.census.analysis.QuantCondition;
-import edu.scripps.yates.census.read.model.interfaces.HasKey;
 import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface;
@@ -34,29 +31,18 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractProtein implement
 	private final IndexedProtein indexedProtein;
 	private boolean discarded;
 
-	private String key;
-
-	private final boolean ignoreACCFormat;
-
 	private Set<QuantifiedPeptideInterface> quantifiedPeptides;
 	private Set<QuantifiedPSMInterface> quantifiedPSMs;
 	private Set<QuantRatio> quantRatios;
 
 	public QuantifiedProteinFromDBIndexEntry(IndexedProtein indexedProtein, boolean ignoreTaxonomies,
 			boolean ignoreACCFormat) throws IOException {
+		setKey(QuantKeyUtils.getInstance().getProteinKey(indexedProtein, ignoreACCFormat));
 		this.indexedProtein = indexedProtein;
-		final Accession primaryAcc = FastaParser.getACC(indexedProtein.getFastaDefLine());
+		final Accession primaryAcc = FastaParser.getACC(getKey());
 		setPrimaryAccession(primaryAcc);
 		setIgnoreTaxonomy(ignoreTaxonomies);
-		this.ignoreACCFormat = ignoreACCFormat;
-	}
 
-	@Override
-	public String getKey() {
-		if (key == null) {
-			key = QuantKeyUtils.getInstance().getProteinKey(indexedProtein, ignoreACCFormat);
-		}
-		return key;
 	}
 
 	@Override
@@ -176,7 +162,9 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractProtein implement
 	public void setPrimaryAccession(String primaryAccession) {
 		super.setPrimaryAccession(primaryAccession);
 		// because the key depends on primaryAccession
-		key = primaryAccession;
+		// we disable this. I somebody modifies the key, the hashcode get modified which
+		// could lead to incosistencies
+//		setKey(primaryAccession);
 	}
 
 	@Override
@@ -313,16 +301,4 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractProtein implement
 		return Maths.stddev(ratioValues);
 	}
 
-	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof HasKey) {
-			return ((HasKey) obj).getKey().equals(getKey());
-		}
-		return super.equals(obj);
-	}
-
-	@Override
-	public int hashCode() {
-		return HashCodeBuilder.reflectionHashCode(getKey(), false);
-	}
 }

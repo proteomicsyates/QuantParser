@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-
 import edu.scripps.yates.census.analysis.QuantCondition;
 import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
@@ -34,7 +32,6 @@ public class QuantifiedPSM extends AbstractPSM implements QuantifiedPSMInterface
 	private final Set<String> fileNames = new THashSet<String>();
 	private boolean discarded;
 	private boolean singleton;
-	private String key;
 	private Set<QuantRatio> quantRatios;
 
 	public QuantifiedPSM(String sequence, Map<QuantCondition, QuantificationLabel> labelsByConditions,
@@ -69,14 +66,7 @@ public class QuantifiedPSM extends AbstractPSM implements QuantifiedPSMInterface
 		final String spectrumKey = QuantKeyUtils.getInstance().getSpectrumKey(this, true);
 		addToMap(peptideKey, peptideToSpectraMap, spectrumKey);
 
-	}
-
-	@Override
-	public String getKey() {
-		if (key == null) {
-			key = getIdentifier();
-		}
-		return key;
+		setKey(getIdentifier());
 	}
 
 	private void addToMap(String key, Map<String, Set<String>> map, String value) {
@@ -105,10 +95,11 @@ public class QuantifiedPSM extends AbstractPSM implements QuantifiedPSMInterface
 		super.addProtein(protein, recursive);
 		// get the taxonomy
 		final Set<String> taxonomies = protein.getTaxonomies();
-		for (final String tax : taxonomies) {
-			addTaxonomy(tax);
+		if (taxonomies != null) {
+			for (final String tax : taxonomies) {
+				addTaxonomy(tax);
+			}
 		}
-
 		return true;
 	}
 
@@ -284,16 +275,4 @@ public class QuantifiedPSM extends AbstractPSM implements QuantifiedPSMInterface
 		return addProtein(protein, recursively);
 	}
 
-	@Override
-	public int hashCode() {
-		return HashCodeBuilder.reflectionHashCode(getKey(), false);
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof QuantifiedPSM) {
-			return ((QuantifiedPSM) obj).getKey().equals(getKey());
-		}
-		return super.equals(obj);
-	}
 }

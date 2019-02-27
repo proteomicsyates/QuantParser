@@ -120,8 +120,8 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 
 	/**
 	 *
-	 * @param writeFiles
-	 *            whether to write output files necessary to run SanXot program
+	 * @param writeFiles whether to write output files necessary to run SanXot
+	 *                   program
 	 */
 
 	@Override
@@ -342,7 +342,9 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 	private void registerProteins(QuantifiedProteinInterface protein, String experimentKey, QuantifiedPSMInterface psm,
 			IsobaricQuantifiedPeptide peptide, String remoteFilePath) {
 		// add protein to protein map
-		taxonomies.addAll(protein.getTaxonomies());
+		if (protein.getTaxonomies() != null) {
+			taxonomies.addAll(protein.getTaxonomies());
+		}
 		// add to protein-experiment map
 		addToMap(experimentKey, experimentToProteinsMap, protein.getAccession());
 		// add psm to the protein

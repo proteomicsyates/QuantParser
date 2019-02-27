@@ -119,7 +119,7 @@ public class StatisticsOnPSMLevel {
 			psmTableString.append(psmID + SEPARATOR);
 			// taxonomies
 			for (final String taxonomy : taxonomyList) {
-				if (quantifiedPSM.getTaxonomies().contains(taxonomy)) {
+				if (quantifiedPSM.getTaxonomies() != null && quantifiedPSM.getTaxonomies().contains(taxonomy)) {
 					psmTableString.append(YES + SEPARATOR);
 					peptideIdentifiedBySpecie.put(taxonomy, true);
 				} else {

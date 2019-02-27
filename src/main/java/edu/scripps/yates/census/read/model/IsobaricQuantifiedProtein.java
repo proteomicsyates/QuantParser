@@ -35,7 +35,6 @@ public class IsobaricQuantifiedProtein extends QuantifiedProtein implements HasI
 	private Set<IsoRatio> isoRatios;
 
 	public IsobaricQuantifiedProtein(ProteinType protein) throws IOException {
-
 		super(protein.getLocus());
 		this.protein = protein;
 	}
