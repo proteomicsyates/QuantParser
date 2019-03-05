@@ -99,8 +99,13 @@ public class CensusRatio implements QuantRatio {
 		} else {
 			nonLogValue = ratioValue;
 			if (isLogValue != null && !isLogValue && nonLogValue < 0) {
-				throw new IllegalArgumentException(nonLogValue
-						+ " ratio is negative and it is suppose to be non logged ratio!! Maybe you should check the ratio values and transform them into non logged ones.");
+				if (Double.compare(nonLogValue, -1.0) == 0) {
+					nonLogValue = Double.NaN;
+					log2Value = Double.NaN;
+				} else {
+					throw new IllegalArgumentException(nonLogValue
+							+ " ratio is negative and it is suppose to be non logged ratio!! Maybe you should check the ratio values and transform them into non logged ones.");
+				}
 			}
 		}
 		if (stdValue != null) {
@@ -174,8 +179,7 @@ public class CensusRatio implements QuantRatio {
 	}
 
 	/**
-	 * @param description
-	 *            the description to set
+	 * @param description the description to set
 	 */
 	public void setDescription(String description) {
 		this.description = description;
@@ -284,8 +288,7 @@ public class CensusRatio implements QuantRatio {
 	}
 
 	/**
-	 * @param combinationType
-	 *            the combinationType to set
+	 * @param combinationType the combinationType to set
 	 */
 	public void setCombinationType(CombinationType combinationType) {
 		this.combinationType = combinationType;
@@ -338,16 +341,14 @@ public class CensusRatio implements QuantRatio {
 	}
 
 	/**
-	 * @param condition1
-	 *            the condition1 to set
+	 * @param condition1 the condition1 to set
 	 */
 	public void setCondition1(Condition condition1) {
 		this.condition1 = condition1;
 	}
 
 	/**
-	 * @param condition2
-	 *            the condition2 to set
+	 * @param condition2 the condition2 to set
 	 */
 	public void setCondition2(Condition condition2) {
 		this.condition2 = condition2;
