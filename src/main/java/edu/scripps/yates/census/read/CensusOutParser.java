@@ -299,11 +299,11 @@ public class CensusOutParser extends AbstractQuantParser {
 					br.close();
 
 				} catch (final PeptideNotFoundInDBIndexException e) {
+					e.printStackTrace();
 					if (!super.ignoreNotFoundPeptidesInDB) {
 						throw e;
 					}
 				} catch (final Exception e) {
-
 					e.printStackTrace();
 					throw e;
 				} finally {
