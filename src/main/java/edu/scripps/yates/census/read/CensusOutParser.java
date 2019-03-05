@@ -928,7 +928,9 @@ public class CensusOutParser extends AbstractQuantParser {
 									localPsmMap.remove(quantifiedPSM.getKey());
 									return;
 								}
-								differentValuesOfPeakArea.add(stringValue);
+								if (!stringValue.equals("0.0")) {
+									differentValuesOfPeakArea.add(stringValue);
+								}
 								final double value = Double.valueOf(stringValue);
 								final QuantAmount amount = new QuantAmount(value, AmountType.AREA, quantCondition);
 								if (singleton && amount.getValue() != 0.0) {
