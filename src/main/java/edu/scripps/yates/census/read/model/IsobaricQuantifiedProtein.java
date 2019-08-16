@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.log4j.Logger;
 
 import edu.scripps.yates.census.analysis.QuantCondition;
@@ -180,11 +179,6 @@ public class IsobaricQuantifiedProtein extends QuantifiedProtein implements HasI
 	}
 
 	@Override
-	public int getUniqueID() {
-		return HashCodeBuilder.reflectionHashCode(this, false);
-	}
-
-	@Override
 	public Set<String> getTaxonomies() {
 		if (super.getTaxonomies() == null || super.getTaxonomies().isEmpty()) {
 			String fastaHeader = null;
@@ -207,7 +201,8 @@ public class IsobaricQuantifiedProtein extends QuantifiedProtein implements HasI
 	}
 
 	/**
-	 * @param distinguishModifiedPeptides the distinguishModifiedPeptides to set
+	 * @param distinguishModifiedPeptides
+	 *            the distinguishModifiedPeptides to set
 	 */
 	public void setDistinguishModifiedPeptides(boolean distinguishModifiedPeptides) {
 		this.distinguishModifiedPeptides = distinguishModifiedPeptides;
@@ -263,8 +258,8 @@ public class IsobaricQuantifiedProtein extends QuantifiedProtein implements HasI
 	}
 
 	/**
-	 * Returns true if the protein contains any {@link Ion} labeled with a certain
-	 * {@link QuantificationLabel} not paired with any other label
+	 * Returns true if the protein contains any {@link Ion} labeled with a
+	 * certain {@link QuantificationLabel} not paired with any other label
 	 *
 	 * @param label
 	 * @return
@@ -279,9 +274,9 @@ public class IsobaricQuantifiedProtein extends QuantifiedProtein implements HasI
 	}
 
 	/**
-	 * Returns true if the protein contains any {@link Ion} labeled with a certain
-	 * {@link QuantificationLabel} not matter if they are paired with any other
-	 * label or not (getting ratios or not)
+	 * Returns true if the protein contains any {@link Ion} labeled with a
+	 * certain {@link QuantificationLabel} not matter if they are paired with
+	 * any other label or not (getting ratios or not)
 	 *
 	 * @param label
 	 * @return

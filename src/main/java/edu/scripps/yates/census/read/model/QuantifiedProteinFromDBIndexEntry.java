@@ -94,11 +94,6 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractProtein implement
 	}
 
 	@Override
-	public int getUniqueID() {
-		return hashCode();
-	}
-
-	@Override
 	public List<GroupablePeptide> getGroupablePeptides() {
 		final List<GroupablePeptide> list = new ArrayList<GroupablePeptide>();
 		list.addAll(getQuantifiedPSMs());
@@ -129,7 +124,8 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractProtein implement
 	}
 
 	/**
-	 * @param distinguishModifiedPeptides the distinguishModifiedPeptides to set
+	 * @param distinguishModifiedPeptides
+	 *            the distinguishModifiedPeptides to set
 	 */
 	public void setDistinguishModifiedPeptides(boolean distinguishModifiedPeptides) {
 		this.distinguishModifiedPeptides = distinguishModifiedPeptides;
@@ -162,9 +158,10 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractProtein implement
 	public void setPrimaryAccession(String primaryAccession) {
 		super.setPrimaryAccession(primaryAccession);
 		// because the key depends on primaryAccession
-		// we disable this. I somebody modifies the key, the hashcode get modified which
+		// we disable this. I somebody modifies the key, the hashcode get
+		// modified which
 		// could lead to incosistencies
-//		setKey(primaryAccession);
+		// setKey(primaryAccession);
 	}
 
 	@Override

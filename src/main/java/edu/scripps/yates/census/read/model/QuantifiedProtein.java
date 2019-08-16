@@ -93,11 +93,6 @@ public class QuantifiedProtein extends AbstractProtein implements QuantifiedProt
 		return ret;
 	}
 
-	@Override
-	public int getUniqueID() {
-		return hashCode();
-	}
-
 	/**
 	 * @return the rawfileNames
 	 */

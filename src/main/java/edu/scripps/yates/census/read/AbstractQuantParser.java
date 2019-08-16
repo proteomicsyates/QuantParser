@@ -603,7 +603,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 		final int initialSize = accessions.size();
 		for (final Set<String> accessionSet : listOfSets) {
 			final Map<String, Entry> annotatedProteins = uplr.getAnnotatedProteins(uniprotVersion, accessionSet,
-					retrieveFastaIsoforms);
+					retrieveFastaIsoforms, false);
 			for (final String accession : accessionSet) {
 				counter.increment();
 				final String percentage = counter.printIfNecessary();
