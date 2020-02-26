@@ -39,7 +39,7 @@ public class QuantifiedPeptide extends AbstractPeptide implements QuantifiedPept
 	 * @param distinguishModifiedSequences
 	 */
 	public QuantifiedPeptide(QuantifiedPSMInterface quantPSM, boolean ignoreTaxonomies) {
-		setKey(QuantKeyUtils.getInstance().getSequenceKey(quantPSM, true));
+		super(QuantKeyUtils.getInstance().getSequenceKey(quantPSM, true));
 		super.setSequence(quantPSM.getSequence());
 		setFullSequence(quantPSM.getFullSequence());
 		setIgnoreTaxonomy(ignoreTaxonomies);
