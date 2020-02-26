@@ -683,8 +683,8 @@ public class QuantUtils {
 	public static String getPositionsInProteinsKey(List<PositionInProtein> positionsInProtein, Set<String> proteinACCs,
 			boolean useProteinGeneName, boolean useProteinID, UniprotProteinLocalRetriever uplr,
 			String uniprotVersion) {
-		if (proteinACCs == null && (positionsInProtein == null || positionsInProtein.isEmpty())) {
-			log.info(proteinACCs);
+		if (positionsInProtein == null || positionsInProtein.isEmpty()) {
+			return "";
 		}
 		if (proteinACCs != null && (positionsInProtein == null || positionsInProtein.isEmpty())) {
 			positionsInProtein = new ArrayList<PositionInProtein>();
@@ -740,8 +740,9 @@ public class QuantUtils {
 			if (positionInProtein.getPosition() > 0) {
 				sb.append(positionInProtein.getPosition());
 			}
-
+			
 		}
+
 		return sb.toString();
 	}
 
