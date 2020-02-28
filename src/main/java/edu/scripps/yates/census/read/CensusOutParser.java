@@ -137,6 +137,19 @@ public class CensusOutParser extends AbstractQuantParser {
 		super(remoteSSHServer, labelsByConditions, labelNumerator, labelDenominator);
 	}
 
+	/**
+	 * This is suitable for TMT data, since the map between labels and conditions
+	 * allow multiple labels for the same condition
+	 * 
+	 * @param inputFile
+	 * @param conditionsByLabels
+	 * @throws FileNotFoundException
+	 */
+	public CensusOutParser(File inputFile, Map<QuantificationLabel, QuantCondition> conditionsByLabels)
+			throws FileNotFoundException {
+		super(inputFile, conditionsByLabels);
+	}
+
 	public CensusOutParser(File xmlFile, Map<QuantCondition, QuantificationLabel> labelsByConditions,
 			QuantificationLabel labelNumerator, QuantificationLabel labelDenominator) throws FileNotFoundException {
 		super(xmlFile, labelsByConditions, labelNumerator, labelDenominator);
@@ -186,12 +199,23 @@ public class CensusOutParser extends AbstractQuantParser {
 			int numDecoy = 0;
 			boolean someValidFile = false;
 			for (final RemoteSSHFileReference remoteFileRetriever : remoteFileRetrievers) {
-				final Map<QuantCondition, QuantificationLabel> labelsByConditions = labelsByConditionsByFile
+				Map<QuantCondition, QuantificationLabel> labelsByConditions = labelsByConditionsByFile
 						.get(remoteFileRetriever);
-				final Map<QuantificationLabel, QuantCondition> conditionsByLabels = new THashMap<QuantificationLabel, QuantCondition>();
-				if (labelsByConditions != null) {
-					for (final QuantCondition cond : labelsByConditions.keySet()) {
-						conditionsByLabels.put(labelsByConditions.get(cond), cond);
+				Map<QuantificationLabel, QuantCondition> conditionsByLabels = new THashMap<QuantificationLabel, QuantCondition>();
+				if (this.conditionsByLabelsByFile.containsKey(remoteFileRetriever)) {
+					conditionsByLabels = this.conditionsByLabelsByFile.get(remoteFileRetriever);
+					if (conditionsByLabels != null && labelsByConditions == null) {
+						labelsByConditions = new THashMap<QuantCondition, QuantificationLabel>();
+						for (final QuantificationLabel label : conditionsByLabels.keySet()) {
+							final QuantCondition cond = conditionsByLabels.get(label);
+							labelsByConditions.put(cond, label);
+						}
+					}
+				} else {
+					if (labelsByConditions != null) {
+						for (final QuantCondition cond : labelsByConditions.keySet()) {
+							conditionsByLabels.put(labelsByConditions.get(cond), cond);
+						}
 					}
 				}
 				final List<RatioDescriptor> ratioDescriptors = ratioDescriptorsByFile.get(remoteFileRetriever);
@@ -771,13 +795,15 @@ public class CensusOutParser extends AbstractQuantParser {
 							&& QuantificationLabel.isTMT6PLEX(labelDenominator)) {
 						// numerator
 						Double numeratorIntensity = null;
-						final String headerNumerator = getHeaderForNormalizedIntensityInTMT6Plex(labelNumerator);
+						final String headerNumerator = getHeaderForPeptideNormalizedIntensityInTMT6Plex(labelNumerator,
+								sLineHeaderList);
 						if (mapValues.containsKey(headerNumerator)) {
 							numeratorIntensity = Double.valueOf(mapValues.get(headerNumerator));
 						}
 						// denominator
 						Double denominatorIntensity = null;
-						final String headerDenominator = getHeaderForNormalizedIntensityInTMT6Plex(labelDenominator);
+						final String headerDenominator = getHeaderForPeptideNormalizedIntensityInTMT6Plex(
+								labelDenominator, sLineHeaderList);
 						if (mapValues.containsKey(headerDenominator)) {
 							denominatorIntensity = Double.valueOf(mapValues.get(headerDenominator));
 						}
@@ -795,13 +821,15 @@ public class CensusOutParser extends AbstractQuantParser {
 							&& QuantificationLabel.isTMT10PLEX(labelDenominator)) {
 						// numerator
 						Double numeratorIntensity = null;
-						final String headerNumerator = getHeaderForNormalizedIntensityInTMT10Plex(labelNumerator);
+						final String headerNumerator = getHeaderForPeptideNormalizedIntensityInTMT10Plex(labelNumerator,
+								sLineHeaderList);
 						if (mapValues.containsKey(headerNumerator)) {
 							numeratorIntensity = Double.valueOf(mapValues.get(headerNumerator));
 						}
 						// denominator
 						Double denominatorIntensity = null;
-						final String headerDenominator = getHeaderForNormalizedIntensityInTMT10Plex(labelDenominator);
+						final String headerDenominator = getHeaderForPeptideNormalizedIntensityInTMT10Plex(
+								labelDenominator, sLineHeaderList);
 						if (mapValues.containsKey(headerDenominator)) {
 							denominatorIntensity = Double.valueOf(mapValues.get(headerDenominator));
 						}
@@ -856,28 +884,50 @@ public class CensusOutParser extends AbstractQuantParser {
 			// PSM amounts
 
 			// TMT6PLEX
-			final boolean isTMT6Plex = isTMT6Plex(conditionsByLabels.keySet());
+			boolean isTMT6Plex = false;
+			if (!conditionsByLabels.isEmpty()) {
+				isTMT6Plex = isTMT6Plex(conditionsByLabels.keySet());
+			} else {
+				isTMT6Plex = isTMT6Plex(labelsByConditions.values());
+			}
 			if (isTMT6Plex) {
 				for (final QuantificationLabel label : QuantificationLabel.getTMT6PlexLabels()) {
-					Double normalizedIntensity = null;
-					final String header = getHeaderForNormalizedIntensityInTMT6Plex(label);
+					String header = getHeaderForPeptideNormalizedIntensityInTMT6Plex(label, sLineHeaderList);
 					if (mapValues.containsKey(header)) {
-						normalizedIntensity = Double.valueOf(mapValues.get(header));
+						final Double normalizedIntensity = Double.valueOf(mapValues.get(header));
 						final QuantAmount amount = new QuantAmount(normalizedIntensity, AmountType.NORMALIZED_INTENSITY,
+								conditionsByLabels.get(label));
+						quantifiedPSM.addAmount(amount);
+					}
+					header = getHeaderForPeptideRawIntensityInTMT6Plex(label, sLineHeaderList);
+					if (mapValues.containsKey(header)) {
+						final Double rawIntensity = Double.valueOf(mapValues.get(header));
+						final QuantAmount amount = new QuantAmount(rawIntensity, AmountType.INTENSITY,
 								conditionsByLabels.get(label));
 						quantifiedPSM.addAmount(amount);
 					}
 				}
 			}
 			// TMT10PLEX
-			final boolean isTMT10Plex = isTMT10Plex(conditionsByLabels.keySet());
+			boolean isTMT10Plex = false;
+			if (!conditionsByLabels.isEmpty()) {
+				isTMT10Plex = isTMT10Plex(conditionsByLabels.keySet());
+			} else {
+				isTMT10Plex = isTMT10Plex(labelsByConditions.values());
+			}
 			if (isTMT10Plex) {
 				for (final QuantificationLabel label : QuantificationLabel.getTMT10PlexLabels()) {
-					Double normalizedIntensity = null;
-					final String header = getHeaderForNormalizedIntensityInTMT10Plex(label);
+					String header = getHeaderForPeptideNormalizedIntensityInTMT10Plex(label, sLineHeaderList);
 					if (mapValues.containsKey(header)) {
-						normalizedIntensity = Double.valueOf(mapValues.get(header));
+						final Double normalizedIntensity = Double.valueOf(mapValues.get(header));
 						final QuantAmount amount = new QuantAmount(normalizedIntensity, AmountType.NORMALIZED_INTENSITY,
+								conditionsByLabels.get(label));
+						quantifiedPSM.addAmount(amount);
+					}
+					header = getHeaderForPeptideRawIntensityInTMT10Plex(label, sLineHeaderList);
+					if (mapValues.containsKey(header)) {
+						final Double rawIntensity = Double.valueOf(mapValues.get(header));
+						final QuantAmount amount = new QuantAmount(rawIntensity, AmountType.INTENSITY,
 								conditionsByLabels.get(label));
 						quantifiedPSM.addAmount(amount);
 					}
@@ -1106,7 +1156,7 @@ public class CensusOutParser extends AbstractQuantParser {
 
 	}
 
-	private boolean isTMT6Plex(Set<QuantificationLabel> labels) {
+	private boolean isTMT6Plex(Collection<QuantificationLabel> labels) {
 		for (final QuantificationLabel label : labels) {
 			if (QuantificationLabel.isTMT6PLEX(label)) {
 				return true;
@@ -1115,7 +1165,7 @@ public class CensusOutParser extends AbstractQuantParser {
 		return false;
 	}
 
-	private boolean isTMT10Plex(Set<QuantificationLabel> labels) {
+	private boolean isTMT10Plex(Collection<QuantificationLabel> labels) {
 		for (final QuantificationLabel label : labels) {
 			if (QuantificationLabel.isTMT10PLEX(label)) {
 				return true;
@@ -1170,7 +1220,7 @@ public class CensusOutParser extends AbstractQuantParser {
 	 * @param label
 	 * @return
 	 */
-	private String getHeaderForNormalizedRatioInTMT6Plex(QuantificationLabel label) {
+	private String getHeaderForNormalizedRatioInTMT6Plex(QuantificationLabel label, List<String> headers) {
 		switch (label) {
 		case TMT_6PLEX_126:
 			return "norm_ratio(126.127725)";
@@ -1190,83 +1240,183 @@ public class CensusOutParser extends AbstractQuantParser {
 	}
 
 	/**
-	 * Gets how the header of the normalized intensity for each channel should start
+	 * Gets how the header of the peptide normalized intensity for each channel
+	 * should start
 	 *
 	 * @param label
 	 * @return
 	 */
-	private String getHeaderForNormalizedIntensityInTMT6Plex(QuantificationLabel label) {
+	private String getHeaderForPeptideNormalizedIntensityInTMT6Plex(QuantificationLabel label, List<String> headers) {
 		switch (label) {
 		case TMT_6PLEX_126:
-			return "norm_m/z_126.127725_int";
+			return findStartingBy(headers, "norm_m/z_126.");
 		case TMT_6PLEX_127:
-			return "norm_m/z_127.12476_int";
+			return findStartingBy(headers, "norm_m/z_127.");
 		case TMT_6PLEX_128:
-			return "norm_m/z_128.134433_int";
+			return findStartingBy(headers, "norm_m/z_128.");
 		case TMT_6PLEX_129:
-			return "norm_m/z_129.131468_int";
+			return findStartingBy(headers, "norm_m/z_129.");
 		case TMT_6PLEX_130:
-			return "norm_m/z_130.141141_int";
+			return findStartingBy(headers, "norm_m/z_130.");
 		case TMT_6PLEX_131:
-			return "norm_m/z_131.138176_int";
+			return findStartingBy(headers, "norm_m/z_131.");
 		default:
 			return null;
 		}
 	}
 
 	/**
-	 * Gets how the header of the normalized intensity for each channel should start
+	 * Gets how the header of the peptide raw intensity for each channel should
+	 * start
 	 *
 	 * @param label
 	 * @return
 	 */
-	private String getHeaderForNormalizedIntensityInTMT10Plex(QuantificationLabel label) {
-		switch (label) {
-		case TMT_10PLEX_126_127726:
-			return "norm_m/z_126.127726_int";
-		case TMT_10PLEX_127_124761:
-			return "norm_m/z_127.124761_int";
-		case TMT_10PLEX_127_131081:
-			return "norm_m/z_127.131081_int";
-		case TMT_10PLEX_128_128116:
-			return "norm_m/z_128.128116_int";
-		case TMT_10PLEX_128_134436:
-			return "norm_m/z_128.134436_int";
-		case TMT_10PLEX_129_131471:
-			return "norm_m/z_129.131471_int";
-		case TMT_10PLEX_129_13779:
-			return "norm_m/z_129.13779_int";
-		case TMT_10PLEX_130_134825:
-			return "norm_m/z_130.134825_int";
-		case TMT_10PLEX_130_141145:
-			return "norm_m/z_130.141145_int";
-		case TMT_10PLEX_131_13818:
-			return "norm_m/z_131.13818_int";
-		default:
-			return null;
-		}
-	}
-
-	/**
-	 * Gets how the header of the normalized intensity for each channel should start
-	 *
-	 * @param label
-	 * @return
-	 */
-	private String getHeaderForProteinNormalizedIntensityInTMT6Plex(QuantificationLabel label) {
+	private String getHeaderForPeptideRawIntensityInTMT6Plex(QuantificationLabel label, List<String> headers) {
 		switch (label) {
 		case TMT_6PLEX_126:
-			return "norm_total m/z_126.127725";
+			return findStartingBy(headers, "m/z_126.");
 		case TMT_6PLEX_127:
-			return "norm_total m/z_127.12476";
+			return findStartingBy(headers, "m/z_127.");
 		case TMT_6PLEX_128:
-			return "norm_total m/z_128.134433";
+			return findStartingBy(headers, "m/z_128.");
 		case TMT_6PLEX_129:
-			return "norm_total m/z_129.131468";
+			return findStartingBy(headers, "m/z_129.");
 		case TMT_6PLEX_130:
-			return "norm_total m/z_130.141141";
+			return findStartingBy(headers, "m/z_130.");
 		case TMT_6PLEX_131:
-			return "norm_total m/z_131.138176";
+			return findStartingBy(headers, "m/z_131.");
+		default:
+			return null;
+		}
+	}
+
+	/**
+	 * Gets how the header of the peptide normalized intensity for each channel
+	 * should start
+	 *
+	 * @param label
+	 * @return
+	 */
+	private String getHeaderForPeptideNormalizedIntensityInTMT10Plex(QuantificationLabel label, List<String> headers) {
+		switch (label) {
+		case TMT_10PLEX_126_127726:
+			return findStartingBy(headers, "norm_m/z_126.12");
+		case TMT_10PLEX_127_124761:
+			return findStartingBy(headers, "norm_m/z_127.124");
+		case TMT_10PLEX_127_131081:
+			return findStartingBy(headers, "norm_m/z_127.131");
+		case TMT_10PLEX_128_128116:
+			return findStartingBy(headers, "norm_m/z_128.128");
+		case TMT_10PLEX_128_134436:
+			return findStartingBy(headers, "norm_m/z_128.134");
+		case TMT_10PLEX_129_131471:
+			return findStartingBy(headers, "norm_m/z_129.131");
+		case TMT_10PLEX_129_13779:
+			return findStartingBy(headers, "norm_m/z_129.137");
+		case TMT_10PLEX_130_134825:
+			return findStartingBy(headers, "norm_m/z_130.134");
+		case TMT_10PLEX_130_141145:
+			return findStartingBy(headers, "norm_m/z_130.141");
+		case TMT_10PLEX_131_13818:
+			return findStartingBy(headers, "norm_m/z_131.138");
+		default:
+			return null;
+		}
+	}
+
+	private String findStartingBy(List<String> headers, String toFind) {
+		for (final String header : headers) {
+			if (header.toLowerCase().startsWith(toFind.toLowerCase())) {
+				return header;
+			}
+		}
+		throw new IllegalArgumentException(toFind + " is not found in the headers of the line");
+	}
+
+	/**
+	 * Gets how the header of the peptide raw intensity for each channel should
+	 * start
+	 *
+	 * @param label
+	 * @return
+	 */
+	private String getHeaderForPeptideRawIntensityInTMT10Plex(QuantificationLabel label, List<String> headers) {
+		switch (label) {
+		case TMT_10PLEX_126_127726:
+			return findStartingBy(headers, "m/z_126.127");
+		case TMT_10PLEX_127_124761:
+			return findStartingBy(headers, "m/z_127.124");
+		case TMT_10PLEX_127_131081:
+			return findStartingBy(headers, "m/z_127.131");
+		case TMT_10PLEX_128_128116:
+			return findStartingBy(headers, "m/z_128.128");
+		case TMT_10PLEX_128_134436:
+			return findStartingBy(headers, "m/z_128.134");
+		case TMT_10PLEX_129_131471:
+			return findStartingBy(headers, "m/z_129.131");
+		case TMT_10PLEX_129_13779:
+			return findStartingBy(headers, "m/z_129.137");
+		case TMT_10PLEX_130_134825:
+			return findStartingBy(headers, "m/z_130.134");
+		case TMT_10PLEX_130_141145:
+			return findStartingBy(headers, "m/z_130.141");
+		case TMT_10PLEX_131_13818:
+			return findStartingBy(headers, "m/z_131.138");
+		default:
+			return null;
+		}
+	}
+
+	/**
+	 * Gets how the header of the protein normalized intensity for each channel
+	 * should start
+	 *
+	 * @param label
+	 * @param mapValues
+	 * @return
+	 */
+	private String getHeaderForProteinNormalizedIntensityInTMT6Plex(QuantificationLabel label, List<String> headers) {
+		switch (label) {
+		case TMT_6PLEX_126:
+			return findStartingBy(headers, "norm_total m/z_126.");
+		case TMT_6PLEX_127:
+			return findStartingBy(headers, "norm_total m/z_127.");
+		case TMT_6PLEX_128:
+			return findStartingBy(headers, "norm_total m/z_128.");
+		case TMT_6PLEX_129:
+			return findStartingBy(headers, "norm_total m/z_129.");
+		case TMT_6PLEX_130:
+			return findStartingBy(headers, "norm_total m/z_130.");
+		case TMT_6PLEX_131:
+			return findStartingBy(headers, "norm_total m/z_131.");
+		default:
+			return null;
+		}
+	}
+
+	/**
+	 * Gets how the header of the protein raw intensity for each channel should
+	 * start
+	 *
+	 * @param label
+	 * @param mapValues
+	 * @return
+	 */
+	private String getHeaderForProteinRawIntensityInTMT6Plex(QuantificationLabel label, List<String> headers) {
+		switch (label) {
+		case TMT_6PLEX_126:
+			return findStartingBy(headers, "total m/z_126.");
+		case TMT_6PLEX_127:
+			return findStartingBy(headers, "total m/z_127.");
+		case TMT_6PLEX_128:
+			return findStartingBy(headers, "total m/z_128.");
+		case TMT_6PLEX_129:
+			return findStartingBy(headers, "total m/z_129.");
+		case TMT_6PLEX_130:
+			return findStartingBy(headers, "total m/z_130.");
+		case TMT_6PLEX_131:
+			return findStartingBy(headers, "total m/z_131.");
 		default:
 			return null;
 		}
@@ -1278,28 +1428,62 @@ public class CensusOutParser extends AbstractQuantParser {
 	 * @param label
 	 * @return
 	 */
-	private String getHeaderForProteinNormalizedIntensityInTMT10Plex(QuantificationLabel label) {
+	private String getHeaderForProteinNormalizedIntensityInTMT10Plex(QuantificationLabel label, List<String> headers) {
 		switch (label) {
 		case TMT_10PLEX_126_127726:
-			return "norm_total m/z_126.127726";
+			return findStartingBy(headers, "norm_total m/z_126.127");
 		case TMT_10PLEX_127_124761:
-			return "norm_total m/z_127.124761";
+			return findStartingBy(headers, "norm_total m/z_127.124");
 		case TMT_10PLEX_127_131081:
-			return "norm_total m/z_127.131081";
+			return findStartingBy(headers, "norm_total m/z_127.131");
 		case TMT_10PLEX_128_128116:
-			return "norm_total m/z_128.128116";
+			return findStartingBy(headers, "norm_total m/z_128.128");
 		case TMT_10PLEX_128_134436:
-			return "norm_total m/z_128.134436";
+			return findStartingBy(headers, "norm_total m/z_128.134");
 		case TMT_10PLEX_129_131471:
-			return "norm_total m/z_129.131471";
+			return findStartingBy(headers, "norm_total m/z_129.131");
 		case TMT_10PLEX_129_13779:
-			return "norm_total m/z_129.13779";
+			return findStartingBy(headers, "norm_total m/z_129.137");
 		case TMT_10PLEX_130_134825:
-			return "norm_total m/z_130.134825";
+			return findStartingBy(headers, "norm_total m/z_130.134");
 		case TMT_10PLEX_130_141145:
-			return "norm_total m/z_130.141145";
+			return findStartingBy(headers, "norm_total m/z_130.141");
 		case TMT_10PLEX_131_13818:
-			return "norm_total m/z_131.13818";
+			return findStartingBy(headers, "norm_total m/z_131.138");
+		default:
+			return null;
+		}
+	}
+
+	/**
+	 * Gets how the header of the protein raw intensity for each channel should
+	 * start
+	 *
+	 * @param label
+	 * @return
+	 */
+	private String getHeaderForProteinRawIntensityInTMT10Plex(QuantificationLabel label, List<String> headers) {
+		switch (label) {
+		case TMT_10PLEX_126_127726:
+			return findStartingBy(headers, "total m/z_126.127");
+		case TMT_10PLEX_127_124761:
+			return findStartingBy(headers, "total m/z_127.124");
+		case TMT_10PLEX_127_131081:
+			return findStartingBy(headers, "total m/z_127.131");
+		case TMT_10PLEX_128_128116:
+			return findStartingBy(headers, "total m/z_128.128");
+		case TMT_10PLEX_128_134436:
+			return findStartingBy(headers, "total m/z_128.134");
+		case TMT_10PLEX_129_131471:
+			return findStartingBy(headers, "total m/z_129.131");
+		case TMT_10PLEX_129_13779:
+			return findStartingBy(headers, "total m/z_129.137");
+		case TMT_10PLEX_130_134825:
+			return findStartingBy(headers, "total m/z_130.134");
+		case TMT_10PLEX_130_141145:
+			return findStartingBy(headers, "total m/z_130.141");
+		case TMT_10PLEX_131_13818:
+			return findStartingBy(headers, "total m/z_131.138");
 		default:
 			return null;
 		}
@@ -1529,11 +1713,18 @@ public class CensusOutParser extends AbstractQuantParser {
 		final boolean isTMT6Plex = isTMT6Plex(conditionsByLabels.keySet());
 		if (isTMT6Plex) {
 			for (final QuantificationLabel label : QuantificationLabel.getTMT6PlexLabels()) {
-				Double normalizedIntensity = null;
-				final String header = getHeaderForProteinNormalizedIntensityInTMT6Plex(label);
+
+				String header = getHeaderForProteinNormalizedIntensityInTMT6Plex(label, pLineHeaderList);
 				if (mapValues.containsKey(header)) {
-					normalizedIntensity = Double.valueOf(mapValues.get(header));
+					final Double normalizedIntensity = Double.valueOf(mapValues.get(header));
 					final QuantAmount amount = new QuantAmount(normalizedIntensity, AmountType.NORMALIZED_INTENSITY,
+							conditionsByLabels.get(label));
+					quantifiedProtein.addAmount(amount);
+				}
+				header = getHeaderForProteinRawIntensityInTMT6Plex(label, pLineHeaderList);
+				if (mapValues.containsKey(header)) {
+					final Double rawIntensity = Double.valueOf(mapValues.get(header));
+					final QuantAmount amount = new QuantAmount(rawIntensity, AmountType.INTENSITY,
 							conditionsByLabels.get(label));
 					quantifiedProtein.addAmount(amount);
 				}
@@ -1543,11 +1734,17 @@ public class CensusOutParser extends AbstractQuantParser {
 		final boolean isTMT10Plex = isTMT10Plex(conditionsByLabels.keySet());
 		if (isTMT10Plex) {
 			for (final QuantificationLabel label : QuantificationLabel.getTMT10PlexLabels()) {
-				Double normalizedIntensity = null;
-				final String header = getHeaderForProteinNormalizedIntensityInTMT10Plex(label);
+				String header = getHeaderForProteinNormalizedIntensityInTMT10Plex(label, pLineHeaderList);
 				if (mapValues.containsKey(header)) {
-					normalizedIntensity = Double.valueOf(mapValues.get(header));
+					final Double normalizedIntensity = Double.valueOf(mapValues.get(header));
 					final QuantAmount amount = new QuantAmount(normalizedIntensity, AmountType.NORMALIZED_INTENSITY,
+							conditionsByLabels.get(label));
+					quantifiedProtein.addAmount(amount);
+				}
+				header = getHeaderForProteinRawIntensityInTMT10Plex(label, pLineHeaderList);
+				if (mapValues.containsKey(header)) {
+					final Double rawIntensity = Double.valueOf(mapValues.get(header));
+					final QuantAmount amount = new QuantAmount(rawIntensity, AmountType.INTENSITY,
 							conditionsByLabels.get(label));
 					quantifiedProtein.addAmount(amount);
 				}

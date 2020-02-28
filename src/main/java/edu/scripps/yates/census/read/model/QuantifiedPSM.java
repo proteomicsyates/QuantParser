@@ -37,7 +37,7 @@ public class QuantifiedPSM extends AbstractPSM implements QuantifiedPSMInterface
 	public QuantifiedPSM(String sequence, Map<QuantCondition, QuantificationLabel> labelsByConditions,
 			Map<String, Set<String>> peptideToSpectraMap, int scanNumber, int chargeState, String rawFileName,
 			boolean singleton) throws IOException {
-		setFullSequence(FastaParser.getSequenceInBetween(sequence));
+		setFullSequence(sequence);
 		setSequence(FastaParser.cleanSequence(sequence));
 		setScanNumber(String.valueOf(scanNumber));
 		conditionsByLabels = new THashMap<QuantificationLabel, QuantCondition>();

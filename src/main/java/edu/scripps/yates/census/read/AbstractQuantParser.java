@@ -74,6 +74,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 	protected boolean processed = false;
 
 	protected final Map<RemoteSSHFileReference, Map<QuantCondition, QuantificationLabel>> labelsByConditionsByFile = new THashMap<RemoteSSHFileReference, Map<QuantCondition, QuantificationLabel>>();
+	protected final Map<RemoteSSHFileReference, Map<QuantificationLabel, QuantCondition>> conditionsByLabelsByFile = new THashMap<RemoteSSHFileReference, Map<QuantificationLabel, QuantCondition>>();
 
 	// protected final Map<RemoteSSHFileReference, QuantificationLabel>
 	// numeratorLabelByFile = new THashMap<RemoteSSHFileReference,
@@ -123,6 +124,20 @@ public abstract class AbstractQuantParser implements QuantParser {
 	public AbstractQuantParser(File inputFile, Map<QuantCondition, QuantificationLabel> labelsByConditions,
 			QuantificationLabel labelNumerator, QuantificationLabel labelDenominator) throws FileNotFoundException {
 		addFile(inputFile, labelsByConditions, labelNumerator, labelDenominator);
+	}
+
+	public AbstractQuantParser(File inputFile, Map<QuantificationLabel, QuantCondition> conditionsByLabels)
+			throws FileNotFoundException {
+
+		if (!inputFile.exists()) {
+			throw new FileNotFoundException(inputFile.getAbsolutePath() + " is not found in the file system");
+		}
+		final RemoteSSHFileReference remoteFileReference = new RemoteSSHFileReference(inputFile);
+		conditionsByLabelsByFile.put(remoteFileReference, conditionsByLabels);
+
+		remoteFileRetrievers.add(remoteFileReference);
+		// clearStaticInfo();
+		checkParameters();
 	}
 
 	public AbstractQuantParser(File inputFile, Map<QuantCondition, QuantificationLabel> labelsByConditions,

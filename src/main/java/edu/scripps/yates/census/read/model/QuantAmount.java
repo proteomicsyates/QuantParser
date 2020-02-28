@@ -19,6 +19,7 @@ public class QuantAmount implements Amount {
 	private Boolean manualSpc = false;
 	private QuantCondition quantCondition;
 	private Condition condition;
+	private int hashCode = -1;
 
 	public QuantAmount(double value, AmountType amountType, QuantCondition condition) {
 
@@ -37,8 +38,7 @@ public class QuantAmount implements Amount {
 	}
 
 	/**
-	 * @param value
-	 *            the value to set
+	 * @param value the value to set
 	 */
 	public void setValue(double value) {
 		this.value = value;
@@ -54,8 +54,7 @@ public class QuantAmount implements Amount {
 	}
 
 	/**
-	 * @param amountType
-	 *            the amountType to set
+	 * @param amountType the amountType to set
 	 */
 	public void setAmountType(AmountType amountType) {
 		this.amountType = amountType;
@@ -71,8 +70,7 @@ public class QuantAmount implements Amount {
 	}
 
 	/**
-	 * @param combinationType
-	 *            the combinationType to set
+	 * @param combinationType the combinationType to set
 	 */
 	public void setCombinationType(CombinationType combinationType) {
 		this.combinationType = combinationType;
@@ -88,8 +86,7 @@ public class QuantAmount implements Amount {
 	}
 
 	/**
-	 * @param singleton
-	 *            the singleton to set
+	 * @param singleton the singleton to set
 	 */
 	public void setSingleton(boolean singleton) {
 		this.singleton = singleton;
@@ -105,16 +102,14 @@ public class QuantAmount implements Amount {
 	}
 
 	/**
-	 * @param manualSpc
-	 *            the manualSpc to set
+	 * @param manualSpc the manualSpc to set
 	 */
 	public void setManualSpc(boolean manualSpc) {
 		this.manualSpc = manualSpc;
 	}
 
 	/**
-	 * @param condition
-	 *            the condition to set
+	 * @param condition the condition to set
 	 */
 	public void setQuantCondition(QuantCondition condition) {
 		quantCondition = condition;
@@ -143,7 +138,10 @@ public class QuantAmount implements Amount {
 
 	@Override
 	public int hashCode() {
-		return HashCodeBuilder.reflectionHashCode(toString(), false);
+		if (hashCode == -1) {
+			hashCode = HashCodeBuilder.reflectionHashCode(toString(), false);
+		}
+		return hashCode;
 	}
 
 	/*
@@ -158,9 +156,9 @@ public class QuantAmount implements Amount {
 	}
 
 	/**
-	 * @param condition
-	 *            the condition to set
+	 * @param condition the condition to set
 	 */
+	@Override
 	public void setCondition(Condition condition) {
 		this.condition = condition;
 	}
