@@ -21,15 +21,29 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements HasI
 
 	/**
 	 * Creates a {@link IsobaricQuantifiedPeptide} object, adding the
-	 * {@link QuantifiedPSMInterface} to its list of
-	 * {@link QuantifiedPSMInterface}s
+	 * {@link QuantifiedPSMInterface} to its list of {@link QuantifiedPSMInterface}s
 	 *
 	 * @param quantPSM
+	 * @param ignoreTaxonomies
 	 * @param distinguishModifiedSequences
+	 * @param charSensible
 	 */
-	public IsobaricQuantifiedPeptide(IsobaricQuantifiedPSM quantPSM, boolean ignoreTaxonomies) {
-		super(quantPSM, ignoreTaxonomies);
+	public IsobaricQuantifiedPeptide(IsobaricQuantifiedPSM quantPSM, boolean ignoreTaxonomies,
+			boolean distinguishModifiedPeptide, boolean chargeSensible) {
+		super(quantPSM, ignoreTaxonomies, distinguishModifiedPeptide, chargeSensible);
 	}
+
+	// DISABLED TO ALWAYS CONSIDER CHARGE AND MODIFIED SEQUENCE
+//	/**
+//	 * Creates a {@link IsobaricQuantifiedPeptide} object, adding the
+//	 * {@link QuantifiedPSMInterface} to its list of {@link QuantifiedPSMInterface}s
+//	 *
+//	 * @param quantPSM
+//	 * @param distinguishModifiedSequences
+//	 */
+//	public IsobaricQuantifiedPeptide(IsobaricQuantifiedPSM quantPSM, boolean ignoreTaxonomies) {
+//		super(quantPSM, ignoreTaxonomies);
+//	}
 
 	public Set<IsobaricQuantifiedPSM> getIsobaricQuantifiedPSMs() {
 		final Set<IsobaricQuantifiedPSM> isoPsms = new THashSet<IsobaricQuantifiedPSM>();
@@ -54,8 +68,8 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements HasI
 	}
 
 	/**
-	 * Returns true if the protein contains any {@link Ion} labeled with a
-	 * certain {@link QuantificationLabel} not paired with any other label
+	 * Returns true if the protein contains any {@link Ion} labeled with a certain
+	 * {@link QuantificationLabel} not paired with any other label
 	 *
 	 * @param label
 	 * @return
@@ -70,9 +84,9 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements HasI
 	}
 
 	/**
-	 * Returns true if the protein contains any {@link Ion} labeled with a
-	 * certain {@link QuantificationLabel} not matter if they are paired with
-	 * any other label or not (getting ratios or not)
+	 * Returns true if the protein contains any {@link Ion} labeled with a certain
+	 * {@link QuantificationLabel} not matter if they are paired with any other
+	 * label or not (getting ratios or not)
 	 *
 	 * @param label
 	 * @return
@@ -373,8 +387,7 @@ public class IsobaricQuantifiedPeptide extends QuantifiedPeptide implements HasI
 	}
 
 	/**
-	 * In case of OspbaricQuantifiedPeptide, the consensusRatio is the
-	 * ionCountRatio
+	 * In case of OspbaricQuantifiedPeptide, the consensusRatio is the ionCountRatio
 	 */
 	@Override
 	public QuantRatio getConsensusRatio(QuantCondition quantConditionNumerator,

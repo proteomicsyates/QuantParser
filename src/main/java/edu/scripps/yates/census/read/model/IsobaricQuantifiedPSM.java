@@ -73,7 +73,9 @@ public class IsobaricQuantifiedPSM extends AbstractPSM implements QuantifiedPSMI
 	 * @throws IOException
 	 */
 	public IsobaricQuantifiedPSM(Peptide peptide, Map<QuantCondition, QuantificationLabel> labelsByConditions,
-			Collection<IonExclusion> ionExclusions, Set<Character> quantifiedSites) throws IOException {
+			Collection<IonExclusion> ionExclusions, Set<Character> quantifiedSites, boolean distinguishModifiedSequence,
+			boolean chargeStateSensible) throws IOException {
+		super(distinguishModifiedSequence, chargeStateSensible);
 		censusChroPeptide = peptide;
 		this.ionExclusions = ionExclusions;
 		setScanNumber(peptide.getScan());
@@ -87,7 +89,7 @@ public class IsobaricQuantifiedPSM extends AbstractPSM implements QuantifiedPSMI
 		}
 
 		process();
-		setKey(QuantKeyUtils.getInstance().getSpectrumKey(this, true));
+		setKey(QuantKeyUtils.getInstance().getSpectrumKey(this, distinguishModifiedSequence, chargeStateSensible));
 	}
 
 	/**

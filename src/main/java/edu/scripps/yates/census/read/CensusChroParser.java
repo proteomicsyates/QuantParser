@@ -203,16 +203,19 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 							if (peptide.getFrag() != null && peptide.getFrag().getBr() != null
 									&& !"".equals(peptide.getFrag().getBr())) {
 								IsobaricQuantifiedPSM quantifiedPSM = null;
-								final String spectrumKey = QuantKeyUtils.getInstance().getSpectrumKey(peptide, true);
+								final String spectrumKey = QuantKeyUtils.getInstance().getSpectrumKey(peptide,
+										isChargeSensible(), isDistinguishModifiedSequences());
 								if (StaticQuantMaps.psmMap.containsKey(spectrumKey)) {
 									quantifiedPSM = (IsobaricQuantifiedPSM) StaticQuantMaps.psmMap.getItem(spectrumKey);
 								} else {
 									quantifiedPSM = new IsobaricQuantifiedPSM(peptide,
 											labelsByConditionsByFile.get(remoteFileRetriever), ionExclusions,
-											getQuantifiedAAs());
+											getQuantifiedAAs(), isDistinguishModifiedSequences(), isChargeSensible());
 								}
-								final String spectrumKey2 = KeyUtils.getInstance().getSpectrumKey(quantifiedPSM, true);
-								final String peptideKey = KeyUtils.getInstance().getSequenceKey(quantifiedPSM, true);
+								final String spectrumKey2 = KeyUtils.getInstance().getSpectrumKey(quantifiedPSM,
+										isDistinguishModifiedSequences(), isChargeSensible());
+								final String peptideKey = KeyUtils.getInstance().getSequenceChargeKey(quantifiedPSM,
+										isDistinguishModifiedSequences(), isChargeSensible());
 								quantifiedPSM.addSpectrumToIonsMaps(spectrumKey2, spectrumToIonsMap, ionKeys);
 								addToMap(peptideKey, peptideToSpectraMap, spectrumKey2);
 								StaticQuantMaps.psmMap.addItem(quantifiedPSM);
@@ -234,7 +237,7 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 											.getItem(peptideKey);
 								} else {
 									quantifiedPeptide = new IsobaricQuantifiedPeptide(quantifiedPSM,
-											isIgnoreTaxonomies());
+											isIgnoreTaxonomies(), isDistinguishModifiedSequences(), isChargeSensible());
 								}
 								StaticQuantMaps.peptideMap.addItem(quantifiedPeptide);
 

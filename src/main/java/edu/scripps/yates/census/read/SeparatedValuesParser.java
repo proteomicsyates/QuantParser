@@ -293,10 +293,11 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 		// chargeState, rawFileName, false);
 		// } else {
 		quantifiedPSM = new QuantifiedPSM(sequence, labelsByConditions, peptideToSpectraMap, scanNumber, chargeState,
-				rawFileName, false);
+				rawFileName, false, isDistinguishModifiedSequences(), isChargeSensible());
 		// }
 		quantifiedPSM.getFileNames().add(inputFileName);
-		final String psmKey = KeyUtils.getInstance().getSpectrumKey(quantifiedPSM, true);
+		final String psmKey = KeyUtils.getInstance().getSpectrumKey(quantifiedPSM, isDistinguishModifiedSequences(),
+				isChargeSensible());
 		// in case of TMT, the psm may have been created before
 		if (StaticQuantMaps.psmMap.containsKey(psmKey)) {
 			quantifiedPSM = StaticQuantMaps.psmMap.getItem(psmKey);
@@ -358,11 +359,13 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 
 		// create the peptide
 		QuantifiedPeptideInterface quantifiedPeptide = null;
-		final String peptideKey = KeyUtils.getInstance().getSequenceKey(quantifiedPSM, true);
+		final String peptideKey = KeyUtils.getInstance().getSequenceChargeKey(quantifiedPSM,
+				isDistinguishModifiedSequences(), isChargeSensible());
 		if (StaticQuantMaps.peptideMap.containsKey(peptideKey)) {
 			quantifiedPeptide = StaticQuantMaps.peptideMap.getItem(peptideKey);
 		} else {
-			quantifiedPeptide = new QuantifiedPeptide(quantifiedPSM, isIgnoreTaxonomies());
+			quantifiedPeptide = new QuantifiedPeptide(quantifiedPSM, isIgnoreTaxonomies(),
+					isDistinguishModifiedSequences(), isChargeSensible());
 		}
 		StaticQuantMaps.peptideMap.addItem(quantifiedPeptide);
 		quantifiedPSM.setQuantifiedPeptide(quantifiedPeptide, true);
@@ -403,7 +406,8 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 				quantifiedProtein.addPeptide(quantifiedPeptide, true);
 				// add to the map (if it was already there
 				// is not a problem, it will be only once)
-				addToMap(proteinKey, proteinToPeptidesMap, KeyUtils.getInstance().getSequenceKey(quantifiedPSM, true));
+				addToMap(proteinKey, proteinToPeptidesMap, KeyUtils.getInstance().getSequenceChargeKey(quantifiedPSM,
+						isDistinguishModifiedSequences(), isChargeSensible()));
 				// add protein to protein map
 				localProteinMap.put(proteinKey, quantifiedProtein);
 				// add to protein-experiment map
@@ -429,7 +433,8 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 			quantifiedProtein.addPeptide(quantifiedPeptide, true);
 			// add to the map (if it was already there
 			// is not a problem, it will be only once)
-			addToMap(proteinKey, proteinToPeptidesMap, KeyUtils.getInstance().getSequenceKey(quantifiedPSM, true));
+			addToMap(proteinKey, proteinToPeptidesMap, KeyUtils.getInstance().getSequenceChargeKey(quantifiedPSM,
+					isDistinguishModifiedSequences(), isChargeSensible()));
 			// add protein to protein map
 			localProteinMap.put(proteinKey, quantifiedProtein);
 			// add to protein-experiment map
@@ -437,8 +442,8 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 
 		}
 		if (proteinACC == null && dbIndex == null) {
-			throw new IllegalArgumentException("Protein missing for peptide  " + quantifiedPeptide.getFullSequence()
-					+ " (" + psmId + "). Either provide a protein column or a Fasta file");
+			throw new IllegalArgumentException("Protein missing for peptide  " + quantifiedPeptide.getKey() + " ("
+					+ psmId + "). Either provide a protein column or a Fasta file");
 		}
 
 	}

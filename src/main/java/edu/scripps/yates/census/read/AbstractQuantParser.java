@@ -92,6 +92,26 @@ public abstract class AbstractQuantParser implements QuantParser {
 	protected boolean getPTMInProteinMap = false;
 	protected ProteinSequences proteinSequences;
 
+	// PEPTIDE KEY GROUPING SETTINGS
+	private boolean distinguishModifiedSequences = true;
+	private boolean chargeSensible = true;
+
+	public boolean isDistinguishModifiedSequences() {
+		return distinguishModifiedSequences;
+	}
+
+	public void setDistinguishModifiedSequences(boolean distinguishModifiedSequences) {
+		this.distinguishModifiedSequences = distinguishModifiedSequences;
+	}
+
+	public boolean isChargeSensible() {
+		return chargeSensible;
+	}
+
+	public void setChargeSensible(boolean chargeSensible) {
+		this.chargeSensible = chargeSensible;
+	}
+
 	public AbstractQuantParser() {
 
 	}
@@ -457,7 +477,8 @@ public abstract class AbstractQuantParser implements QuantParser {
 					ptmKey = getPTMKeyFromPTMsInProtein(ptmsInProtein);
 
 				}
-				final String spectrumKey = KeyUtils.getInstance().getSpectrumKey(psm, true);
+				final String spectrumKey = KeyUtils.getInstance().getSpectrumKey(psm, isDistinguishModifiedSequences(),
+						isChargeSensible());
 				addToMap(ptmKey, ptmToSpectraMap, spectrumKey);
 			}
 		}

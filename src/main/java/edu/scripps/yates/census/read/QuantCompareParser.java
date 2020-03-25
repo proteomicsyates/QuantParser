@@ -50,24 +50,15 @@ public class QuantCompareParser extends AbstractQuantParser {
 	private static final String scoreType = "PSM-level search engine specific statistic";
 	private static final String DCN = "DCN";
 	private static final String RETENTIONTIME = "RETENTIONTIME";
+	private static final String CORRIONINJECTION_INTENSITY = "CORRIONINJECTION_INTENSITY";
+	private static final String REDUNDANCY = "REDUNDANCY";
 
 	private final File file;
 	private final TIntObjectMap<TObjectIntMap<String>> columnsByExperiments = new TIntObjectHashMap<TObjectIntMap<String>>();
 	private final TObjectIntMap<String> indexByColumn = new TObjectIntHashMap<String>();
 
 	private final TIntIntMap normIntensityColumnPerExperiment = new TIntIntHashMap();
-	private boolean ignoreTaxonomies = true;
 	private final TIntObjectMap<QuantCondition> conditionByExp = new TIntObjectHashMap<QuantCondition>();
-
-	@Override
-	public boolean isIgnoreTaxonomies() {
-		return ignoreTaxonomies;
-	}
-
-	@Override
-	public void setIgnoreTaxonomies(boolean ignoreTaxonomies) {
-		this.ignoreTaxonomies = ignoreTaxonomies;
-	}
 
 	/**
 	 * 
@@ -96,7 +87,7 @@ public class QuantCompareParser extends AbstractQuantParser {
 				// this is a peptide line
 				// take the sequence
 				final String rawSequence = split[getIndexByColumnAndExperiment(1, SEQUENCE)];
-				QuantifiedPeptideInterface peptide = null;
+				QuantifiedPeptideInterface quantPeptide = null;
 				for (int exp = 1; exp <= columnsByExperiments.size(); exp++) {
 					// create a PSM per experiment
 					final String scanNumberString = split[getIndexByColumnAndExperiment(exp, SCAN)];
@@ -113,42 +104,64 @@ public class QuantCompareParser extends AbstractQuantParser {
 					} catch (final NumberFormatException e) {
 
 					}
+					int redundancy = 1;
+					final String redundancyString = split[getIndexByColumnAndExperiment(exp, REDUNDANCY)];
+					try {
+						redundancy = Integer.valueOf(redundancyString);
+					} catch (final NumberFormatException e) {
+
+					}
 					String rawFileName = split[getIndexByColumnAndExperiment(exp, FILENAME)];
 					if ("NA".equals(rawFileName)) {
 						rawFileName = "NA_" + exp;
 					}
 					final boolean singleton = false;// not used here
-					QuantifiedPSMInterface quantPSM = new QuantifiedPSM(rawSequence, null, peptideToSpectraMap,
-							scanNumber, chargeState, rawFileName, singleton);
-					if (!localPsmMap.containsKey(quantPSM.getKey())) {
-						localPsmMap.put(quantPSM.getKey(), quantPSM);
+					// create a PSM per peptide
+					List<QuantifiedPSMInterface> quantPSMs = new ArrayList<QuantifiedPSMInterface>();
+					// the scan number we get is from one PSM only
+					// we will create fake scan numbers for all PSMs that are behind this peptide by
+					// adding up 1 to each scan number
+					int scanNumberForPSM = scanNumber;
+					for (int i = 1; i <= redundancy; i++) {
+						QuantifiedPSMInterface quantPSM = new QuantifiedPSM(rawSequence, null, peptideToSpectraMap,
+								scanNumberForPSM++, chargeState, rawFileName, singleton,
+								isDistinguishModifiedSequences(), isChargeSensible());
+						quantPSMs.add(quantPSM);
+						if (!localPsmMap.containsKey(quantPSM.getKey())) {
+							localPsmMap.put(quantPSM.getKey(), quantPSM);
+						}
+						if (StaticQuantMaps.psmMap.containsKey(quantPSM.getKey())) {
+							quantPSM = StaticQuantMaps.psmMap.getItem(quantPSM.getKey());
+						}
+						StaticQuantMaps.psmMap.addItem(quantPSM);
+
 					}
-					if (StaticQuantMaps.psmMap.containsKey(quantPSM.getKey())) {
-						quantPSM = StaticQuantMaps.psmMap.getItem(quantPSM.getKey());
-					}
-					StaticQuantMaps.psmMap.addItem(quantPSM);
-					if (peptide == null) {
-						final String peptideKey = KeyUtils.getInstance().getSequenceKey(quantPSM, true);
+					if (quantPeptide == null) {
+						final String peptideKey = KeyUtils.getInstance().getSequenceChargeKey(quantPSMs.get(0),
+								isDistinguishModifiedSequences(), isChargeSensible());
 						if (StaticQuantMaps.peptideMap.containsKey(peptideKey)) {
-							peptide = StaticQuantMaps.peptideMap.getItem(peptideKey);
+							quantPeptide = StaticQuantMaps.peptideMap.getItem(peptideKey);
 						} else {
-							peptide = new QuantifiedPeptide(quantPSM, ignoreTaxonomies);
+							quantPeptide = new QuantifiedPeptide(quantPSMs.get(0), isIgnoreTaxonomies(),
+									isDistinguishModifiedSequences(), isChargeSensible());
 						}
-						StaticQuantMaps.peptideMap.addItem(peptide);
+						StaticQuantMaps.peptideMap.addItem(quantPeptide);
 						if (!localPeptideMap.containsKey(peptideKey)) {
-							localPeptideMap.put(peptide.getKey(), peptide);
+							localPeptideMap.put(quantPeptide.getKey(), quantPeptide);
 						}
-					} else {
-						peptide.addPSM(quantPSM, true);
 					}
-					// add the intensities to the PSM
+					// add the rest of PSMs
+					for (QuantifiedPSMInterface psm : quantPSMs) {
+						quantPeptide.addPSM(psm, true);
+					}
+					// add the intensities to the PEPTIDE
 					// INTENSITY
 					final String intensityString = split[getIndexByColumnAndExperiment(exp, INTENSITY)];
 					if (intensityString != null && !"NA".equals(intensityString)) {
 						final double intensity = Double.valueOf(intensityString);
 						final Amount intensityAmount = new AmountEx(intensity, AmountType.INTENSITY,
 								conditionByExp.get(exp));
-						quantPSM.addAmount(intensityAmount);
+						quantPeptide.addAmount(intensityAmount);
 					}
 					// NORM_INTENSITY
 					final String normIntensityString = split[normIntensityColumnPerExperiment.get(exp)];
@@ -156,28 +169,37 @@ public class QuantCompareParser extends AbstractQuantParser {
 						final double normIntensity = Double.valueOf(normIntensityString);
 						final Amount normIntensityAmount = new AmountEx(normIntensity, AmountType.NORMALIZED_INTENSITY,
 								conditionByExp.get(exp));
-						quantPSM.addAmount(normIntensityAmount);
+						quantPeptide.addAmount(normIntensityAmount);
+					}
+					// CORRIONINJECTION_INTENSITY
+					final String corrInjectionIntensityString = split[getIndexByColumnAndExperiment(exp,
+							CORRIONINJECTION_INTENSITY)];
+					if (corrInjectionIntensityString != null && !"NA".equals(corrInjectionIntensityString)) {
+						final double corrInjectionIntensity = Double.valueOf(corrInjectionIntensityString);
+						final Amount corrInjectionIntensityAmount = new AmountEx(corrInjectionIntensity,
+								AmountType.CORRIONINJECTION_INTENSITY, conditionByExp.get(exp));
+						quantPeptide.addAmount(corrInjectionIntensityAmount);
 					}
 					// add the scores to the PSM
 					// XCorr
 					final String xcorrString = split[getIndexByColumnAndExperiment(exp, XCORR)];
 					if (xcorrString != null && !"NA".equals(xcorrString)) {
 						final Score score = new ScoreEx(xcorrString, XCORR, scoreType, null);
-						quantPSM.addScore(score);
+						quantPeptide.addScore(score);
 					}
 					// XCorr
 					final String dcnString = split[getIndexByColumnAndExperiment(exp, DCN)];
 					if (dcnString != null && !"NA".equals(dcnString)) {
 						final Score score = new ScoreEx(dcnString, DCN, scoreType, null);
-						quantPSM.addScore(score);
+						quantPeptide.addScore(score);
 					}
-					// Retention time
+					// Retention time to the first PSM (this is not entirely correct)
 					final String rtString = split[getIndexByColumnAndExperiment(exp, RETENTIONTIME)];
 					if (rtString != null && !"NA".equals(rtString)) {
 						try {
 							final float rt = Float.valueOf(rtString);
-							if (quantPSM instanceof AbstractPSM) {
-								((AbstractPSM) quantPSM).setRtInMinutes(rt);
+							if (quantPSMs.get(0) instanceof AbstractPSM) {
+								((AbstractPSM) quantPSMs.get(0)).setRtInMinutes(rt);
 							}
 						} catch (final NumberFormatException e) {
 							// do nothing
@@ -186,10 +208,10 @@ public class QuantCompareParser extends AbstractQuantParser {
 				}
 				// asign the pvalue and qvalue to the peptide
 				final String pvalue = split[indexByColumn.get(PVALUE)];
-				peptide.addScore(new ScoreEx(pvalue, PVALUE,
+				quantPeptide.addScore(new ScoreEx(pvalue, PVALUE,
 						"p-value at peptide level between " + columnsByExperiments.size() + " experiments", null));
 				final String qvalue = split[indexByColumn.get(QVALUE)];
-				peptide.addScore(new ScoreEx(qvalue, QVALUE,
+				quantPeptide.addScore(new ScoreEx(qvalue, QVALUE,
 						"q-value at peptide level between " + columnsByExperiments.size() + " experiments", null));
 				// create protein(s)
 				String proteinAccs = split[indexByColumn.get(PROTEIN)];
@@ -220,7 +242,7 @@ public class QuantCompareParser extends AbstractQuantParser {
 					if (StaticQuantMaps.proteinMap.containsKey(proteinACC)) {
 						protein = StaticQuantMaps.proteinMap.getItem(proteinACC);
 					} else {
-						protein = new QuantifiedProtein(proteinACC, ignoreTaxonomies);
+						protein = new QuantifiedProtein(proteinACC, isIgnoreTaxonomies());
 
 					}
 					StaticQuantMaps.proteinMap.addItem(protein);
@@ -231,7 +253,7 @@ public class QuantCompareParser extends AbstractQuantParser {
 					if (descriptions.size() > i) {
 						protein.setDescription(descriptions.get(i));
 					}
-					protein.addPeptide(peptide, true);
+					protein.addPeptide(quantPeptide, true);
 
 				}
 			}

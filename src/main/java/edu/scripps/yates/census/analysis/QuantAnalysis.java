@@ -82,6 +82,8 @@ public class QuantAnalysis implements PropertyChangeListener {
 	private boolean useProteinGeneName;
 	private boolean useProteinID;
 	private String uniprotVersion;
+	private final boolean distinguishModifiedSequence;
+	private final boolean chargeStateSensible;
 
 	public static enum ANALYSIS_LEVEL_OUTCOME {
 		PEPTIDE, PROTEIN, PROTEINGROUP, PROTEIN_CLUSTER, FORCED_CLUSTERS, QUANTIFIED_SITE, QUANTIFIED_PTM
@@ -95,7 +97,8 @@ public class QuantAnalysis implements PropertyChangeListener {
 	 * @param condition2
 	 */
 	public QuantAnalysis(QuantificationType quantType, String workingPath, QuantCondition condition1,
-			QuantCondition condition2, boolean ignorePTMs, boolean collapseByPTM, boolean collapseBySite) {
+			QuantCondition condition2, boolean ignorePTMs, boolean collapseByPTM, boolean collapseBySite,
+			boolean distinguishModifiedSequence, boolean chargeStateSensible) {
 		this.condition1 = condition1;
 		this.condition2 = condition2;
 		analysisOutCome = ANALYSIS_LEVEL_OUTCOME.PROTEINGROUP;
@@ -104,6 +107,8 @@ public class QuantAnalysis implements PropertyChangeListener {
 		this.ignorePTMs = ignorePTMs;
 		this.collapseByPTM = collapseByPTM;
 		this.collapseBySite = collapseBySite;
+		this.distinguishModifiedSequence = distinguishModifiedSequence;
+		this.chargeStateSensible = chargeStateSensible;
 	}
 
 	/**
@@ -115,7 +120,8 @@ public class QuantAnalysis implements PropertyChangeListener {
 	 * @param analysisOutCome
 	 */
 	public QuantAnalysis(QuantificationType quantType, File workingFolder, QuantCondition condition1,
-			QuantCondition condition2, boolean ignorePTMs, boolean collapseByPTM, boolean collapseBySite) {
+			QuantCondition condition2, boolean ignorePTMs, boolean collapseByPTM, boolean collapseBySite,
+			boolean distinguishModifiedSequence, boolean chargeStateSensible) {
 		this.condition1 = condition1;
 		this.condition2 = condition2;
 		analysisOutCome = ANALYSIS_LEVEL_OUTCOME.PROTEINGROUP;
@@ -124,6 +130,8 @@ public class QuantAnalysis implements PropertyChangeListener {
 		this.ignorePTMs = ignorePTMs;
 		this.collapseByPTM = collapseByPTM;
 		this.collapseBySite = collapseBySite;
+		this.distinguishModifiedSequence = distinguishModifiedSequence;
+		this.chargeStateSensible = chargeStateSensible;
 	}
 
 	/**
@@ -135,7 +143,8 @@ public class QuantAnalysis implements PropertyChangeListener {
 	 */
 	public QuantAnalysis(QuantificationType quantType, String workingPath, QuantCondition condition1,
 			QuantCondition condition2, ANALYSIS_LEVEL_OUTCOME analysisOutCome, boolean ignorePTMs,
-			boolean collapseByPTM, boolean collapseBySite) {
+			boolean collapseByPTM, boolean collapseBySite, boolean distinguishModifiedSequence,
+			boolean chargeStateSensible) {
 		this.condition1 = condition1;
 		this.condition2 = condition2;
 		this.analysisOutCome = analysisOutCome;
@@ -145,6 +154,8 @@ public class QuantAnalysis implements PropertyChangeListener {
 		this.ignorePTMs = ignorePTMs;
 		this.collapseByPTM = collapseByPTM;
 		this.collapseBySite = collapseBySite;
+		this.distinguishModifiedSequence = distinguishModifiedSequence;
+		this.chargeStateSensible = chargeStateSensible;
 	}
 
 	/**
@@ -157,7 +168,8 @@ public class QuantAnalysis implements PropertyChangeListener {
 	 */
 	public QuantAnalysis(QuantificationType quantType, File workingFolder, QuantCondition condition1,
 			QuantCondition condition2, ANALYSIS_LEVEL_OUTCOME analysisOutCome, boolean ignorePTMs,
-			boolean collapseByPTM, boolean collapseBySite) {
+			boolean collapseByPTM, boolean collapseBySite, boolean distinguishModifiedSequence,
+			boolean chargeStateSensible) {
 		this.condition1 = condition1;
 		this.condition2 = condition2;
 		this.analysisOutCome = analysisOutCome;
@@ -166,7 +178,8 @@ public class QuantAnalysis implements PropertyChangeListener {
 		this.ignorePTMs = ignorePTMs;
 		this.collapseByPTM = collapseByPTM;
 		this.collapseBySite = collapseBySite;
-
+		this.distinguishModifiedSequence = distinguishModifiedSequence;
+		this.chargeStateSensible = chargeStateSensible;
 	}
 
 	public ProteinSequences getProteinSequences() {
@@ -215,8 +228,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 	}
 
 	/**
-	 * @param keepExperimentsSeparated
-	 *            the keepExperimentsSeparated to set
+	 * @param keepExperimentsSeparated the keepExperimentsSeparated to set
 	 */
 	public void setKeepExperimentsSeparated(Boolean keepExperimentsSeparated) {
 		this.keepExperimentsSeparated = keepExperimentsSeparated;
@@ -345,8 +357,8 @@ public class QuantAnalysis implements PropertyChangeListener {
 	}
 
 	/**
-	 * Iterates over the list of experiments and save the names of the
-	 * experiments and replicates for its further use.
+	 * Iterates over the list of experiments and save the names of the experiments
+	 * and replicates for its further use.
 	 */
 	private void readExperimentAndReplicateNames() {
 		for (final QuantExperiment exp : quantExperiments) {
@@ -504,7 +516,8 @@ public class QuantAnalysis implements PropertyChangeListener {
 								}
 							}
 
-							key = QuantKeyUtils.getInstance().getSpectrumKey(quantifiedPSM, true) + expRepKey;
+							key = QuantKeyUtils.getInstance().getSpectrumKey(quantifiedPSM, distinguishModifiedSequence,
+									chargeStateSensible) + expRepKey;
 
 							// in case of not having isobaric isotopologues, we
 							// have one ratio per PSM in the replicate, not
@@ -1603,7 +1616,8 @@ public class QuantAnalysis implements PropertyChangeListener {
 						if (quantifiedPSM.isDiscarded()) {
 							continue;
 						}
-						final String peptideKey = KeyUtils.getInstance().getSequenceKey(quantifiedPSM, true);
+						final String peptideKey = KeyUtils.getInstance().getSequenceChargeKey(quantifiedPSM,
+								distinguishModifiedSequence, chargeStateSensible);
 						if (map2.containsKey(proteinKey)) {
 							map2.get(proteinKey).add(peptideKey);
 						} else {
@@ -1632,7 +1646,8 @@ public class QuantAnalysis implements PropertyChangeListener {
 			for (final GroupablePeptide groupablePSM : psMs) {
 				if (groupablePSM instanceof QuantifiedPSMInterface) {
 					final QuantifiedPSMInterface psm = (QuantifiedPSMInterface) groupablePSM;
-					final String peptideKey = KeyUtils.getInstance().getSequenceKey(psm, true);
+					final String peptideKey = KeyUtils.getInstance().getSequenceChargeKey(psm,
+							distinguishModifiedSequence, chargeStateSensible);
 					set.add(peptideKey);
 				}
 			}
@@ -1908,8 +1923,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 	}
 
 	/**
-	 * @param minAlignmentScore
-	 *            the minAlignmentScore to set
+	 * @param minAlignmentScore the minAlignmentScore to set
 	 */
 	public void setMinAlignmentScore(int minAlignmentScore) {
 		this.minAlignmentScore = minAlignmentScore;
@@ -1923,8 +1937,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 	}
 
 	/**
-	 * @param minPercentajeOfsmilirarity
-	 *            the minPercentajeOfsmilirarity to set
+	 * @param minPercentajeOfsmilirarity the minPercentajeOfsmilirarity to set
 	 */
 	public void setMinPercentajeOfsmilirarity(double minPercentajeOfsmilirarity) {
 		this.minPercentajeOfsmilirarity = minPercentajeOfsmilirarity;
@@ -1938,8 +1951,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 	}
 
 	/**
-	 * @param minConsecutiveLength
-	 *            the minConsecutiveLength to set
+	 * @param minConsecutiveLength the minConsecutiveLength to set
 	 */
 	public void setMinConsecutiveLength(int minConsecutiveLength) {
 		this.minConsecutiveLength = minConsecutiveLength;
@@ -1953,24 +1965,23 @@ public class QuantAnalysis implements PropertyChangeListener {
 	}
 
 	/**
-	 * Determine if override or not the relationaship and data files if they
-	 * already exist.
+	 * Determine if override or not the relationaship and data files if they already
+	 * exist.
 	 *
-	 * @param overrideFilesIfExists
-	 *            the overrideFilesIfExists to set
+	 * @param overrideFilesIfExists the overrideFilesIfExists to set
 	 */
 	public void setOverrideFilesIfExists(boolean overrideFilesIfExists) {
 		this.overrideFilesIfExists = overrideFilesIfExists;
 	}
 
 	/**
-	 * force the analysis to retrieve the protein level values by grouping
-	 * proteins according to the proteinAccClusters provided in the parameter
+	 * force the analysis to retrieve the protein level values by grouping proteins
+	 * according to the proteinAccClusters provided in the parameter
 	 *
 	 * @param proteinAccClusters
-	 * @throws IllegalArgumentException
-	 *             if the {@link ANALYSIS_LEVEL_OUTCOME} is not set to
-	 *             ANALYSIS_LEVEL_OUTCOME.FORCED_CLUSTERS
+	 * @throws IllegalArgumentException if the {@link ANALYSIS_LEVEL_OUTCOME} is not
+	 *                                  set to
+	 *                                  ANALYSIS_LEVEL_OUTCOME.FORCED_CLUSTERS
 	 */
 	public void forceProteinClusters(Set<Set<String>> proteinAccClusters) throws IllegalArgumentException {
 		if (analysisOutCome != ANALYSIS_LEVEL_OUTCOME.FORCED_CLUSTERS) {

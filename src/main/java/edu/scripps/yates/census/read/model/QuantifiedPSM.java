@@ -36,7 +36,8 @@ public class QuantifiedPSM extends AbstractPSM implements QuantifiedPSMInterface
 
 	public QuantifiedPSM(String sequence, Map<QuantCondition, QuantificationLabel> labelsByConditions,
 			Map<String, Set<String>> peptideToSpectraMap, int scanNumber, int chargeState, String rawFileName,
-			boolean singleton) throws IOException {
+			boolean singleton, boolean distinguishModifiedSequence, boolean chargeStateSensible) throws IOException {
+		super(distinguishModifiedSequence, chargeStateSensible);
 		setFullSequence(sequence);
 		setSequence(FastaParser.cleanSequence(sequence));
 		setScanNumber(String.valueOf(scanNumber));
@@ -62,8 +63,10 @@ public class QuantifiedPSM extends AbstractPSM implements QuantifiedPSMInterface
 		}
 
 		this.singleton = singleton;
-		final String peptideKey = QuantKeyUtils.getInstance().getSequenceKey(this, true);
-		final String spectrumKey = QuantKeyUtils.getInstance().getSpectrumKey(this, true);
+		final String peptideKey = QuantKeyUtils.getInstance().getSequenceChargeKey(this, distinguishModifiedSequence,
+				chargeStateSensible);
+		final String spectrumKey = QuantKeyUtils.getInstance().getSpectrumKey(this, distinguishModifiedSequence,
+				chargeStateSensible);
 		addToMap(peptideKey, peptideToSpectraMap, spectrumKey);
 
 		setKey(getIdentifier());
@@ -116,7 +119,8 @@ public class QuantifiedPSM extends AbstractPSM implements QuantifiedPSMInterface
 
 	@Override
 	public String getIdentifier() {
-		return QuantKeyUtils.getInstance().getSpectrumKey(this, true);
+		return QuantKeyUtils.getInstance().getSpectrumKey(this, isDistinguishModifiedSequence(),
+				isChargeStateSensible());
 	}
 
 	@Override

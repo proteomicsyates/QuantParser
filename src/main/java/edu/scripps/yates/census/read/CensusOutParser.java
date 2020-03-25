@@ -552,7 +552,8 @@ public class CensusOutParser extends AbstractQuantParser {
 			// singleton);
 			// } else {
 			quantifiedPSM = new QuantifiedPSM(sequence, labelsByConditions, peptideToSpectraMap, scanNumber,
-					Double.valueOf(mapValues.get(CS)).intValue(), rawFileName, singleton);
+					Double.valueOf(mapValues.get(CS)).intValue(), rawFileName, singleton,
+					isDistinguishModifiedSequences(), isChargeSensible());
 			// }
 
 			// xcorr
@@ -577,7 +578,8 @@ public class CensusOutParser extends AbstractQuantParser {
 			}
 
 			quantifiedPSM.getFileNames().add(inputFileName);
-			final String psmKey = KeyUtils.getInstance().getSpectrumKey(quantifiedPSM, true);
+			final String psmKey = KeyUtils.getInstance().getSpectrumKey(quantifiedPSM, isDistinguishModifiedSequences(),
+					isChargeSensible());
 			// in case of TMT, the psm may have been created before
 			if (StaticQuantMaps.psmMap.containsKey(psmKey)) {
 				quantifiedPSM = StaticQuantMaps.psmMap.getItem(psmKey);
@@ -1029,11 +1031,13 @@ public class CensusOutParser extends AbstractQuantParser {
 
 			// create the peptide
 			QuantifiedPeptideInterface quantifiedPeptide = null;
-			final String peptideKey = KeyUtils.getInstance().getSequenceKey(quantifiedPSM, true);
+			final String peptideKey = KeyUtils.getInstance().getSequenceChargeKey(quantifiedPSM,
+					isDistinguishModifiedSequences(), isChargeSensible());
 			if (StaticQuantMaps.peptideMap.containsKey(peptideKey)) {
 				quantifiedPeptide = StaticQuantMaps.peptideMap.getItem(peptideKey);
 			} else {
-				quantifiedPeptide = new QuantifiedPeptide(quantifiedPSM, isIgnoreTaxonomies());
+				quantifiedPeptide = new QuantifiedPeptide(quantifiedPSM, isIgnoreTaxonomies(),
+						isDistinguishModifiedSequences(), isChargeSensible());
 			}
 			StaticQuantMaps.peptideMap.addItem(quantifiedPeptide);
 
@@ -1086,8 +1090,8 @@ public class CensusOutParser extends AbstractQuantParser {
 					// add to the map (if it was already
 					// there is not a problem, it will be
 					// only once)
-					addToMap(proteinKey, proteinToPeptidesMap,
-							KeyUtils.getInstance().getSequenceKey(quantifiedPSM, true));
+					addToMap(proteinKey, proteinToPeptidesMap, KeyUtils.getInstance()
+							.getSequenceChargeKey(quantifiedPSM, isDistinguishModifiedSequences(), isChargeSensible()));
 
 				}
 			}
@@ -1104,7 +1108,8 @@ public class CensusOutParser extends AbstractQuantParser {
 				// add to the map (if it was already there
 				// is not a problem, it will be only once)
 				final String proteinKey = quantifiedProtein.getKey();
-				addToMap(proteinKey, proteinToPeptidesMap, KeyUtils.getInstance().getSequenceKey(quantifiedPSM, true));
+				addToMap(proteinKey, proteinToPeptidesMap, KeyUtils.getInstance().getSequenceChargeKey(quantifiedPSM,
+						isDistinguishModifiedSequences(), isChargeSensible()));
 				// add protein to protein map
 				localProteinMap.put(proteinKey, quantifiedProtein);
 				// add to protein-experiment map

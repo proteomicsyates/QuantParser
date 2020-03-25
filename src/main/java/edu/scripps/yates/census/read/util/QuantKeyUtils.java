@@ -27,11 +27,10 @@ public class QuantKeyUtils extends KeyUtils {
 	 *
 	 * @param ratio
 	 * @param peptide
-	 * @param chargeSensible
-	 *            if true, then, the charge will be considered for
-	 *            differentiating peptides with different charge states. If
-	 *            false, peptides with different charge states will have the
-	 *            same key
+	 * @param chargeSensible if true, then, the charge will be considered for
+	 *                       differentiating peptides with different charge states.
+	 *                       If false, peptides with different charge states will
+	 *                       have the same key
 	 * @return
 	 */
 	public String getIonKey(IsoRatio ratio, ProteinType.Peptide peptide, boolean chargeSensible) {
@@ -45,11 +44,10 @@ public class QuantKeyUtils extends KeyUtils {
 	 *
 	 * @param ratio
 	 * @param peptide
-	 * @param chargeSensible
-	 *            if true, then, the charge will be considered for
-	 *            differentiating peptides with different charge states. If
-	 *            false, peptides with different charge states will have the
-	 *            same key
+	 * @param chargeSensible if true, then, the charge will be considered for
+	 *                       differentiating peptides with different charge states.
+	 *                       If false, peptides with different charge states will
+	 *                       have the same key
 	 * @return
 	 */
 	public String getIonKey(IsoRatio ratio, Peptide peptide) {
@@ -72,15 +70,14 @@ public class QuantKeyUtils extends KeyUtils {
 	/**
 	 *
 	 * @param psm
-	 * @param chargeSensible
-	 *            if true, then, the charge will be considered for
-	 *            differentiating peptides with different charge states. If
-	 *            false, peptides with different charge states will have the
-	 *            same key
+	 * @param chargeSensible if true, then, the charge will be considered for
+	 *                       differentiating peptides with different charge states.
+	 *                       If false, peptides with different charge states will
+	 *                       have the same key
 	 * @return
 	 */
 	@Override
-	public String getSpectrumKey(PSM psm, boolean chargeSensible) {
+	public String getSpectrumKey(PSM psm, boolean distinguishModifiedSequence, boolean chargeSensible) {
 
 		final StringBuilder sb = new StringBuilder();
 		if (psm instanceof QuantifiedPSMInterface) {
@@ -97,8 +94,14 @@ public class QuantKeyUtils extends KeyUtils {
 		if (!"".equals(sb.toString())) {
 			sb.append("-");
 		}
-		if (psm.getFullSequence() != null) {
-			sb.append(psm.getFullSequence());
+		if (distinguishModifiedSequence) {
+			if (psm.getFullSequence() != null) {
+				sb.append(psm.getFullSequence());
+			}
+		} else {
+			if (psm.getSequence() != null) {
+				sb.append(psm.getSequence());
+			}
 		}
 
 		if (chargeSensible) {
@@ -113,16 +116,40 @@ public class QuantKeyUtils extends KeyUtils {
 	/**
 	 *
 	 * @param psm
-	 * @param chargeSensible
-	 *            if true, then, the charge will be considered for
-	 *            differentiating peptides with different charge states. If
-	 *            false, peptides with different charge states will have the
-	 *            same key
+	 * @param chargeSensible if true, then, the charge will be considered for
+	 *                       differentiating peptides with different charge states.
+	 *                       If false, peptides with different charge states will
+	 *                       have the same key
 	 * @return
 	 */
 	public String getSpectrumKey(ProteinType.Peptide peptide, boolean chargeSensible) {
 
 		final String string = peptide.getFile() + "-" + peptide.getScan() + "-" + peptide.getSeq();
+		if (chargeSensible) {
+			return string + "-" + peptide.getCharge();
+		} else {
+			return string;
+		}
+	}
+
+	/**
+	 *
+	 * @param psm
+	 * @param chargeSensible if true, then, the charge will be considered for
+	 *                       differentiating peptides with different charge states.
+	 *                       If false, peptides with different charge states will
+	 *                       have the same key
+	 * @return
+	 */
+	public String getSpectrumKey(ProteinType.Peptide peptide, boolean distinguishModifiedSequence,
+			boolean chargeSensible) {
+
+		String string = peptide.getFile() + "-" + peptide.getScan();
+		if (distinguishModifiedSequence) {
+			string += "-" + FastaParser.getSequenceInBetween(peptide.getSeq());
+		} else {
+			string += "-" + FastaParser.cleanSequence(peptide.getSeq());
+		}
 		if (chargeSensible) {
 			return string + "-" + peptide.getCharge();
 		} else {

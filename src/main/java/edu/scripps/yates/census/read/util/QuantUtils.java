@@ -55,14 +55,16 @@ public class QuantUtils {
 	public static final String KEY_SEPARATOR = "-";
 
 	public static void addToPeptideMap(QuantifiedPSMInterface quantifiedPSM, Map<String, QuantifiedPeptide> map,
-			boolean ignoreTaxonomies) {
-		final String sequenceKey = QuantKeyUtils.getInstance().getSequenceKey(quantifiedPSM, true);
+			boolean ignoreTaxonomies, boolean distinguishModifiedSequence, boolean chargeStateSensible) {
+		final String sequenceKey = QuantKeyUtils.getInstance().getSequenceChargeKey(quantifiedPSM,
+				distinguishModifiedSequence, chargeStateSensible);
 		QuantifiedPeptide quantifiedPeptide = null;
 		if (map.containsKey(sequenceKey)) {
 			quantifiedPeptide = map.get(sequenceKey);
 			quantifiedPeptide.addQuantifiedPSM(quantifiedPSM, true);
 		} else {
-			quantifiedPeptide = new QuantifiedPeptide(quantifiedPSM, ignoreTaxonomies);
+			quantifiedPeptide = new QuantifiedPeptide(quantifiedPSM, ignoreTaxonomies, distinguishModifiedSequence,
+					chargeStateSensible);
 			map.put(sequenceKey, quantifiedPeptide);
 		}
 
@@ -70,14 +72,17 @@ public class QuantUtils {
 	}
 
 	public static void addToIsobaricPeptideMap(IsobaricQuantifiedPSM quantifiedPSM,
-			Map<String, IsobaricQuantifiedPeptide> map, boolean ignoreTaxonomies) {
-		final String sequenceKey = QuantKeyUtils.getInstance().getSequenceKey(quantifiedPSM, true);
+			Map<String, IsobaricQuantifiedPeptide> map, boolean ignoreTaxonomies, boolean distinguishModifiedSequence,
+			boolean chargeStateSensible) {
+		final String sequenceKey = QuantKeyUtils.getInstance().getSequenceChargeKey(quantifiedPSM,
+				distinguishModifiedSequence, chargeStateSensible);
 		IsobaricQuantifiedPeptide quantifiedPeptide = null;
 		if (map.containsKey(sequenceKey)) {
 			quantifiedPeptide = map.get(sequenceKey);
 			quantifiedPeptide.addQuantifiedPSM(quantifiedPSM, true);
 		} else {
-			quantifiedPeptide = new IsobaricQuantifiedPeptide(quantifiedPSM, ignoreTaxonomies);
+			quantifiedPeptide = new IsobaricQuantifiedPeptide(quantifiedPSM, ignoreTaxonomies,
+					distinguishModifiedSequence, chargeStateSensible);
 			map.put(sequenceKey, quantifiedPeptide);
 		}
 
@@ -740,7 +745,7 @@ public class QuantUtils {
 			if (positionInProtein.getPosition() > 0) {
 				sb.append(positionInProtein.getPosition());
 			}
-			
+
 		}
 
 		return sb.toString();

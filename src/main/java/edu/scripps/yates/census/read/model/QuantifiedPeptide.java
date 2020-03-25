@@ -31,16 +31,39 @@ public class QuantifiedPeptide extends AbstractPeptide implements QuantifiedPept
 	private boolean discarded;
 	private Set<QuantRatio> quantRatios;
 
+	// DISTINGUISH TO ALWAYS CONSIDER CHARGE AND MODIFIED SEQUENCE
+//	/**
+//	 * Creates a {@link QuantifiedPeptide} object, adding the
+//	 * {@link QuantifiedPSMInterface} to its list of {@link QuantifiedPSMInterface}s
+//	 * setting the key as PTM sensible but not charge sensible.
+//	 * 
+//	 * @param quantPSM
+//	 * @param ignoreTaxonomies
+//	 */
+//	public QuantifiedPeptide(QuantifiedPSMInterface quantPSM, boolean ignoreTaxonomies) {
+//		super(QuantKeyUtils.getInstance().getSequenceKey(quantPSM, true));
+//		super.setSequence(quantPSM.getSequence());
+//		setFullSequence(quantPSM.getFullSequence());
+//		setIgnoreTaxonomy(ignoreTaxonomies);
+//		addPSM(quantPSM, true);
+//
+//	}
+
 	/**
 	 * Creates a {@link QuantifiedPeptide} object, adding the
 	 * {@link QuantifiedPSMInterface} to its list of {@link QuantifiedPSMInterface}s
 	 *
 	 * @param quantPSM
-	 * @param distinguishModifiedSequences
+	 * @param ignoreTaxonomies
+	 * @param distinguishModifiedSequence
+	 * @param chargeSensible
 	 */
-	public QuantifiedPeptide(QuantifiedPSMInterface quantPSM, boolean ignoreTaxonomies) {
-		super(QuantKeyUtils.getInstance().getSequenceKey(quantPSM, true));
+	public QuantifiedPeptide(QuantifiedPSMInterface quantPSM, boolean ignoreTaxonomies,
+			boolean distinguishModifiedSequence, boolean chargeSensible) {
+		super(QuantKeyUtils.getInstance().getSequenceChargeKey(quantPSM, distinguishModifiedSequence, chargeSensible));
 		super.setSequence(quantPSM.getSequence());
+		super.setDistinguishModifiedSequence(distinguishModifiedSequence);
+		super.setChargeSensible(chargeSensible);
 		setFullSequence(quantPSM.getFullSequence());
 		setIgnoreTaxonomy(ignoreTaxonomies);
 		addPSM(quantPSM, true);
@@ -53,7 +76,8 @@ public class QuantifiedPeptide extends AbstractPeptide implements QuantifiedPept
 	 */
 	@Override
 	public boolean addPSM(PSM quantPSM, boolean recursive) {
-		if (getKey().equals(QuantKeyUtils.getInstance().getSequenceKey(quantPSM, true))) {
+		if (getKey().equals(QuantKeyUtils.getInstance().getSequenceChargeKey(quantPSM, isDistinguishModifiedSequence(),
+				isChargeSensible()))) {
 			if (!getPSMs().contains(quantPSM)) {
 				final boolean ret = super.addPSM(quantPSM, recursive);
 				return ret;
@@ -252,8 +276,8 @@ public class QuantifiedPeptide extends AbstractPeptide implements QuantifiedPept
 	}
 
 	@Override
-	public boolean addQuantifiedPSM(QuantifiedPSMInterface quantifiedPSM, boolean b) {
-		return addPSM(quantifiedPSM, b);
+	public boolean addQuantifiedPSM(QuantifiedPSMInterface quantifiedPSM, boolean recursively) {
+		return addPSM(quantifiedPSM, recursively);
 	}
 
 	@Override
