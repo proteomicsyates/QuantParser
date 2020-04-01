@@ -3,10 +3,8 @@ package edu.scripps.yates.census.read.model;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.log4j.Logger;
-
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
 
 import edu.scripps.yates.census.analysis.QuantCondition;
 import edu.scripps.yates.census.read.model.interfaces.QuantRatio;
@@ -38,7 +36,7 @@ public class CensusRatio implements QuantRatio {
 	private Character quantifiedAA;
 	private int numMeasurements;
 	private double standardDeviationOfLog2Ratios = Double.NaN;
-	private final static HashFunction goodFastHash = Hashing.goodFastHash(256);
+//	private final static HashFunction goodFastHash = Hashing.goodFastHash(256);
 
 	public static CensusRatio getNaNRatio(QuantCondition quantConditionNumerator,
 			QuantCondition quantConditionDenominator, AggregationLevel aggregationLevel, String description) {
@@ -310,7 +308,7 @@ public class CensusRatio implements QuantRatio {
 	@Override
 	public int hashCode() {
 
-		return goodFastHash.hashUnencodedChars(toString()).asInt();
+		return HashCodeBuilder.reflectionHashCode(toString());
 		// if two ratios are equal, they should have an equal hashcode, so, make
 		// it dependent of toString
 	}
