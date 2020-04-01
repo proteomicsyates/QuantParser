@@ -231,6 +231,10 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 				e.printStackTrace();
 				log.error(e.getMessage());
 				throw new IOException(e);
+			} catch (final Exception e) {
+				e.printStackTrace();
+				log.error(e.getMessage());
+				throw e;
 			} finally {
 				if (br != null) {
 					br.close();
