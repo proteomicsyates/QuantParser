@@ -287,7 +287,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 		// charge state
 		int chargeState = 0;
 		try {
-			chargeState = Integer.valueOf(FastaParser.getChargeStateFromPSMIdentifier(psmId));
+			chargeState = Double.valueOf(FastaParser.getChargeStateFromPSMIdentifier(psmId)).intValue();
 		} catch (final Exception e) {
 		}
 		QuantifiedPSMInterface quantifiedPSM = null;
