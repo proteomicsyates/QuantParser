@@ -16,6 +16,7 @@ import edu.scripps.yates.census.read.model.StaticQuantMaps;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPSMInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedPeptideInterface;
 import edu.scripps.yates.census.read.model.interfaces.QuantifiedProteinInterface;
+import edu.scripps.yates.utilities.files.FileUtils;
 import edu.scripps.yates.utilities.proteomicsmodel.AbstractPSM;
 import edu.scripps.yates.utilities.proteomicsmodel.Amount;
 import edu.scripps.yates.utilities.proteomicsmodel.Score;
@@ -72,8 +73,13 @@ public class QuantCompareParser extends AbstractQuantParser {
 	@Override
 	protected void process() throws IOException {
 		final Map<String, Set<String>> peptideToSpectraMap = new THashMap<String, Set<String>>();
-
-		final List<String> lines = Files.readAllLines(this.file.toPath());
+		List<String> lines = null;
+		// check whether it is an excel file
+		if (FileUtils.isExcelFile(file)) {
+			lines = FileUtils.readLinesFromXLSX(file, "\t", 0);
+		} else {
+			lines = Files.readAllLines(this.file.toPath());
+		}
 		for (final String line : lines) {
 			final String[] split = line.split("\t");
 
@@ -93,21 +99,21 @@ public class QuantCompareParser extends AbstractQuantParser {
 					final String scanNumberString = split[getIndexByColumnAndExperiment(exp, SCAN)];
 					int scanNumber = -1;
 					try {
-						scanNumber = Integer.valueOf(scanNumberString);
+						scanNumber = Double.valueOf(scanNumberString).intValue();
 					} catch (final NumberFormatException e) {
 
 					}
 					int chargeState = -1;
 					final String chargeStateString = split[getIndexByColumnAndExperiment(exp, CSTATE)];
 					try {
-						chargeState = Integer.valueOf(chargeStateString);
+						chargeState = Double.valueOf(chargeStateString).intValue();
 					} catch (final NumberFormatException e) {
 
 					}
 					int redundancy = 1;
 					final String redundancyString = split[getIndexByColumnAndExperiment(exp, REDUNDANCY)];
 					try {
-						redundancy = Integer.valueOf(redundancyString);
+						redundancy = Double.valueOf(redundancyString).intValue();
 					} catch (final NumberFormatException e) {
 
 					}
@@ -117,7 +123,7 @@ public class QuantCompareParser extends AbstractQuantParser {
 					}
 					final boolean singleton = false;// not used here
 					// create a PSM per peptide
-					List<QuantifiedPSMInterface> quantPSMs = new ArrayList<QuantifiedPSMInterface>();
+					final List<QuantifiedPSMInterface> quantPSMs = new ArrayList<QuantifiedPSMInterface>();
 					// the scan number we get is from one PSM only
 					// we will create fake scan numbers for all PSMs that are behind this peptide by
 					// adding up 1 to each scan number
@@ -151,7 +157,7 @@ public class QuantCompareParser extends AbstractQuantParser {
 						}
 					}
 					// add the rest of PSMs
-					for (QuantifiedPSMInterface psm : quantPSMs) {
+					for (final QuantifiedPSMInterface psm : quantPSMs) {
 						quantPeptide.addPSM(psm, true);
 					}
 					// add the intensities to the PEPTIDE
