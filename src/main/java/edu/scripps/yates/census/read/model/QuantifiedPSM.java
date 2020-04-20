@@ -1,6 +1,5 @@
 package edu.scripps.yates.census.read.model;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 
@@ -36,7 +35,7 @@ public class QuantifiedPSM extends AbstractPSM implements QuantifiedPSMInterface
 
 	public QuantifiedPSM(String sequence, Map<QuantCondition, QuantificationLabel> labelsByConditions,
 			Map<String, Set<String>> peptideToSpectraMap, int scanNumber, int chargeState, String rawFileName,
-			boolean singleton, boolean distinguishModifiedSequence, boolean chargeStateSensible) throws IOException {
+			boolean singleton, boolean distinguishModifiedSequence, boolean chargeStateSensible) {
 		super(distinguishModifiedSequence, chargeStateSensible);
 		setFullSequence(sequence);
 		setSequence(FastaParser.cleanSequence(sequence));
