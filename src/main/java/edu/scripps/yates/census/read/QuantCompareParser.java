@@ -53,6 +53,8 @@ public class QuantCompareParser extends AbstractQuantParser {
 	private static final String RETENTIONTIME = "RETENTIONTIME";
 	private static final String CORRIONINJECTION_INTENSITY = "CORRIONINJECTION_INTENSITY";
 	private static final String REDUNDANCY = "REDUNDANCY";
+	public static final String REPLICATE_PREFIX = "Rep_";
+	private static final String EXP_HEADER_PREFIX = "EXP_";
 
 	private final File file;
 	private final TIntObjectMap<TObjectIntMap<String>> columnsByExperiments = new TIntObjectHashMap<TObjectIntMap<String>>();
@@ -94,9 +96,9 @@ public class QuantCompareParser extends AbstractQuantParser {
 				// take the sequence
 				final String rawSequence = split[getIndexByColumnAndExperiment(1, SEQUENCE)];
 				QuantifiedPeptideInterface quantPeptide = null;
-				for (int exp = 1; exp <= columnsByExperiments.size(); exp++) {
+				for (int rep = 1; rep <= columnsByExperiments.size(); rep++) {
 					// create a PSM per experiment
-					final String scanNumberString = split[getIndexByColumnAndExperiment(exp, SCAN)];
+					final String scanNumberString = split[getIndexByColumnAndExperiment(rep, SCAN)];
 					int scanNumber = -1;
 					try {
 						scanNumber = Double.valueOf(scanNumberString).intValue();
@@ -104,22 +106,22 @@ public class QuantCompareParser extends AbstractQuantParser {
 
 					}
 					int chargeState = -1;
-					final String chargeStateString = split[getIndexByColumnAndExperiment(exp, CSTATE)];
+					final String chargeStateString = split[getIndexByColumnAndExperiment(rep, CSTATE)];
 					try {
 						chargeState = Double.valueOf(chargeStateString).intValue();
 					} catch (final NumberFormatException e) {
 
 					}
 					int redundancy = 1;
-					final String redundancyString = split[getIndexByColumnAndExperiment(exp, REDUNDANCY)];
+					final String redundancyString = split[getIndexByColumnAndExperiment(rep, REDUNDANCY)];
 					try {
 						redundancy = Double.valueOf(redundancyString).intValue();
 					} catch (final NumberFormatException e) {
 
 					}
-					String rawFileName = split[getIndexByColumnAndExperiment(exp, FILENAME)];
+					String rawFileName = split[getIndexByColumnAndExperiment(rep, FILENAME)];
 					if ("NA".equals(rawFileName)) {
-						rawFileName = "NA_" + exp;
+						rawFileName = "NA_" + rep;
 					}
 					final boolean singleton = false;// not used here
 					// create a PSM per peptide
@@ -132,6 +134,9 @@ public class QuantCompareParser extends AbstractQuantParser {
 						QuantifiedPSMInterface quantPSM = new QuantifiedPSM(rawSequence, null, peptideToSpectraMap,
 								scanNumberForPSM++, chargeState, rawFileName, singleton,
 								isDistinguishModifiedSequences(), isChargeSensible());
+						// make this PSM to be from replicate rep
+						quantPSM.addCondition(conditionByExp.get(rep));
+
 						quantPSMs.add(quantPSM);
 						if (!localPsmMap.containsKey(quantPSM.getKey())) {
 							localPsmMap.put(quantPSM.getKey(), quantPSM);
@@ -162,45 +167,45 @@ public class QuantCompareParser extends AbstractQuantParser {
 					}
 					// add the intensities to the PEPTIDE
 					// INTENSITY
-					final String intensityString = split[getIndexByColumnAndExperiment(exp, INTENSITY)];
+					final String intensityString = split[getIndexByColumnAndExperiment(rep, INTENSITY)];
 					if (intensityString != null && !"NA".equals(intensityString)) {
 						final double intensity = Double.valueOf(intensityString);
 						final Amount intensityAmount = new AmountEx(intensity, AmountType.INTENSITY,
-								conditionByExp.get(exp));
+								conditionByExp.get(rep));
 						quantPeptide.addAmount(intensityAmount);
 					}
 					// NORM_INTENSITY
-					final String normIntensityString = split[normIntensityColumnPerExperiment.get(exp)];
+					final String normIntensityString = split[normIntensityColumnPerExperiment.get(rep)];
 					if (normIntensityString != null && !"NA".equals(normIntensityString)) {
 						final double normIntensity = Double.valueOf(normIntensityString);
 						final Amount normIntensityAmount = new AmountEx(normIntensity, AmountType.NORMALIZED_INTENSITY,
-								conditionByExp.get(exp));
+								conditionByExp.get(rep));
 						quantPeptide.addAmount(normIntensityAmount);
 					}
 					// CORRIONINJECTION_INTENSITY
-					final String corrInjectionIntensityString = split[getIndexByColumnAndExperiment(exp,
+					final String corrInjectionIntensityString = split[getIndexByColumnAndExperiment(rep,
 							CORRIONINJECTION_INTENSITY)];
 					if (corrInjectionIntensityString != null && !"NA".equals(corrInjectionIntensityString)) {
 						final double corrInjectionIntensity = Double.valueOf(corrInjectionIntensityString);
 						final Amount corrInjectionIntensityAmount = new AmountEx(corrInjectionIntensity,
-								AmountType.CORRIONINJECTION_INTENSITY, conditionByExp.get(exp));
+								AmountType.CORRIONINJECTION_INTENSITY, conditionByExp.get(rep));
 						quantPeptide.addAmount(corrInjectionIntensityAmount);
 					}
 					// add the scores to the PSM
 					// XCorr
-					final String xcorrString = split[getIndexByColumnAndExperiment(exp, XCORR)];
+					final String xcorrString = split[getIndexByColumnAndExperiment(rep, XCORR)];
 					if (xcorrString != null && !"NA".equals(xcorrString)) {
 						final Score score = new ScoreEx(xcorrString, XCORR, scoreType, null);
 						quantPeptide.addScore(score);
 					}
 					// XCorr
-					final String dcnString = split[getIndexByColumnAndExperiment(exp, DCN)];
+					final String dcnString = split[getIndexByColumnAndExperiment(rep, DCN)];
 					if (dcnString != null && !"NA".equals(dcnString)) {
 						final Score score = new ScoreEx(dcnString, DCN, scoreType, null);
 						quantPeptide.addScore(score);
 					}
 					// Retention time to the first PSM (this is not entirely correct)
-					final String rtString = split[getIndexByColumnAndExperiment(exp, RETENTIONTIME)];
+					final String rtString = split[getIndexByColumnAndExperiment(rep, RETENTIONTIME)];
 					if (rtString != null && !"NA".equals(rtString)) {
 						try {
 							final float rt = Float.valueOf(rtString);
@@ -278,10 +283,14 @@ public class QuantCompareParser extends AbstractQuantParser {
 		int exp = -1;
 		int index = 0;
 		for (final String header : split) {
-			if (header.startsWith("EXP_")) {
-				exp = Integer.valueOf(header.substring("EXP_".length()));
+			if (header.startsWith(EXP_HEADER_PREFIX)) {
+				exp = Integer.valueOf(header.substring(EXP_HEADER_PREFIX.length()));
 				columnsByExperiments.put(exp, new TObjectIntHashMap<String>());
-				conditionByExp.put(exp, new QuantCondition(header));
+				String conditionName = REPLICATE_PREFIX;
+				if (header.length() > EXP_HEADER_PREFIX.length()) {
+					conditionName += header.substring(EXP_HEADER_PREFIX.length());
+				}
+				conditionByExp.put(exp, new QuantCondition(conditionName));
 			} else if (header.startsWith(NORM_INTENSITY)) {
 				final int exp2 = Integer.valueOf(header.substring(NORM_INTENSITY.length()));
 				normIntensityColumnPerExperiment.put(exp2, index);
