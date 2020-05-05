@@ -95,6 +95,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 	// PEPTIDE KEY GROUPING SETTINGS
 	private boolean distinguishModifiedSequences = true;
 	private boolean chargeSensible = true;
+	private final Set<String> ratiosToCapture = new THashSet<String>();
 
 	public boolean isDistinguishModifiedSequences() {
 		return distinguishModifiedSequences;
@@ -791,4 +792,33 @@ public abstract class AbstractQuantParser implements QuantParser {
 		this.uniprotVersion = uniprotVersion;
 	}
 
+	/**
+	 * Adds ratio names to be captured if present in the input file
+	 * 
+	 * @param ratioName
+	 */
+	public void addRatioNameToCapture(String ratioName) {
+		this.ratiosToCapture.add(ratioName.toLowerCase());
+	}
+
+	/**
+	 * Adds ratio names to be captured if present in the input file
+	 * 
+	 * @param ratioNames Take them from the parser static properties, such as
+	 *                   CensusOutParser.AREA_RATIO
+	 */
+	public void addRatioNamesToCapture(String... ratioNames) {
+		for (final String ratioName : ratioNames) {
+			this.ratiosToCapture.add(ratioName.toLowerCase());
+		}
+
+	}
+
+	public Set<String> getRatiosNameToCapture() {
+		return ratiosToCapture;
+	}
+
+	public boolean isCapturingRatioName(String ratioName) {
+		return ratiosToCapture.contains(ratioName.toLowerCase());
+	}
 }
