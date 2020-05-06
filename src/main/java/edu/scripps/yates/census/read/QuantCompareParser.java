@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
+
 import edu.scripps.yates.census.analysis.QuantCondition;
 import edu.scripps.yates.census.read.model.QuantifiedPSM;
 import edu.scripps.yates.census.read.model.QuantifiedPeptide;
@@ -31,8 +33,12 @@ import gnu.trove.map.hash.THashMap;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.map.hash.TObjectIntHashMap;
+import gnu.trove.set.TIntSet;
+import gnu.trove.set.hash.THashSet;
+import gnu.trove.set.hash.TIntHashSet;
 
 public class QuantCompareParser extends AbstractQuantParser {
+	private final static Logger log = Logger.getLogger(QuantCompareParser.class);
 	private static final String H = "H";
 	private static final String GROUP_SAMPLE = "GROUP_SAMPLE";
 	private static final String SLINE = "SLINE";
@@ -82,7 +88,10 @@ public class QuantCompareParser extends AbstractQuantParser {
 		} else {
 			lines = Files.readAllLines(this.file.toPath());
 		}
+		final Set<String> uniqueLineStrings = new THashSet<String>();
+		int numLine = 0;
 		for (final String line : lines) {
+			numLine++;
 			final String[] split = line.split("\t");
 
 			if (line.startsWith(H)) {
@@ -92,6 +101,10 @@ public class QuantCompareParser extends AbstractQuantParser {
 			} else if (line.startsWith(SLINE)) {
 				processColumns(split);
 			} else if (split[0].equals(S)) {
+				// first of all, check whether the line has been already seen before except for
+				// the protein columns
+				final String uniqueLineString = getUniqueLineStringWithNoProtein(split);
+
 				// this is a peptide line
 				// take the sequence
 				final String rawSequence = split[getIndexByColumnAndExperiment(1, SEQUENCE)];
@@ -165,56 +178,62 @@ public class QuantCompareParser extends AbstractQuantParser {
 					for (final QuantifiedPSMInterface psm : quantPSMs) {
 						quantPeptide.addPSM(psm, true);
 					}
-					// add the intensities to the PEPTIDE
-					// INTENSITY
-					final String intensityString = split[getIndexByColumnAndExperiment(rep, INTENSITY)];
-					if (intensityString != null && !"NA".equals(intensityString)) {
-						final double intensity = Double.valueOf(intensityString);
-						final Amount intensityAmount = new AmountEx(intensity, AmountType.INTENSITY,
-								conditionByExp.get(rep));
-						quantPeptide.addAmount(intensityAmount);
-					}
-					// NORM_INTENSITY
-					final String normIntensityString = split[normIntensityColumnPerExperiment.get(rep)];
-					if (normIntensityString != null && !"NA".equals(normIntensityString)) {
-						final double normIntensity = Double.valueOf(normIntensityString);
-						final Amount normIntensityAmount = new AmountEx(normIntensity, AmountType.NORMALIZED_INTENSITY,
-								conditionByExp.get(rep));
-						quantPeptide.addAmount(normIntensityAmount);
-					}
-					// CORRIONINJECTION_INTENSITY
-					final String corrInjectionIntensityString = split[getIndexByColumnAndExperiment(rep,
-							CORRIONINJECTION_INTENSITY)];
-					if (corrInjectionIntensityString != null && !"NA".equals(corrInjectionIntensityString)) {
-						final double corrInjectionIntensity = Double.valueOf(corrInjectionIntensityString);
-						final Amount corrInjectionIntensityAmount = new AmountEx(corrInjectionIntensity,
-								AmountType.CORRIONINJECTION_INTENSITY, conditionByExp.get(rep));
-						quantPeptide.addAmount(corrInjectionIntensityAmount);
-					}
-					// add the scores to the PSM
-					// XCorr
-					final String xcorrString = split[getIndexByColumnAndExperiment(rep, XCORR)];
-					if (xcorrString != null && !"NA".equals(xcorrString)) {
-						final Score score = new ScoreEx(xcorrString, XCORR, scoreType, null);
-						quantPeptide.addScore(score);
-					}
-					// XCorr
-					final String dcnString = split[getIndexByColumnAndExperiment(rep, DCN)];
-					if (dcnString != null && !"NA".equals(dcnString)) {
-						final Score score = new ScoreEx(dcnString, DCN, scoreType, null);
-						quantPeptide.addScore(score);
-					}
-					// Retention time to the first PSM (this is not entirely correct)
-					final String rtString = split[getIndexByColumnAndExperiment(rep, RETENTIONTIME)];
-					if (rtString != null && !"NA".equals(rtString)) {
-						try {
-							final float rt = Float.valueOf(rtString);
-							if (quantPSMs.get(0) instanceof AbstractPSM) {
-								((AbstractPSM) quantPSMs.get(0)).setRtInMinutes(rt);
-							}
-						} catch (final NumberFormatException e) {
-							// do nothing
+					// if the line already appear is because it was the same peptide with different
+					// protein
+					if (!uniqueLineStrings.contains(uniqueLineString)) {
+						// add the intensities to the PEPTIDE
+						// INTENSITY
+						final String intensityString = split[getIndexByColumnAndExperiment(rep, INTENSITY)];
+						if (intensityString != null && !"NA".equals(intensityString)) {
+							final double intensity = Double.valueOf(intensityString);
+							final Amount intensityAmount = new AmountEx(intensity, AmountType.INTENSITY,
+									conditionByExp.get(rep));
+							quantPeptide.addAmount(intensityAmount);
 						}
+						// NORM_INTENSITY
+						final String normIntensityString = split[normIntensityColumnPerExperiment.get(rep)];
+						if (normIntensityString != null && !"NA".equals(normIntensityString)) {
+							final double normIntensity = Double.valueOf(normIntensityString);
+							final Amount normIntensityAmount = new AmountEx(normIntensity,
+									AmountType.NORMALIZED_INTENSITY, conditionByExp.get(rep));
+							quantPeptide.addAmount(normIntensityAmount);
+						}
+						// CORRIONINJECTION_INTENSITY
+						final String corrInjectionIntensityString = split[getIndexByColumnAndExperiment(rep,
+								CORRIONINJECTION_INTENSITY)];
+						if (corrInjectionIntensityString != null && !"NA".equals(corrInjectionIntensityString)) {
+							final double corrInjectionIntensity = Double.valueOf(corrInjectionIntensityString);
+							final Amount corrInjectionIntensityAmount = new AmountEx(corrInjectionIntensity,
+									AmountType.CORRIONINJECTION_INTENSITY, conditionByExp.get(rep));
+							quantPeptide.addAmount(corrInjectionIntensityAmount);
+						}
+						// add the scores to the PSM
+						// XCorr
+						final String xcorrString = split[getIndexByColumnAndExperiment(rep, XCORR)];
+						if (xcorrString != null && !"NA".equals(xcorrString)) {
+							final Score score = new ScoreEx(xcorrString, XCORR, scoreType, null);
+							quantPeptide.addScore(score);
+						}
+						// XCorr
+						final String dcnString = split[getIndexByColumnAndExperiment(rep, DCN)];
+						if (dcnString != null && !"NA".equals(dcnString)) {
+							final Score score = new ScoreEx(dcnString, DCN, scoreType, null);
+							quantPeptide.addScore(score);
+						}
+						// Retention time to the first PSM (this is not entirely correct)
+						final String rtString = split[getIndexByColumnAndExperiment(rep, RETENTIONTIME)];
+						if (rtString != null && !"NA".equals(rtString)) {
+							try {
+								final float rt = Float.valueOf(rtString);
+								if (quantPSMs.get(0) instanceof AbstractPSM) {
+									((AbstractPSM) quantPSMs.get(0)).setRtInMinutes(rt);
+								}
+							} catch (final NumberFormatException e) {
+								// do nothing
+							}
+						}
+					} else {
+						uniqueLineStrings.add(uniqueLineString);
 					}
 				}
 				// asign the pvalue and qvalue to the peptide
@@ -269,6 +288,28 @@ public class QuantCompareParser extends AbstractQuantParser {
 				}
 			}
 		}
+	}
+
+	private String getUniqueLineStringWithNoProtein(String[] split) {
+		// here the columns with information that may change between same peptide rows
+		// with different proteins
+		final TIntSet indexToAvoid = new TIntHashSet();
+		indexToAvoid.add(indexByColumn.get(PROTEIN));
+		indexToAvoid.add(indexByColumn.get(PROTEIN_DESCRIPTION));
+		indexToAvoid.add(indexByColumn.get(PVALUE));
+		indexToAvoid.add(indexByColumn.get(QVALUE));
+		// we include the peptide sequences because they include extra aminoacids that
+		// may be different in different proteins
+		for (int rep = 1; rep <= columnsByExperiments.size(); rep++) {
+			indexToAvoid.add(getIndexByColumnAndExperiment(rep, SEQUENCE));
+		}
+		final StringBuilder sb = new StringBuilder();
+		for (int index = 0; index < split.length; index++) {
+			if (!indexToAvoid.contains(index)) {
+				sb.append(split[index] + ",");
+			}
+		}
+		return sb.toString();
 	}
 
 	private String removeQuotes(String string) {
