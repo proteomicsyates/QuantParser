@@ -232,7 +232,6 @@ public class QuantCompareParser extends AbstractQuantParser {
 								// do nothing
 							}
 						}
-					} else {
 						uniqueLineStrings.add(uniqueLineString);
 					}
 				}
