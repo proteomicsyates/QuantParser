@@ -180,58 +180,61 @@ public class QuantCompareParser extends AbstractQuantParser {
 					}
 					// if the line already appear is because it was the same peptide with different
 					// protein
-					if (!uniqueLineStrings.contains(uniqueLineString)) {
-						// add the intensities to the PEPTIDE
-						// INTENSITY
-						final String intensityString = split[getIndexByColumnAndExperiment(rep, INTENSITY)];
-						if (intensityString != null && !"NA".equals(intensityString)) {
-							final double intensity = Double.valueOf(intensityString);
-							final Amount intensityAmount = new AmountEx(intensity, AmountType.INTENSITY,
-									conditionByExp.get(rep));
-							quantPeptide.addAmount(intensityAmount);
-						}
-						// NORM_INTENSITY
-						final String normIntensityString = split[normIntensityColumnPerExperiment.get(rep)];
-						if (normIntensityString != null && !"NA".equals(normIntensityString)) {
-							final double normIntensity = Double.valueOf(normIntensityString);
-							final Amount normIntensityAmount = new AmountEx(normIntensity,
-									AmountType.NORMALIZED_INTENSITY, conditionByExp.get(rep));
-							quantPeptide.addAmount(normIntensityAmount);
-						}
-						// CORRIONINJECTION_INTENSITY
-						final String corrInjectionIntensityString = split[getIndexByColumnAndExperiment(rep,
-								CORRIONINJECTION_INTENSITY)];
-						if (corrInjectionIntensityString != null && !"NA".equals(corrInjectionIntensityString)) {
-							final double corrInjectionIntensity = Double.valueOf(corrInjectionIntensityString);
-							final Amount corrInjectionIntensityAmount = new AmountEx(corrInjectionIntensity,
-									AmountType.CORRIONINJECTION_INTENSITY, conditionByExp.get(rep));
-							quantPeptide.addAmount(corrInjectionIntensityAmount);
-						}
-						// add the scores to the PSM
-						// XCorr
-						final String xcorrString = split[getIndexByColumnAndExperiment(rep, XCORR)];
-						if (xcorrString != null && !"NA".equals(xcorrString)) {
-							final Score score = new ScoreEx(xcorrString, XCORR, scoreType, null);
-							quantPeptide.addScore(score);
-						}
-						// XCorr
-						final String dcnString = split[getIndexByColumnAndExperiment(rep, DCN)];
-						if (dcnString != null && !"NA".equals(dcnString)) {
-							final Score score = new ScoreEx(dcnString, DCN, scoreType, null);
-							quantPeptide.addScore(score);
-						}
-						// Retention time to the first PSM (this is not entirely correct)
-						final String rtString = split[getIndexByColumnAndExperiment(rep, RETENTIONTIME)];
-						if (rtString != null && !"NA".equals(rtString)) {
-							try {
-								final float rt = Float.valueOf(rtString);
-								if (quantPSMs.get(0) instanceof AbstractPSM) {
-									((AbstractPSM) quantPSMs.get(0)).setRtInMinutes(rt);
-								}
-							} catch (final NumberFormatException e) {
-								// do nothing
+					if (rep == 1 && uniqueLineStrings.contains(uniqueLineString)) {
+						continue;
+					}
+					// add the intensities to the PEPTIDE
+					// INTENSITY
+					final String intensityString = split[getIndexByColumnAndExperiment(rep, INTENSITY)];
+					if (intensityString != null && !"NA".equals(intensityString)) {
+						final double intensity = Double.valueOf(intensityString);
+						final Amount intensityAmount = new AmountEx(intensity, AmountType.INTENSITY,
+								conditionByExp.get(rep));
+						quantPeptide.addAmount(intensityAmount);
+					}
+					// NORM_INTENSITY
+					final String normIntensityString = split[normIntensityColumnPerExperiment.get(rep)];
+					if (normIntensityString != null && !"NA".equals(normIntensityString)) {
+						final double normIntensity = Double.valueOf(normIntensityString);
+						final Amount normIntensityAmount = new AmountEx(normIntensity, AmountType.NORMALIZED_INTENSITY,
+								conditionByExp.get(rep));
+						quantPeptide.addAmount(normIntensityAmount);
+					}
+					// CORRIONINJECTION_INTENSITY
+					final String corrInjectionIntensityString = split[getIndexByColumnAndExperiment(rep,
+							CORRIONINJECTION_INTENSITY)];
+					if (corrInjectionIntensityString != null && !"NA".equals(corrInjectionIntensityString)) {
+						final double corrInjectionIntensity = Double.valueOf(corrInjectionIntensityString);
+						final Amount corrInjectionIntensityAmount = new AmountEx(corrInjectionIntensity,
+								AmountType.CORRIONINJECTION_INTENSITY, conditionByExp.get(rep));
+						quantPeptide.addAmount(corrInjectionIntensityAmount);
+					}
+					// add the scores to the PSM
+					// XCorr
+					final String xcorrString = split[getIndexByColumnAndExperiment(rep, XCORR)];
+					if (xcorrString != null && !"NA".equals(xcorrString)) {
+						final Score score = new ScoreEx(xcorrString, XCORR, scoreType, null);
+						quantPeptide.addScore(score);
+					}
+					// XCorr
+					final String dcnString = split[getIndexByColumnAndExperiment(rep, DCN)];
+					if (dcnString != null && !"NA".equals(dcnString)) {
+						final Score score = new ScoreEx(dcnString, DCN, scoreType, null);
+						quantPeptide.addScore(score);
+					}
+					// Retention time to the first PSM (this is not entirely correct)
+					final String rtString = split[getIndexByColumnAndExperiment(rep, RETENTIONTIME)];
+					if (rtString != null && !"NA".equals(rtString)) {
+						try {
+							final float rt = Float.valueOf(rtString);
+							if (quantPSMs.get(0) instanceof AbstractPSM) {
+								((AbstractPSM) quantPSMs.get(0)).setRtInMinutes(rt);
 							}
+						} catch (final NumberFormatException e) {
+							// do nothing
 						}
+					}
+					if (rep == 1) {
 						uniqueLineStrings.add(uniqueLineString);
 					}
 				}
