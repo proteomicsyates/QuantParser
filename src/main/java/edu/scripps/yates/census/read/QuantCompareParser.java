@@ -108,6 +108,7 @@ public class QuantCompareParser extends AbstractQuantParser {
 				// this is a peptide line
 				// take the sequence
 				final String rawSequence = split[getIndexByColumnAndExperiment(1, SEQUENCE)];
+
 				QuantifiedPeptideInterface quantPeptide = null;
 				for (int rep = 1; rep <= columnsByExperiments.size(); rep++) {
 					// create a PSM per experiment
@@ -178,10 +179,11 @@ public class QuantCompareParser extends AbstractQuantParser {
 					for (final QuantifiedPSMInterface psm : quantPSMs) {
 						quantPeptide.addPSM(psm, true);
 					}
+
 					// if the line already appear is because it was the same peptide with different
 					// protein
 					if (rep == 1 && uniqueLineStrings.contains(uniqueLineString)) {
-						continue;
+						break;
 					}
 					// add the intensities to the PEPTIDE
 					// INTENSITY
