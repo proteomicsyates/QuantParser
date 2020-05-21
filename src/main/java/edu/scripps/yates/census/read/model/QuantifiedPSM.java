@@ -34,12 +34,12 @@ public class QuantifiedPSM extends AbstractPSM implements QuantifiedPSMInterface
 	private Set<QuantRatio> quantRatios;
 
 	public QuantifiedPSM(String sequence, Map<QuantCondition, QuantificationLabel> labelsByConditions,
-			Map<String, Set<String>> peptideToSpectraMap, int scanNumber, int chargeState, String rawFileName,
+			Map<String, Set<String>> peptideToSpectraMap, String scanNumber, int chargeState, String rawFileName,
 			boolean singleton, boolean distinguishModifiedSequence, boolean chargeStateSensible) {
 		super(distinguishModifiedSequence, chargeStateSensible);
 		setFullSequence(sequence);
 		setSequence(FastaParser.cleanSequence(sequence));
-		setScanNumber(String.valueOf(scanNumber));
+		setScanNumber(scanNumber);
 		conditionsByLabels = new THashMap<QuantificationLabel, QuantCondition>();
 		if (labelsByConditions != null) {
 			for (final QuantCondition condition : labelsByConditions.keySet()) {

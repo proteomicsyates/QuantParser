@@ -143,20 +143,24 @@ public class QuantCompareParser extends AbstractQuantParser {
 					// the scan number we get is from one PSM only
 					// we will create fake scan numbers for all PSMs that are behind this peptide by
 					// adding up 1 to each scan number
-					int scanNumberForPSM = scanNumber;
 					for (int i = 1; i <= redundancy; i++) {
+						String scanNumberStringForPSM = String.valueOf(scanNumber);
+						if (i != 1) {
+							scanNumberStringForPSM += "_" + i;
+						}
 						QuantifiedPSMInterface quantPSM = new QuantifiedPSM(rawSequence, null, peptideToSpectraMap,
-								scanNumberForPSM++, chargeState, rawFileName, singleton,
+								scanNumberStringForPSM, chargeState, rawFileName, singleton,
 								isDistinguishModifiedSequences(), isChargeSensible());
 						// make this PSM to be from replicate rep
 						quantPSM.addCondition(conditionByExp.get(rep));
 
 						quantPSMs.add(quantPSM);
-						if (!localPsmMap.containsKey(quantPSM.getKey())) {
-							localPsmMap.put(quantPSM.getKey(), quantPSM);
+						final String key = quantPSM.getKey();
+						if (!localPsmMap.containsKey(key)) {
+							localPsmMap.put(key, quantPSM);
 						}
-						if (StaticQuantMaps.psmMap.containsKey(quantPSM.getKey())) {
-							quantPSM = StaticQuantMaps.psmMap.getItem(quantPSM.getKey());
+						if (StaticQuantMaps.psmMap.containsKey(key)) {
+							quantPSM = StaticQuantMaps.psmMap.getItem(key);
 						}
 						StaticQuantMaps.psmMap.addItem(quantPSM);
 

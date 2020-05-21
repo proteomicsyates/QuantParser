@@ -540,9 +540,9 @@ public class CensusOutParser extends AbstractQuantParser {
 			}
 			StaticQuantMaps.addRawFileName(rawFileName);
 			// scan number
-			int scanNumber = 0;
+			String scanNumber = "0";
 			if (mapValues.containsKey(SCAN)) {
-				scanNumber = Double.valueOf(mapValues.get(SCAN)).intValue();
+				scanNumber = String.valueOf(Double.valueOf(mapValues.get(SCAN)).intValue());
 			}
 			QuantifiedPSMInterface quantifiedPSM = null;
 			// if (!isGetPTMInProteinMap()) {

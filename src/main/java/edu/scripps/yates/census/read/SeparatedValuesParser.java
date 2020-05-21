@@ -276,12 +276,12 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 		}
 		StaticQuantMaps.addRawFileName(rawFileName);
 		// scan number
-		int scanNumber = 0;
+		String scanNumber = "0";
 		try {
-			scanNumber = Integer.valueOf(FastaParser.getScanFromPSMIdentifier(psmId));
+			scanNumber = String.valueOf(Integer.valueOf(FastaParser.getScanFromPSMIdentifier(psmId)));
 		} catch (final Exception e) {
 			// get next available number
-			scanNumber = ++scanNumberTMP;
+			scanNumber = String.valueOf(++scanNumberTMP);
 		}
 
 		// charge state
