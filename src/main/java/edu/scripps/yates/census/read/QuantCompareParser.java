@@ -80,8 +80,8 @@ public class QuantCompareParser extends AbstractQuantParser {
 
 	@Override
 	protected void process() throws IOException {
-		final Map<String, Set<String>> peptideToSpectraMap = new THashMap<String, Set<String>>();
 		List<String> lines = null;
+		final Map<String, Set<String>> peptideToSpectraMap = new THashMap<String, Set<String>>();
 		// check whether it is an excel file
 		if (FileUtils.isExcelFile(file)) {
 			lines = FileUtils.readLinesFromXLSX(file, "\t", 0);
@@ -110,9 +110,16 @@ public class QuantCompareParser extends AbstractQuantParser {
 				final String rawSequence = split[getIndexByColumnAndExperiment(1, SEQUENCE)];
 
 				QuantifiedPeptideInterface quantPeptide = null;
+				int repWithPeptidePresent = 0;
 				for (int rep = 1; rep <= columnsByExperiments.size(); rep++) {
 					// create a PSM per experiment
 					final String scanNumberString = split[getIndexByColumnAndExperiment(rep, SCAN)];
+					// if scanNumberString is NA, this psm has not been detected in this replicate,
+					// and therefore we dont create it
+					if ("NA".equals(scanNumberString)) {
+						continue;
+					}
+					repWithPeptidePresent++;
 					int scanNumber = -1;
 					try {
 						scanNumber = Double.valueOf(scanNumberString).intValue();
@@ -140,6 +147,7 @@ public class QuantCompareParser extends AbstractQuantParser {
 					final boolean singleton = false;// not used here
 					// create a PSM per peptide
 					final List<QuantifiedPSMInterface> quantPSMs = new ArrayList<QuantifiedPSMInterface>();
+
 					// the scan number we get is from one PSM only
 					// we will create fake scan numbers for all PSMs that are behind this peptide by
 					// adding up 1 to each scan number
@@ -163,7 +171,6 @@ public class QuantCompareParser extends AbstractQuantParser {
 							quantPSM = StaticQuantMaps.psmMap.getItem(key);
 						}
 						StaticQuantMaps.psmMap.addItem(quantPSM);
-
 					}
 					if (quantPeptide == null) {
 						final String peptideKey = KeyUtils.getInstance().getSequenceChargeKey(quantPSMs.get(0),
@@ -186,7 +193,7 @@ public class QuantCompareParser extends AbstractQuantParser {
 
 					// if the line already appear is because it was the same peptide with different
 					// protein
-					if (rep == 1 && uniqueLineStrings.contains(uniqueLineString)) {
+					if (repWithPeptidePresent == 1 && uniqueLineStrings.contains(uniqueLineString)) {
 						break;
 					}
 					// add the intensities to the PEPTIDE
@@ -240,7 +247,7 @@ public class QuantCompareParser extends AbstractQuantParser {
 							// do nothing
 						}
 					}
-					if (rep == 1) {
+					if (repWithPeptidePresent == 1) {
 						uniqueLineStrings.add(uniqueLineString);
 					}
 				}
