@@ -13,7 +13,7 @@ import edu.scripps.yates.utilities.proteomicsmodel.Protein;
  *
  */
 public interface QuantifiedProteinInterface
-		extends Protein, HasQuantRatios, HasKey, QuantifiedItem, HasQuantifiedPeptides, HasQuantifiedPSMs {
+		extends Protein, HasQuantRatios, HasKey, QuantifiedItem, HasQuantifiedPeptides, HasQuantifiedPSMs, Discardable {
 
 	public Set<QuantifiedPeptideInterface> getNonDiscardedQuantifiedPeptides();
 

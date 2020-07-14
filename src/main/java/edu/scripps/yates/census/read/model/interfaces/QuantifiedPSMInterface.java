@@ -10,7 +10,7 @@ import edu.scripps.yates.utilities.proteomicsmodel.PSM;
  *
  */
 public interface QuantifiedPSMInterface
-		extends PSM, HasKey, QuantifiedItem, HasQuantRatios, HasQuantifiedPeptide, HasQuantifiedProteins {
+		extends PSM, HasKey, QuantifiedItem, HasQuantRatios, HasQuantifiedPeptide, HasQuantifiedProteins, Discardable {
 
 	/**
 	 * Gets the peak twith more intensity
