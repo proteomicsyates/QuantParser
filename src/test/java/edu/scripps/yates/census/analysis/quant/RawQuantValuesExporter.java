@@ -15,6 +15,7 @@ import java.util.Set;
 
 import edu.scripps.yates.census.analysis.QuantCondition;
 import edu.scripps.yates.census.read.CensusChroParser;
+import edu.scripps.yates.census.read.QuantParserException;
 import edu.scripps.yates.census.read.model.Ion;
 import edu.scripps.yates.census.read.model.IsoRatio;
 import edu.scripps.yates.census.read.model.IsobaricQuantifiedPSM;
@@ -58,7 +59,7 @@ public class RawQuantValuesExporter {
 
 	public void printRawQuantTableValuesAtPSMLevel(BufferedWriter bw, QuantCondition conditionNumerator,
 			QuantCondition conditionDenominator, CensusChroParser parser, DBIndexImpl dbIndex)
-			throws IOException, DBIndexStoreException {
+			throws IOException, DBIndexStoreException, QuantParserException {
 
 		printPSMHeader(bw);
 
@@ -146,7 +147,7 @@ public class RawQuantValuesExporter {
 
 	public void printRawQuantTableValuesAtProteinGroupLevel(BufferedWriter bw, QuantCondition conditionNumerator,
 			QuantCondition conditionDenominator, CensusChroParser parser, DBIndexImpl dbIndex)
-			throws IOException, DBIndexStoreException {
+			throws IOException, DBIndexStoreException, QuantParserException {
 
 		printProteinGroupHeader(bw);
 		final Map<String, QuantifiedProteinInterface> proteinMap = parser.getProteinMap();
@@ -168,7 +169,7 @@ public class RawQuantValuesExporter {
 
 	public void printRawQuantTableValuesAtPeptideLevel(BufferedWriter bw, QuantCondition conditionNumerator,
 			QuantCondition conditionDenominator, CensusChroParser parser, DBIndexImpl dbIndex)
-			throws IOException, DBIndexStoreException {
+			throws IOException, DBIndexStoreException, QuantParserException {
 
 		printPeptideHeader(bw);
 		final Map<String, QuantifiedPeptideInterface> peptideMap = parser.getPeptideMap();

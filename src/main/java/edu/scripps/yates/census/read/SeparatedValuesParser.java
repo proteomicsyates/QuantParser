@@ -126,7 +126,7 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 	}
 
 	@Override
-	protected void process() throws IOException {
+	protected void process() throws QuantParserException {
 		processed = false;
 		log.info("Processing file...");
 
@@ -225,19 +225,23 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 			} catch (final IOException e) {
 				e.printStackTrace();
 				log.error(e.getMessage());
-				throw e;
+				throw new QuantParserException(e);
 			} catch (final DBIndexStoreException e) {
 
 				e.printStackTrace();
 				log.error(e.getMessage());
-				throw new IOException(e);
+				throw new QuantParserException(e);
 			} catch (final Exception e) {
 				e.printStackTrace();
 				log.error(e.getMessage());
 				throw e;
 			} finally {
 				if (br != null) {
-					br.close();
+					try {
+						br.close();
+					} catch (final IOException e) {
+						throw new QuantParserException(e);
+					}
 				}
 			}
 

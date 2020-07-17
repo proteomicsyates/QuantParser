@@ -21,6 +21,7 @@ import edu.scripps.yates.census.analysis.clustering.ProteinClusterUtils;
 import edu.scripps.yates.census.analysis.wrappers.IntegrationResultWrapper;
 import edu.scripps.yates.census.analysis.wrappers.OutStatsLine;
 import edu.scripps.yates.census.analysis.wrappers.SanXotAnalysisResult;
+import edu.scripps.yates.census.read.QuantParserException;
 import edu.scripps.yates.census.read.SeparatedValuesParser;
 import edu.scripps.yates.census.read.model.IonCountRatio;
 import edu.scripps.yates.census.read.model.IonSerie.IonSerieType;
@@ -277,7 +278,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 		return workingFolder;
 	}
 
-	public void runSanXot() throws IOException {
+	public void runSanXot() throws IOException, QuantParserException {
 
 		// clear static data from censusParsers
 		// log.info("Clearing static data from parser");
@@ -304,7 +305,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 		}
 	}
 
-	public FileMappingResults writeFiles() throws IOException {
+	public FileMappingResults writeFiles() throws IOException, QuantParserException {
 		// assign db index to replicates (if exists)
 		assignDBIndexToRuns();
 		// read experiment and replicate names and stores at
@@ -394,7 +395,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 		}
 	}
 
-	private void writeDataFile() throws IOException {
+	private void writeDataFile() throws QuantParserException, IOException {
 
 		final String fileName = getWorkingPath().getAbsolutePath() + File.separator + FileMappingResults.DATA_FILE;
 		final FileWriter dataFileWriter = new FileWriter(fileName);
@@ -568,7 +569,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 		}
 	}
 
-	private void writeRelationshipsFilesForProteinGroupOutcome() throws IOException {
+	private void writeRelationshipsFilesForProteinGroupOutcome() throws IOException, QuantParserException {
 		writeIonToSpectrumMap();
 		writeSpectrumToPeptideExperimentReplicateMap();
 		writePeptideExperimentReplicateToProteinGroupExperimentReplicateMap();
@@ -604,7 +605,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 
 	}
 
-	private void writeRelationshipsFilesForForcedProteinClustersOutcome() throws IOException {
+	private void writeRelationshipsFilesForForcedProteinClustersOutcome() throws IOException, QuantParserException {
 		writeIonToSpectrumMap();
 
 		writeSpectrumToPeptideExperimentReplicateMap();
@@ -636,7 +637,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 	}
 
 	private void writeRelationshipsFilesForProteinClustersOutcome(int minAlignmentScore,
-			double minPercentajeOfsmilirarity, int minConsecutiveLength) throws IOException {
+			double minPercentajeOfsmilirarity, int minConsecutiveLength) throws IOException, QuantParserException {
 
 		writeIonToSpectrumMap();
 		writeSpectrumToPeptideExperimentReplicateMap();
@@ -668,7 +669,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 
 	}
 
-	private void writeRelationshipsFilesForProteinOutcome() throws IOException {
+	private void writeRelationshipsFilesForProteinOutcome() throws IOException, QuantParserException {
 		if (quantType == QuantificationType.ISOTOPOLOGUES) {
 			writeIonToSpectrumMap();
 		}
@@ -698,7 +699,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 		writeProteinToAllMap();
 	}
 
-	private void writeRelationshipsFilesForPeptideOutcome() throws IOException {
+	private void writeRelationshipsFilesForPeptideOutcome() throws IOException, QuantParserException {
 		writeIonToSpectrumMap();
 		writeSpectrumToPeptideExperimentReplicateMap();
 
@@ -726,7 +727,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 		writePeptideToAllMap();
 	}
 
-	private void writeRelationshipsFilesForPTMOutcome() throws IOException {
+	private void writeRelationshipsFilesForPTMOutcome() throws QuantParserException, IOException {
 		writeIonToSpectrumMap();
 
 		writeSpectrumToPTMExperimentReplicateMap();
@@ -755,7 +756,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 		writePTMToAllMap();
 	}
 
-	private void writePTMToAllMap() throws IOException {
+	private void writePTMToAllMap() throws QuantParserException, IOException {
 		final File file = new File(
 				getWorkingPath().getAbsolutePath() + File.separator + FileMappingResults.PTM_TO_ALL_5);
 		if (!overrideFilesIfExists && file.exists()) {
@@ -782,7 +783,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 		writeMapToFile(header, map, writer);
 	}
 
-	private void writePTMExperimentToPTMMap() throws IOException {
+	private void writePTMExperimentToPTMMap() throws QuantParserException, IOException {
 		if (quantExperiments.size() == 1)
 			throw new IllegalArgumentException("There is not more than 1 experiment");
 
@@ -816,7 +817,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 		writeMapToFile(header, map, writer);
 	}
 
-	private void writePTMExperimentReplicateToPTMExperimentMap() throws IOException {
+	private void writePTMExperimentReplicateToPTMExperimentMap() throws IOException, QuantParserException {
 		boolean someReplicates = false;
 		for (final QuantExperiment exp : quantExperiments) {
 			if (exp.getReplicates().size() > 1)
@@ -867,7 +868,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 		writeMapToFile(header, map, writer);
 	}
 
-	private void writeRelationshipsFilesForQuantSiteOutcome() throws IOException {
+	private void writeRelationshipsFilesForQuantSiteOutcome() throws IOException, QuantParserException {
 		writeIonToSpectrumMap();
 
 		writeSpectrumToProteinQuantSiteExperimentReplicateMap();
@@ -922,8 +923,9 @@ public class QuantAnalysis implements PropertyChangeListener {
 	 * ALL --> ACC3<br>
 	 *
 	 * @throws IOException
+	 * @throws QuantParserException
 	 */
-	private void writeProteinToAllMap() throws IOException {
+	private void writeProteinToAllMap() throws IOException, QuantParserException {
 		final FileWriter writer = new FileWriter(
 				getWorkingPath().getAbsolutePath() + File.separator + FileMappingResults.PROTEIN_TO_ALL_6);
 		final Map<String, Set<String>> map = new THashMap<String, Set<String>>();
@@ -956,9 +958,10 @@ public class QuantAnalysis implements PropertyChangeListener {
 	 *
 	 * @return
 	 * @throws IOException
+	 * @throws QuantParserException
 	 */
 	private Set<ProteinCluster> writePeptideToForcedProteinClusterMap(Set<Set<String>> forcedProteinClusters)
-			throws IOException {
+			throws IOException, QuantParserException {
 
 		final File file = new File(
 				getWorkingPath().getAbsolutePath() + File.separator + FileMappingResults.PEPTIDE_TO_PROTEIN_CLUSTER_5);
@@ -1028,9 +1031,10 @@ public class QuantAnalysis implements PropertyChangeListener {
 	 * @param minConsecutiveLength
 	 * @return
 	 * @throws IOException
+	 * @throws QuantParserException
 	 */
 	private Set<ProteinCluster> writePeptideToProteinClusterMap(int minAlignmentScore,
-			double minPercentajeOfsmilirarity, int minConsecutiveLength) throws IOException {
+			double minPercentajeOfsmilirarity, int minConsecutiveLength) throws IOException, QuantParserException {
 
 		final File file = new File(
 				getWorkingPath().getAbsolutePath() + File.separator + FileMappingResults.PEPTIDE_TO_PROTEIN_CLUSTER_5);
@@ -1089,8 +1093,9 @@ public class QuantAnalysis implements PropertyChangeListener {
 	 * ALL --> PEP3<br>
 	 *
 	 * @throws IOException
+	 * @throws QuantParserException
 	 */
-	private void writePeptideToAllMap() throws IOException {
+	private void writePeptideToAllMap() throws IOException, QuantParserException {
 		final File file = new File(
 				getWorkingPath().getAbsolutePath() + File.separator + FileMappingResults.PEPTIDE_TO_ALL_5);
 		if (!overrideFilesIfExists && file.exists()) {
@@ -1128,9 +1133,10 @@ public class QuantAnalysis implements PropertyChangeListener {
 	 * @return
 	 *
 	 * @throws IOException
+	 * @throws QuantParserException
 	 */
 	private void writeProteinClusterToAllMap(int minAlignmentScore, double minPercentajeOfsmilirarity,
-			int minConsecutiveLength, Set<ProteinCluster> proteinClusters) throws IOException {
+			int minConsecutiveLength, Set<ProteinCluster> proteinClusters) throws IOException, QuantParserException {
 		final File file = new File(
 				getWorkingPath().getAbsolutePath() + File.separator + FileMappingResults.PROTEIN_CLUSTER_TO_ALL_6);
 		if (!overrideFilesIfExists && file.exists()) {
@@ -1168,7 +1174,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 
 	}
 
-	private void writeProteinGroupToAllMap() throws IOException {
+	private void writeProteinGroupToAllMap() throws IOException, QuantParserException {
 		final File file = new File(
 				getWorkingPath().getAbsolutePath() + File.separator + FileMappingResults.PROTEINGROUP_TO_ALL_6);
 		if (!overrideFilesIfExists && file.exists()) {
@@ -1206,8 +1212,9 @@ public class QuantAnalysis implements PropertyChangeListener {
 	 * ACC3 --> ACC3_EXP2<br>
 	 *
 	 * @throws IOException
+	 * @throws QuantParserException
 	 */
-	private void writeProteinExperimentToProteinMap() throws IOException {
+	private void writeProteinExperimentToProteinMap() throws IOException, QuantParserException {
 		if (quantExperiments.size() == 1)
 			throw new IllegalArgumentException("There is not more than 1 experiment");
 
@@ -1250,8 +1257,9 @@ public class QuantAnalysis implements PropertyChangeListener {
 	 * PEP3 --> PEP3_EXP2<br>
 	 *
 	 * @throws IOException
+	 * @throws QuantParserException
 	 */
-	private void writePeptideExperimentToPeptideMap() throws IOException {
+	private void writePeptideExperimentToPeptideMap() throws IOException, QuantParserException {
 		if (quantExperiments.size() == 1)
 			throw new IllegalArgumentException("There is not more than 1 experiment");
 
@@ -1287,7 +1295,7 @@ public class QuantAnalysis implements PropertyChangeListener {
 
 	}
 
-	private void writeProteinGroupExperimentToProteinGroupMap() throws IOException {
+	private void writeProteinGroupExperimentToProteinGroupMap() throws IOException, QuantParserException {
 		if (quantExperiments.size() == 1)
 			throw new IllegalArgumentException("There is not more than 1 experiment");
 
@@ -1335,8 +1343,9 @@ public class QuantAnalysis implements PropertyChangeListener {
 	 * ACC_EXP2 --> ACC_REP2_EXP2<br>
 	 *
 	 * @throws IOException
+	 * @throws QuantParserException
 	 */
-	private void writeProteinExperimentReplicateToProteinExperimentMap() throws IOException {
+	private void writeProteinExperimentReplicateToProteinExperimentMap() throws IOException, QuantParserException {
 
 		boolean someReplicates = false;
 		for (final QuantExperiment exp : quantExperiments) {
@@ -1400,8 +1409,9 @@ public class QuantAnalysis implements PropertyChangeListener {
 	 * PEP_EXP2 --> PEP_REP2_EXP2<br>
 	 *
 	 * @throws IOException
+	 * @throws QuantParserException
 	 */
-	private void writePeptideExperimentReplicateToPeptideExperimentMap() throws IOException {
+	private void writePeptideExperimentReplicateToPeptideExperimentMap() throws IOException, QuantParserException {
 
 		boolean someReplicates = false;
 		for (final QuantExperiment exp : quantExperiments) {
@@ -1454,7 +1464,8 @@ public class QuantAnalysis implements PropertyChangeListener {
 
 	}
 
-	private void writeProteinGroupExperimentReplicateToProteinGroupExperimentMap() throws IOException {
+	private void writeProteinGroupExperimentReplicateToProteinGroupExperimentMap()
+			throws IOException, QuantParserException {
 
 		boolean someReplicates = false;
 		for (final QuantExperiment exp : quantExperiments) {
@@ -1521,8 +1532,10 @@ public class QuantAnalysis implements PropertyChangeListener {
 	 * ACC1_REP2_EXP2 --> PEPTIDEA_3_REP2_EXP2<br>
 	 *
 	 * @throws IOException
+	 * @throws QuantParserException
 	 */
-	private void writePeptideExperimentReplicateToProteinGroupExperimentReplicateMap() throws IOException {
+	private void writePeptideExperimentReplicateToProteinGroupExperimentReplicateMap()
+			throws IOException, QuantParserException {
 		final File file = new File(getWorkingPath().getAbsolutePath() + File.separator
 				+ FileMappingResults.PEPTIDE_REPLICATE_EXPERIMENT_TO_PROTEINGROUP_REPLICATE_EXPERIMENT_3);
 		if (!overrideFilesIfExists && file.exists()) {
@@ -1574,8 +1587,9 @@ public class QuantAnalysis implements PropertyChangeListener {
 	 * ACC1_REP2_EXP2 --> PEPTIDEA_3_REP2_EXP2<br>
 	 *
 	 * @throws IOException
+	 * @throws QuantParserException
 	 */
-	private void writePeptideToProteinMap() throws IOException {
+	private void writePeptideToProteinMap() throws IOException, QuantParserException {
 		final File file = new File(getWorkingPath().getAbsolutePath() + File.separator
 				+ FileMappingResults.PEPTIDE_REPLICATE_EXPERIMENT_TO_PROTEIN_REPLICATE_EXPERIMENT_3);
 		if (!overrideFilesIfExists && file.exists()) {
@@ -1669,8 +1683,9 @@ public class QuantAnalysis implements PropertyChangeListener {
 	 * PEPTIDEB_2_REP1_EXP1 --> SCAN3_RAWFILE1<br>
 	 *
 	 * @throws IOException
+	 * @throws QuantParserException
 	 */
-	private void writeSpectrumToPeptideExperimentReplicateMap() throws IOException {
+	private void writeSpectrumToPeptideExperimentReplicateMap() throws IOException, QuantParserException {
 		final String fileName = getWorkingPath().getAbsolutePath() + File.separator
 				+ FileMappingResults.SPECTRUM_TO_PEPTIDE_REPLICATE_EXPERIMENT_2;
 		final FileWriter writer = new FileWriter(fileName);
@@ -1712,8 +1727,9 @@ public class QuantAnalysis implements PropertyChangeListener {
 	 * PEPTIDEB_2_REP1_EXP1 --> SCAN3_RAWFILE1<br>
 	 *
 	 * @throws IOException
+	 * @throws QuantParserException
 	 */
-	private void writeSpectrumToPTMExperimentReplicateMap() throws IOException {
+	private void writeSpectrumToPTMExperimentReplicateMap() throws IOException, QuantParserException {
 		final String fileName = getWorkingPath().getAbsolutePath() + File.separator
 				+ FileMappingResults.SPECTRUM_TO_PTM_2;
 		final FileWriter writer = new FileWriter(fileName);
@@ -1754,8 +1770,9 @@ public class QuantAnalysis implements PropertyChangeListener {
 	 * SCAN2_RAWFILE1 --> IONY1_SCAN2_RAWFILE1<br>
 	 *
 	 * @throws IOException
+	 * @throws QuantParserException
 	 */
-	private void writeIonToSpectrumMap() throws IOException {
+	private void writeIonToSpectrumMap() throws IOException, QuantParserException {
 		if (quantType != QuantificationType.ISOTOPOLOGUES) {
 			return;
 		}

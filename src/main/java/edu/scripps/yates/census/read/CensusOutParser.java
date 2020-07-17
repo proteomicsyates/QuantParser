@@ -397,9 +397,10 @@ public class CensusOutParser extends AbstractQuantParser {
 	 *
 	 * @param writeFiles whether to write output files necessary to run SanXot
 	 *                   program
+	 * @throws WrongTMTLabels
 	 */
 	@Override
-	protected void process() {
+	protected void process() throws QuantParserException {
 		processed = false;
 		log.info("Processing quant file...");
 
@@ -639,28 +640,28 @@ public class CensusOutParser extends AbstractQuantParser {
 		}
 	}
 
-	private void checkLabels() throws IOException {
+	private void checkLabels() throws IOException, WrongTMTLabels {
 		for (final RemoteSSHFileReference remoteFile : remoteFileRetrievers) {
 			final Set<QuantificationLabel> labels = conditionsByLabelsByFile.get(remoteFile).keySet();
 			if (isTMT6().containsKey(remoteFile) && isTMT6().get(remoteFile)) {
 				final List<QuantificationLabel> tmt6 = QuantificationLabel.getTMT6PlexLabels();
 				for (final QuantificationLabel label : tmt6) {
 					if (!labels.contains(label)) {
-						throw new IllegalArgumentException("Labels in the constructor must have all TMT6 labels");
+						throw new WrongTMTLabels("Labels in the constructor must have all TMT6 labels");
 					}
 				}
 			} else if (isTMT10().containsKey(remoteFile) && isTMT10().get(remoteFile)) {
 				final List<QuantificationLabel> tmt10 = QuantificationLabel.getTMT10PlexLabels();
 				for (final QuantificationLabel label : tmt10) {
 					if (!labels.contains(label)) {
-						throw new IllegalArgumentException("Labels in the constructor must have all TMT10 labels");
+						throw new WrongTMTLabels("Labels in the constructor must have all TMT10 labels");
 					}
 				}
 			} else if (isTMT11().containsKey(remoteFile) && isTMT11().get(remoteFile)) {
 				final List<QuantificationLabel> tmt11 = QuantificationLabel.getTMT11PlexLabels();
 				for (final QuantificationLabel label : tmt11) {
 					if (!labels.contains(label)) {
-						throw new IllegalArgumentException("Labels in the constructor must have all TMT11 labels");
+						throw new WrongTMTLabels("Labels in the constructor must have all TMT11 labels");
 					}
 				}
 			}

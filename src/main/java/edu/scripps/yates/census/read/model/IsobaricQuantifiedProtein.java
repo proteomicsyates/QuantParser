@@ -1,6 +1,5 @@
 package edu.scripps.yates.census.read.model;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -33,12 +32,12 @@ public class IsobaricQuantifiedProtein extends QuantifiedProtein implements HasI
 	private final Map<String, IonCountRatio> countRatiosByConditionKey = new THashMap<String, IonCountRatio>();
 	private Set<IsoRatio> isoRatios;
 
-	public IsobaricQuantifiedProtein(ProteinType protein) throws IOException {
+	public IsobaricQuantifiedProtein(ProteinType protein) {
 		super(protein.getLocus());
 		this.protein = protein;
 	}
 
-	public IsobaricQuantifiedProtein(String proteinACC) throws IOException {
+	public IsobaricQuantifiedProtein(String proteinACC) {
 		super(proteinACC);
 		protein = null;
 	}
@@ -201,8 +200,7 @@ public class IsobaricQuantifiedProtein extends QuantifiedProtein implements HasI
 	}
 
 	/**
-	 * @param distinguishModifiedPeptides
-	 *            the distinguishModifiedPeptides to set
+	 * @param distinguishModifiedPeptides the distinguishModifiedPeptides to set
 	 */
 	public void setDistinguishModifiedPeptides(boolean distinguishModifiedPeptides) {
 		this.distinguishModifiedPeptides = distinguishModifiedPeptides;
@@ -258,8 +256,8 @@ public class IsobaricQuantifiedProtein extends QuantifiedProtein implements HasI
 	}
 
 	/**
-	 * Returns true if the protein contains any {@link Ion} labeled with a
-	 * certain {@link QuantificationLabel} not paired with any other label
+	 * Returns true if the protein contains any {@link Ion} labeled with a certain
+	 * {@link QuantificationLabel} not paired with any other label
 	 *
 	 * @param label
 	 * @return
@@ -274,9 +272,9 @@ public class IsobaricQuantifiedProtein extends QuantifiedProtein implements HasI
 	}
 
 	/**
-	 * Returns true if the protein contains any {@link Ion} labeled with a
-	 * certain {@link QuantificationLabel} not matter if they are paired with
-	 * any other label or not (getting ratios or not)
+	 * Returns true if the protein contains any {@link Ion} labeled with a certain
+	 * {@link QuantificationLabel} not matter if they are paired with any other
+	 * label or not (getting ratios or not)
 	 *
 	 * @param label
 	 * @return

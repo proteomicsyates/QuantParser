@@ -1,6 +1,5 @@
 package edu.scripps.yates.census.read.model;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -36,7 +35,7 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractProtein implement
 	private Set<QuantRatio> quantRatios;
 
 	public QuantifiedProteinFromDBIndexEntry(IndexedProtein indexedProtein, boolean ignoreTaxonomies,
-			boolean ignoreACCFormat) throws IOException {
+			boolean ignoreACCFormat) {
 		setKey(QuantKeyUtils.getInstance().getProteinKey(indexedProtein, ignoreACCFormat));
 		this.indexedProtein = indexedProtein;
 		final Accession primaryAcc = FastaParser.getACC(getKey());
@@ -124,8 +123,7 @@ public class QuantifiedProteinFromDBIndexEntry extends AbstractProtein implement
 	}
 
 	/**
-	 * @param distinguishModifiedPeptides
-	 *            the distinguishModifiedPeptides to set
+	 * @param distinguishModifiedPeptides the distinguishModifiedPeptides to set
 	 */
 	public void setDistinguishModifiedPeptides(boolean distinguishModifiedPeptides) {
 		this.distinguishModifiedPeptides = distinguishModifiedPeptides;

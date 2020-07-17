@@ -79,229 +79,233 @@ public class QuantCompareParser extends AbstractQuantParser {
 	}
 
 	@Override
-	protected void process() throws IOException {
-		List<String> lines = null;
-		final Map<String, Set<String>> peptideToSpectraMap = new THashMap<String, Set<String>>();
-		// check whether it is an excel file
-		if (FileUtils.isExcelFile(file)) {
-			lines = FileUtils.readLinesFromXLSX(file, "\t", 0);
-		} else {
-			lines = Files.readAllLines(this.file.toPath());
-		}
-		final Set<String> uniqueLineStrings = new THashSet<String>();
-		int numLine = 0;
-		for (final String line : lines) {
-			numLine++;
-			final String[] split = line.split("\t");
+	protected void process() throws QuantParserException {
+		try {
+			List<String> lines = null;
+			final Map<String, Set<String>> peptideToSpectraMap = new THashMap<String, Set<String>>();
+			// check whether it is an excel file
+			if (FileUtils.isExcelFile(file)) {
+				lines = FileUtils.readLinesFromXLSX(file, "\t", 0);
+			} else {
+				lines = Files.readAllLines(this.file.toPath());
+			}
+			final Set<String> uniqueLineStrings = new THashSet<String>();
+			int numLine = 0;
+			for (final String line : lines) {
+				numLine++;
+				final String[] split = line.split("\t");
 
-			if (line.startsWith(H)) {
-				if (split[1].equals(GROUP_SAMPLE)) {
-					// do nothing yet. I have to figure out what is that
-				}
-			} else if (line.startsWith(SLINE)) {
-				processColumns(split);
-			} else if (split[0].equals(S)) {
-				// first of all, check whether the line has been already seen before except for
-				// the protein columns
-				final String uniqueLineString = getUniqueLineStringWithNoProtein(split);
-
-				// this is a peptide line
-				// take the sequence
-				final String rawSequence = split[getIndexByColumnAndExperiment(1, SEQUENCE)];
-
-				QuantifiedPeptideInterface quantPeptide = null;
-				int repWithPeptidePresent = 0;
-				for (int rep = 1; rep <= columnsByExperiments.size(); rep++) {
-					// create a PSM per experiment
-					final String scanNumberString = split[getIndexByColumnAndExperiment(rep, SCAN)];
-					// if scanNumberString is NA, this psm has not been detected in this replicate,
-					// and therefore we dont create it
-					if ("NA".equals(scanNumberString)) {
-						continue;
+				if (line.startsWith(H)) {
+					if (split[1].equals(GROUP_SAMPLE)) {
+						// do nothing yet. I have to figure out what is that
 					}
-					repWithPeptidePresent++;
-					int scanNumber = -1;
-					try {
-						scanNumber = Double.valueOf(scanNumberString).intValue();
-					} catch (final NumberFormatException e) {
+				} else if (line.startsWith(SLINE)) {
+					processColumns(split);
+				} else if (split[0].equals(S)) {
+					// first of all, check whether the line has been already seen before except for
+					// the protein columns
+					final String uniqueLineString = getUniqueLineStringWithNoProtein(split);
 
-					}
-					int chargeState = -1;
-					final String chargeStateString = split[getIndexByColumnAndExperiment(rep, CSTATE)];
-					try {
-						chargeState = Double.valueOf(chargeStateString).intValue();
-					} catch (final NumberFormatException e) {
+					// this is a peptide line
+					// take the sequence
+					final String rawSequence = split[getIndexByColumnAndExperiment(1, SEQUENCE)];
 
-					}
-					int redundancy = 1;
-					final String redundancyString = split[getIndexByColumnAndExperiment(rep, REDUNDANCY)];
-					try {
-						redundancy = Double.valueOf(redundancyString).intValue();
-					} catch (final NumberFormatException e) {
-
-					}
-					String rawFileName = split[getIndexByColumnAndExperiment(rep, FILENAME)];
-					if ("NA".equals(rawFileName)) {
-						rawFileName = "NA_" + rep;
-					}
-					final boolean singleton = false;// not used here
-					// create a PSM per peptide
-					final List<QuantifiedPSMInterface> quantPSMs = new ArrayList<QuantifiedPSMInterface>();
-
-					// the scan number we get is from one PSM only
-					// we will create fake scan numbers for all PSMs that are behind this peptide by
-					// adding up 1 to each scan number
-					for (int i = 1; i <= redundancy; i++) {
-						String scanNumberStringForPSM = String.valueOf(scanNumber);
-						if (i != 1) {
-							scanNumberStringForPSM += "_" + i;
+					QuantifiedPeptideInterface quantPeptide = null;
+					int repWithPeptidePresent = 0;
+					for (int rep = 1; rep <= columnsByExperiments.size(); rep++) {
+						// create a PSM per experiment
+						final String scanNumberString = split[getIndexByColumnAndExperiment(rep, SCAN)];
+						// if scanNumberString is NA, this psm has not been detected in this replicate,
+						// and therefore we dont create it
+						if ("NA".equals(scanNumberString)) {
+							continue;
 						}
-						QuantifiedPSMInterface quantPSM = new QuantifiedPSM(rawSequence, null, peptideToSpectraMap,
-								scanNumberStringForPSM, chargeState, rawFileName, singleton,
-								isDistinguishModifiedSequences(), isChargeSensible());
-						// make this PSM to be from replicate rep
-						quantPSM.addCondition(conditionByExp.get(rep));
-
-						quantPSMs.add(quantPSM);
-						final String key = quantPSM.getKey();
-						if (!localPsmMap.containsKey(key)) {
-							localPsmMap.put(key, quantPSM);
-						}
-						if (StaticQuantMaps.psmMap.containsKey(key)) {
-							quantPSM = StaticQuantMaps.psmMap.getItem(key);
-						}
-						StaticQuantMaps.psmMap.addItem(quantPSM);
-					}
-					if (quantPeptide == null) {
-						final String peptideKey = KeyUtils.getInstance().getSequenceChargeKey(quantPSMs.get(0),
-								isDistinguishModifiedSequences(), isChargeSensible());
-						if (StaticQuantMaps.peptideMap.containsKey(peptideKey)) {
-							quantPeptide = StaticQuantMaps.peptideMap.getItem(peptideKey);
-						} else {
-							quantPeptide = new QuantifiedPeptide(quantPSMs.get(0), isIgnoreTaxonomies(),
-									isDistinguishModifiedSequences(), isChargeSensible());
-						}
-						StaticQuantMaps.peptideMap.addItem(quantPeptide);
-						if (!localPeptideMap.containsKey(peptideKey)) {
-							localPeptideMap.put(quantPeptide.getKey(), quantPeptide);
-						}
-					}
-					// add the rest of PSMs
-					for (final QuantifiedPSMInterface psm : quantPSMs) {
-						quantPeptide.addPSM(psm, true);
-					}
-
-					// if the line already appear is because it was the same peptide with different
-					// protein
-					if (repWithPeptidePresent == 1 && uniqueLineStrings.contains(uniqueLineString)) {
-						break;
-					}
-					// add the intensities to the PEPTIDE
-					// INTENSITY
-					final String intensityString = split[getIndexByColumnAndExperiment(rep, INTENSITY)];
-					if (intensityString != null && !"NA".equals(intensityString)) {
-						final double intensity = Double.valueOf(intensityString);
-						final Amount intensityAmount = new AmountEx(intensity, AmountType.INTENSITY,
-								conditionByExp.get(rep));
-						quantPeptide.addAmount(intensityAmount);
-					}
-					// NORM_INTENSITY
-					final String normIntensityString = split[normIntensityColumnPerExperiment.get(rep)];
-					if (normIntensityString != null && !"NA".equals(normIntensityString)) {
-						final double normIntensity = Double.valueOf(normIntensityString);
-						final Amount normIntensityAmount = new AmountEx(normIntensity, AmountType.NORMALIZED_INTENSITY,
-								conditionByExp.get(rep));
-						quantPeptide.addAmount(normIntensityAmount);
-					}
-					// CORRIONINJECTION_INTENSITY
-					final String corrInjectionIntensityString = split[getIndexByColumnAndExperiment(rep,
-							CORRIONINJECTION_INTENSITY)];
-					if (corrInjectionIntensityString != null && !"NA".equals(corrInjectionIntensityString)) {
-						final double corrInjectionIntensity = Double.valueOf(corrInjectionIntensityString);
-						final Amount corrInjectionIntensityAmount = new AmountEx(corrInjectionIntensity,
-								AmountType.CORRIONINJECTION_INTENSITY, conditionByExp.get(rep));
-						quantPeptide.addAmount(corrInjectionIntensityAmount);
-					}
-					// add the scores to the PSM
-					// XCorr
-					final String xcorrString = split[getIndexByColumnAndExperiment(rep, XCORR)];
-					if (xcorrString != null && !"NA".equals(xcorrString)) {
-						final Score score = new ScoreEx(xcorrString, XCORR, scoreType, null);
-						quantPeptide.addScore(score);
-					}
-					// XCorr
-					final String dcnString = split[getIndexByColumnAndExperiment(rep, DCN)];
-					if (dcnString != null && !"NA".equals(dcnString)) {
-						final Score score = new ScoreEx(dcnString, DCN, scoreType, null);
-						quantPeptide.addScore(score);
-					}
-					// Retention time to the first PSM (this is not entirely correct)
-					final String rtString = split[getIndexByColumnAndExperiment(rep, RETENTIONTIME)];
-					if (rtString != null && !"NA".equals(rtString)) {
+						repWithPeptidePresent++;
+						int scanNumber = -1;
 						try {
-							final float rt = Float.valueOf(rtString);
-							if (quantPSMs.get(0) instanceof AbstractPSM) {
-								((AbstractPSM) quantPSMs.get(0)).setRtInMinutes(rt);
-							}
+							scanNumber = Double.valueOf(scanNumberString).intValue();
 						} catch (final NumberFormatException e) {
-							// do nothing
+
+						}
+						int chargeState = -1;
+						final String chargeStateString = split[getIndexByColumnAndExperiment(rep, CSTATE)];
+						try {
+							chargeState = Double.valueOf(chargeStateString).intValue();
+						} catch (final NumberFormatException e) {
+
+						}
+						int redundancy = 1;
+						final String redundancyString = split[getIndexByColumnAndExperiment(rep, REDUNDANCY)];
+						try {
+							redundancy = Double.valueOf(redundancyString).intValue();
+						} catch (final NumberFormatException e) {
+
+						}
+						String rawFileName = split[getIndexByColumnAndExperiment(rep, FILENAME)];
+						if ("NA".equals(rawFileName)) {
+							rawFileName = "NA_" + rep;
+						}
+						final boolean singleton = false;// not used here
+						// create a PSM per peptide
+						final List<QuantifiedPSMInterface> quantPSMs = new ArrayList<QuantifiedPSMInterface>();
+
+						// the scan number we get is from one PSM only
+						// we will create fake scan numbers for all PSMs that are behind this peptide by
+						// adding up 1 to each scan number
+						for (int i = 1; i <= redundancy; i++) {
+							String scanNumberStringForPSM = String.valueOf(scanNumber);
+							if (i != 1) {
+								scanNumberStringForPSM += "_" + i;
+							}
+							QuantifiedPSMInterface quantPSM = new QuantifiedPSM(rawSequence, null, peptideToSpectraMap,
+									scanNumberStringForPSM, chargeState, rawFileName, singleton,
+									isDistinguishModifiedSequences(), isChargeSensible());
+							// make this PSM to be from replicate rep
+							quantPSM.addCondition(conditionByExp.get(rep));
+
+							quantPSMs.add(quantPSM);
+							final String key = quantPSM.getKey();
+							if (!localPsmMap.containsKey(key)) {
+								localPsmMap.put(key, quantPSM);
+							}
+							if (StaticQuantMaps.psmMap.containsKey(key)) {
+								quantPSM = StaticQuantMaps.psmMap.getItem(key);
+							}
+							StaticQuantMaps.psmMap.addItem(quantPSM);
+						}
+						if (quantPeptide == null) {
+							final String peptideKey = KeyUtils.getInstance().getSequenceChargeKey(quantPSMs.get(0),
+									isDistinguishModifiedSequences(), isChargeSensible());
+							if (StaticQuantMaps.peptideMap.containsKey(peptideKey)) {
+								quantPeptide = StaticQuantMaps.peptideMap.getItem(peptideKey);
+							} else {
+								quantPeptide = new QuantifiedPeptide(quantPSMs.get(0), isIgnoreTaxonomies(),
+										isDistinguishModifiedSequences(), isChargeSensible());
+							}
+							StaticQuantMaps.peptideMap.addItem(quantPeptide);
+							if (!localPeptideMap.containsKey(peptideKey)) {
+								localPeptideMap.put(quantPeptide.getKey(), quantPeptide);
+							}
+						}
+						// add the rest of PSMs
+						for (final QuantifiedPSMInterface psm : quantPSMs) {
+							quantPeptide.addPSM(psm, true);
+						}
+
+						// if the line already appear is because it was the same peptide with different
+						// protein
+						if (repWithPeptidePresent == 1 && uniqueLineStrings.contains(uniqueLineString)) {
+							break;
+						}
+						// add the intensities to the PEPTIDE
+						// INTENSITY
+						final String intensityString = split[getIndexByColumnAndExperiment(rep, INTENSITY)];
+						if (intensityString != null && !"NA".equals(intensityString)) {
+							final double intensity = Double.valueOf(intensityString);
+							final Amount intensityAmount = new AmountEx(intensity, AmountType.INTENSITY,
+									conditionByExp.get(rep));
+							quantPeptide.addAmount(intensityAmount);
+						}
+						// NORM_INTENSITY
+						final String normIntensityString = split[normIntensityColumnPerExperiment.get(rep)];
+						if (normIntensityString != null && !"NA".equals(normIntensityString)) {
+							final double normIntensity = Double.valueOf(normIntensityString);
+							final Amount normIntensityAmount = new AmountEx(normIntensity,
+									AmountType.NORMALIZED_INTENSITY, conditionByExp.get(rep));
+							quantPeptide.addAmount(normIntensityAmount);
+						}
+						// CORRIONINJECTION_INTENSITY
+						final String corrInjectionIntensityString = split[getIndexByColumnAndExperiment(rep,
+								CORRIONINJECTION_INTENSITY)];
+						if (corrInjectionIntensityString != null && !"NA".equals(corrInjectionIntensityString)) {
+							final double corrInjectionIntensity = Double.valueOf(corrInjectionIntensityString);
+							final Amount corrInjectionIntensityAmount = new AmountEx(corrInjectionIntensity,
+									AmountType.CORRIONINJECTION_INTENSITY, conditionByExp.get(rep));
+							quantPeptide.addAmount(corrInjectionIntensityAmount);
+						}
+						// add the scores to the PSM
+						// XCorr
+						final String xcorrString = split[getIndexByColumnAndExperiment(rep, XCORR)];
+						if (xcorrString != null && !"NA".equals(xcorrString)) {
+							final Score score = new ScoreEx(xcorrString, XCORR, scoreType, null);
+							quantPeptide.addScore(score);
+						}
+						// XCorr
+						final String dcnString = split[getIndexByColumnAndExperiment(rep, DCN)];
+						if (dcnString != null && !"NA".equals(dcnString)) {
+							final Score score = new ScoreEx(dcnString, DCN, scoreType, null);
+							quantPeptide.addScore(score);
+						}
+						// Retention time to the first PSM (this is not entirely correct)
+						final String rtString = split[getIndexByColumnAndExperiment(rep, RETENTIONTIME)];
+						if (rtString != null && !"NA".equals(rtString)) {
+							try {
+								final float rt = Float.valueOf(rtString);
+								if (quantPSMs.get(0) instanceof AbstractPSM) {
+									((AbstractPSM) quantPSMs.get(0)).setRtInMinutes(rt);
+								}
+							} catch (final NumberFormatException e) {
+								// do nothing
+							}
+						}
+						if (repWithPeptidePresent == 1) {
+							uniqueLineStrings.add(uniqueLineString);
 						}
 					}
-					if (repWithPeptidePresent == 1) {
-						uniqueLineStrings.add(uniqueLineString);
-					}
-				}
-				// asign the pvalue and qvalue to the peptide
-				final String pvalue = split[indexByColumn.get(PVALUE)];
-				quantPeptide.addScore(new ScoreEx(pvalue, PVALUE,
-						"p-value at peptide level between " + columnsByExperiments.size() + " experiments", null));
-				final String qvalue = split[indexByColumn.get(QVALUE)];
-				quantPeptide.addScore(new ScoreEx(qvalue, QVALUE,
-						"q-value at peptide level between " + columnsByExperiments.size() + " experiments", null));
-				// create protein(s)
-				String proteinAccs = split[indexByColumn.get(PROTEIN)];
-				proteinAccs = removeQuotes(proteinAccs);
-				final List<String> accs = new ArrayList<String>();
-				if (proteinAccs.contains(",")) {
-					final String[] split2 = proteinAccs.split(",");
-					for (final String acc : split2) {
-						accs.add(acc);
-					}
-				} else {
-					accs.add(proteinAccs);
-				}
-				String proteinDescriptions = split[indexByColumn.get(PROTEIN_DESCRIPTION)];
-				proteinDescriptions = removeQuotes(proteinDescriptions);
-				final List<String> descriptions = new ArrayList<String>();
-				if (proteinDescriptions.contains(",")) {
-					final String[] split2 = proteinDescriptions.split(",");
-					for (final String description : split2) {
-						descriptions.add(description);
-					}
-				} else {
-					descriptions.add(proteinDescriptions);
-				}
-				for (int i = 0; i < accs.size(); i++) {
-					final String proteinACC = accs.get(i);
-					QuantifiedProteinInterface protein = null;
-					if (StaticQuantMaps.proteinMap.containsKey(proteinACC)) {
-						protein = StaticQuantMaps.proteinMap.getItem(proteinACC);
+					// asign the pvalue and qvalue to the peptide
+					final String pvalue = split[indexByColumn.get(PVALUE)];
+					quantPeptide.addScore(new ScoreEx(pvalue, PVALUE,
+							"p-value at peptide level between " + columnsByExperiments.size() + " experiments", null));
+					final String qvalue = split[indexByColumn.get(QVALUE)];
+					quantPeptide.addScore(new ScoreEx(qvalue, QVALUE,
+							"q-value at peptide level between " + columnsByExperiments.size() + " experiments", null));
+					// create protein(s)
+					String proteinAccs = split[indexByColumn.get(PROTEIN)];
+					proteinAccs = removeQuotes(proteinAccs);
+					final List<String> accs = new ArrayList<String>();
+					if (proteinAccs.contains(",")) {
+						final String[] split2 = proteinAccs.split(",");
+						for (final String acc : split2) {
+							accs.add(acc);
+						}
 					} else {
-						protein = new QuantifiedProtein(proteinACC, isIgnoreTaxonomies());
+						accs.add(proteinAccs);
+					}
+					String proteinDescriptions = split[indexByColumn.get(PROTEIN_DESCRIPTION)];
+					proteinDescriptions = removeQuotes(proteinDescriptions);
+					final List<String> descriptions = new ArrayList<String>();
+					if (proteinDescriptions.contains(",")) {
+						final String[] split2 = proteinDescriptions.split(",");
+						for (final String description : split2) {
+							descriptions.add(description);
+						}
+					} else {
+						descriptions.add(proteinDescriptions);
+					}
+					for (int i = 0; i < accs.size(); i++) {
+						final String proteinACC = accs.get(i);
+						QuantifiedProteinInterface protein = null;
+						if (StaticQuantMaps.proteinMap.containsKey(proteinACC)) {
+							protein = StaticQuantMaps.proteinMap.getItem(proteinACC);
+						} else {
+							protein = new QuantifiedProtein(proteinACC, isIgnoreTaxonomies());
+
+						}
+						StaticQuantMaps.proteinMap.addItem(protein);
+
+						if (!localProteinMap.containsKey(protein.getKey())) {
+							localProteinMap.put(protein.getKey(), protein);
+						}
+						if (descriptions.size() > i) {
+							protein.setDescription(descriptions.get(i));
+						}
+						protein.addPeptide(quantPeptide, true);
 
 					}
-					StaticQuantMaps.proteinMap.addItem(protein);
-
-					if (!localProteinMap.containsKey(protein.getKey())) {
-						localProteinMap.put(protein.getKey(), protein);
-					}
-					if (descriptions.size() > i) {
-						protein.setDescription(descriptions.get(i));
-					}
-					protein.addPeptide(quantPeptide, true);
-
 				}
 			}
+		} catch (final IOException e) {
+			throw new QuantParserException(e);
 		}
 	}
 

@@ -2,7 +2,6 @@ package edu.scripps.yates.census.read;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.text.DecimalFormat;
 import java.util.Collection;
@@ -125,7 +124,7 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 	 */
 
 	@Override
-	public void process() throws IOException {
+	public void process() throws QuantParserException {
 		processed = false;
 		log.info("reading " + remoteFileRetrievers.size() + " census chro file(s) from parser " + hashCode() + "...");
 
@@ -328,7 +327,7 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 		} catch (final DBIndexStoreException e) {
 			e.printStackTrace();
 			log.error(e.getMessage());
-			throw new IOException(e);
+			throw new QuantParserException(e);
 		} finally
 
 		{

@@ -86,15 +86,14 @@ public abstract class AbstractIsobaricQuantParser extends AbstractQuantParser im
 	 * @throws IOException
 	 */
 	@Override
-	public Map<String, Set<String>> getSpectrumToIonsMap() throws IOException {
+	public Map<String, Set<String>> getSpectrumToIonsMap() throws QuantParserException {
 		if (!processed)
 			process();
 		return spectrumToIonsMap;
 	}
 
 	/**
-	 * @param excludeY1Ions
-	 *            the excludeY1Ions to set
+	 * @param excludeY1Ions the excludeY1Ions to set
 	 */
 	@Override
 	public void addIonExclusion(IonSerieType serieType, int ionNumber) {
@@ -102,16 +101,14 @@ public abstract class AbstractIsobaricQuantParser extends AbstractQuantParser im
 	}
 
 	/**
-	 * @param excludeY1Ions
-	 *            the excludeY1Ions to set
+	 * @param excludeY1Ions the excludeY1Ions to set
 	 */
 	public void addIonExclusion(IonExclusion ionExclusion) {
 		ionExclusions.add(ionExclusion);
 	}
 
 	/**
-	 * @param excludeY1Ions
-	 *            the excludeY1Ions to set
+	 * @param excludeY1Ions the excludeY1Ions to set
 	 */
 	@Override
 	public void addIonExclusions(Collection<IonExclusion> ionExclusions) {
@@ -126,6 +123,6 @@ public abstract class AbstractIsobaricQuantParser extends AbstractQuantParser im
 	}
 
 	@Override
-	protected abstract void process() throws IOException;
+	protected abstract void process() throws QuantParserException;
 
 }

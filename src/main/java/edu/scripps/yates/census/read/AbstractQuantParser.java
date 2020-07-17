@@ -362,9 +362,10 @@ public abstract class AbstractQuantParser implements QuantParser {
 	/**
 	 * @return the proteinMap @
 	 * @throws IOException
+	 * @throws QuantParserException
 	 */
 	@Override
-	public Map<String, Set<String>> getProteinToPeptidesMap() throws IOException {
+	public Map<String, Set<String>> getProteinToPeptidesMap() throws QuantParserException {
 		if (!processed) {
 			startProcess();
 		}
@@ -374,9 +375,10 @@ public abstract class AbstractQuantParser implements QuantParser {
 	/**
 	 * @return the peptideMap @
 	 * @throws IOException
+	 * @throws QuantParserException
 	 */
 	@Override
-	public Map<String, Set<String>> getPeptideToSpectraMap() throws IOException {
+	public Map<String, Set<String>> getPeptideToSpectraMap() throws QuantParserException {
 		if (!processed) {
 			startProcess();
 		}
@@ -386,9 +388,10 @@ public abstract class AbstractQuantParser implements QuantParser {
 	/**
 	 * @return the peptideMap @
 	 * @throws IOException
+	 * @throws QuantParserException
 	 */
 	@Override
-	public Map<String, Set<String>> getPTMToSpectraMap() throws IOException {
+	public Map<String, Set<String>> getPTMToSpectraMap() throws QuantParserException {
 		if (!processed) {
 			startProcess();
 		}
@@ -400,9 +403,10 @@ public abstract class AbstractQuantParser implements QuantParser {
 	 *
 	 * @return the proteinMap @
 	 * @throws IOException
+	 * @throws QuantParserException
 	 */
 	@Override
-	public final Map<String, QuantifiedProteinInterface> getProteinMap() throws IOException {
+	public final Map<String, QuantifiedProteinInterface> getProteinMap() throws QuantParserException {
 		if (!processed) {
 			startProcess();
 		}
@@ -410,7 +414,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 	}
 
 	@Override
-	public final Map<String, QuantifiedPSMInterface> getPSMMap() throws IOException {
+	public final Map<String, QuantifiedPSMInterface> getPSMMap() throws QuantParserException {
 		if (!processed) {
 			startProcess();
 		}
@@ -426,7 +430,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 	}
 
 	@Override
-	public Set<String> getTaxonomies() throws IOException {
+	public Set<String> getTaxonomies() throws QuantParserException {
 		if (!processed) {
 			startProcess();
 		}
@@ -436,16 +440,17 @@ public abstract class AbstractQuantParser implements QuantParser {
 	/**
 	 * @return the peptideMap @
 	 * @throws IOException
+	 * @throws QuantParserException
 	 */
 	@Override
-	public Map<String, QuantifiedPeptideInterface> getPeptideMap() throws IOException {
+	public Map<String, QuantifiedPeptideInterface> getPeptideMap() throws QuantParserException {
 		if (!processed) {
 			startProcess();
 		}
 		return localPeptideMap;
 	}
 
-	private void startProcess() throws IOException {
+	private void startProcess() throws QuantParserException {
 		if (clearStaticMapsBeforeReading) {
 			// clear information in static maps
 			StaticQuantMaps.clearInfo();
@@ -464,7 +469,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 		createPTMsInProteins();
 	}
 
-	private void createPTMsInProteins() throws IOException {
+	private void createPTMsInProteins() throws QuantParserException {
 
 		if (getPTMInProteinMap) {
 			final Set<String> accs = getProteinMap().keySet();
@@ -508,7 +513,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 		return sb.toString();
 	}
 
-	protected abstract void process() throws IOException;
+	protected abstract void process() throws QuantParserException;
 
 	public static void addToMap(String key, Map<String, Set<String>> map, String value) {
 		if (map.containsKey(key)) {
@@ -547,7 +552,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 	 * @throws IOException
 	 */
 	@Override
-	public Set<String> getUniprotAccSet() throws IOException {
+	public Set<String> getUniprotAccSet() throws QuantParserException {
 		final Set<String> ret = new THashSet<String>();
 		final Set<String> keySet = getProteinMap().keySet();
 		for (final String acc : keySet) {
@@ -610,7 +615,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 		this.uniprotVersion = uniprotVersion;
 	}
 
-	private void mergeProteinsWithSecondaryAccessionsInParser() throws IOException {
+	private void mergeProteinsWithSecondaryAccessionsInParser() throws QuantParserException {
 		if (uplr == null) {
 			return;
 		}
