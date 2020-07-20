@@ -247,6 +247,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 			Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelNumerator,
 			QuantificationLabel labelDenominator) {
 		labelsByConditionsByFile.put(remoteFileReference, labelsByConditions);
+		conditionsByLabelsByFile.put(remoteFileReference, QuantUtils.getConditionsByLabels(labelsByConditions));
 		QuantCondition condition1 = null;
 		QuantCondition condition2 = null;
 		if (labelsByConditions != null) {
@@ -277,6 +278,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 			Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelL,
 			QuantificationLabel labelM, QuantificationLabel labelH) {
 		labelsByConditionsByFile.put(remoteFileReference, labelsByConditions);
+		conditionsByLabelsByFile.put(remoteFileReference, QuantUtils.getConditionsByLabels(labelsByConditions));
 		QuantCondition conditionL = null;
 		QuantCondition conditionM = null;
 		QuantCondition conditionH = null;

@@ -787,4 +787,15 @@ public class QuantUtils {
 		}
 		return ret;
 	}
+
+	public static Map<QuantificationLabel, QuantCondition> getConditionsByLabels(
+			Map<QuantCondition, QuantificationLabel> labelsByConditions) {
+		final Map<QuantificationLabel, QuantCondition> ret = new THashMap<QuantificationLabel, QuantCondition>();
+		if (labelsByConditions != null) {
+			for (final QuantCondition condition : labelsByConditions.keySet()) {
+				ret.put(labelsByConditions.get(condition), condition);
+			}
+		}
+		return ret;
+	}
 }
