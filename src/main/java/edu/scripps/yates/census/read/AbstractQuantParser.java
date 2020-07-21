@@ -40,7 +40,9 @@ import edu.scripps.yates.utilities.proteomicsmodel.utils.KeyUtils;
 import edu.scripps.yates.utilities.remote.RemoteSSHFileReference;
 import edu.scripps.yates.utilities.sequence.PTMInProtein;
 import edu.scripps.yates.utilities.util.Pair;
+import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.THashMap;
+import gnu.trove.map.hash.TObjectIntHashMap;
 import gnu.trove.set.hash.THashSet;
 
 public abstract class AbstractQuantParser implements QuantParser {
@@ -73,7 +75,6 @@ public abstract class AbstractQuantParser implements QuantParser {
 	protected final Set<String> taxonomies = new THashSet<String>();
 	protected boolean processed = false;
 
-	protected final Map<RemoteSSHFileReference, Map<QuantCondition, QuantificationLabel>> labelsByConditionsByFile = new THashMap<RemoteSSHFileReference, Map<QuantCondition, QuantificationLabel>>();
 	protected final Map<RemoteSSHFileReference, Map<QuantificationLabel, QuantCondition>> conditionsByLabelsByFile = new THashMap<RemoteSSHFileReference, Map<QuantificationLabel, QuantCondition>>();
 
 	// protected final Map<RemoteSSHFileReference, QuantificationLabel>
@@ -96,6 +97,8 @@ public abstract class AbstractQuantParser implements QuantParser {
 	private boolean distinguishModifiedSequences = true;
 	private boolean chargeSensible = true;
 	private final Set<String> ratiosToCapture = new THashSet<String>();
+	private boolean reCalculatedIonsCountsReady = false;
+	private final TObjectIntMap<String> reCalculatedIonCounts = new TObjectIntHashMap<String>();
 
 	public boolean isDistinguishModifiedSequences() {
 		return distinguishModifiedSequences;
@@ -118,33 +121,33 @@ public abstract class AbstractQuantParser implements QuantParser {
 	}
 
 	public AbstractQuantParser(List<RemoteSSHFileReference> remoteSSHServers,
-			List<Map<QuantCondition, QuantificationLabel>> labelsByConditions, QuantificationLabel labelNumerator,
+			List<Map<QuantificationLabel, QuantCondition>> conditionsByLabels, QuantificationLabel labelNumerator,
 			QuantificationLabel labelDenominator) {
 		int index = 0;
 		for (final RemoteSSHFileReference remoteSSHServer : remoteSSHServers) {
-			addFile(remoteSSHServer, labelsByConditions.get(index), labelNumerator, labelDenominator);
+			addFile(remoteSSHServer, conditionsByLabels.get(index), labelNumerator, labelDenominator);
 			index++;
 		}
 	}
 
-	public AbstractQuantParser(Map<QuantCondition, QuantificationLabel> labelsByConditions,
+	public AbstractQuantParser(Map<QuantificationLabel, QuantCondition> conditionsByLabels,
 			Collection<RemoteSSHFileReference> remoteSSHServers, QuantificationLabel labelNumerator,
 			QuantificationLabel labelDenominator) {
 
 		for (final RemoteSSHFileReference remoteSSHServer : remoteSSHServers) {
-			addFile(remoteSSHServer, labelsByConditions, labelNumerator, labelDenominator);
+			addFile(remoteSSHServer, conditionsByLabels, labelNumerator, labelDenominator);
 		}
 	}
 
 	public AbstractQuantParser(RemoteSSHFileReference remoteSSHServer,
-			Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelNumerator,
+			Map<QuantificationLabel, QuantCondition> conditionsByLabels, QuantificationLabel labelNumerator,
 			QuantificationLabel labelDenominator) throws FileNotFoundException {
-		addFile(remoteSSHServer, labelsByConditions, labelNumerator, labelDenominator);
+		addFile(remoteSSHServer, conditionsByLabels, labelNumerator, labelDenominator);
 	}
 
-	public AbstractQuantParser(File inputFile, Map<QuantCondition, QuantificationLabel> labelsByConditions,
+	public AbstractQuantParser(File inputFile, Map<QuantificationLabel, QuantCondition> conditionsByLabels,
 			QuantificationLabel labelNumerator, QuantificationLabel labelDenominator) throws FileNotFoundException {
-		addFile(inputFile, labelsByConditions, labelNumerator, labelDenominator);
+		addFile(inputFile, conditionsByLabels, labelNumerator, labelDenominator);
 	}
 
 	public AbstractQuantParser(File inputFile, Map<QuantificationLabel, QuantCondition> conditionsByLabels)
@@ -161,98 +164,97 @@ public abstract class AbstractQuantParser implements QuantParser {
 		checkParameters();
 	}
 
-	public AbstractQuantParser(File inputFile, Map<QuantCondition, QuantificationLabel> labelsByConditions,
+	public AbstractQuantParser(File inputFile, Map<QuantificationLabel, QuantCondition> conditionsByLabels,
 			QuantificationLabel labelL, QuantificationLabel labelM, QuantificationLabel labelH)
 			throws FileNotFoundException {
-		addFile(inputFile, labelsByConditions, labelL, labelM, labelH);
+		addFile(inputFile, conditionsByLabels, labelL, labelM, labelH);
 	}
 
-	public AbstractQuantParser(File[] inputFiles, Map<QuantCondition, QuantificationLabel> labelsByConditions,
+	public AbstractQuantParser(File[] inputFiles, Map<QuantificationLabel, QuantCondition> conditionsByLabels,
 			QuantificationLabel labelNumerator, QuantificationLabel labelDenominator) throws FileNotFoundException {
-		this(Arrays.asList(inputFiles), labelsByConditions, labelNumerator, labelDenominator);
+		this(Arrays.asList(inputFiles), conditionsByLabels, labelNumerator, labelDenominator);
 	}
 
-	public AbstractQuantParser(File[] inputFiles, Map<QuantCondition, QuantificationLabel>[] labelsByConditions,
+	public AbstractQuantParser(File[] inputFiles, Map<QuantificationLabel, QuantCondition>[] conditionsByLabels,
 			QuantificationLabel[] labelNumerator, QuantificationLabel[] labelDenominator) throws FileNotFoundException {
 		for (int i = 0; i < inputFiles.length; i++) {
-			addFile(inputFiles[i], labelsByConditions[i], labelNumerator[i], labelDenominator[i]);
+			addFile(inputFiles[i], conditionsByLabels[i], labelNumerator[i], labelDenominator[i]);
 		}
 	}
 
-	public AbstractQuantParser(Collection<File> inputFiles, Map<QuantCondition, QuantificationLabel> labelsByConditions,
+	public AbstractQuantParser(Collection<File> inputFiles, Map<QuantificationLabel, QuantCondition> conditionsByLabels,
 			QuantificationLabel labelNumerator, QuantificationLabel labelDenominator) throws FileNotFoundException {
 		for (final File xmlFile : inputFiles) {
-			addFile(xmlFile, labelsByConditions, labelNumerator, labelDenominator);
+			addFile(xmlFile, conditionsByLabels, labelNumerator, labelDenominator);
 		}
 	}
 
 	public AbstractQuantParser(RemoteSSHFileReference remoteServer, QuantificationLabel label1, QuantCondition cond1,
 			QuantificationLabel label2, QuantCondition cond2) {
-		final Map<QuantCondition, QuantificationLabel> map = new THashMap<QuantCondition, QuantificationLabel>();
-		map.put(cond1, label1);
-		map.put(cond2, label2);
+		final Map<QuantificationLabel, QuantCondition> map = new THashMap<QuantificationLabel, QuantCondition>();
+		map.put(label1, cond1);
+		map.put(label2, cond2);
 		addFile(remoteServer, map, label1, label2);
 	}
 
 	public AbstractQuantParser(RemoteSSHFileReference remoteServer, QuantificationLabel label1, QuantCondition cond1,
 			QuantificationLabel label2, QuantCondition cond2, QuantificationLabel label3, QuantCondition cond3) {
-		final Map<QuantCondition, QuantificationLabel> map = new THashMap<QuantCondition, QuantificationLabel>();
-		map.put(cond1, label1);
-		map.put(cond2, label2);
-		map.put(cond3, label3);
+		final Map<QuantificationLabel, QuantCondition> map = new THashMap<QuantificationLabel, QuantCondition>();
+		map.put(label1, cond1);
+		map.put(label2, cond2);
+		map.put(label3, cond3);
 		addFile(remoteServer, map, label1, label2);
 	}
 
 	public AbstractQuantParser(File inputFile, QuantificationLabel label1, QuantCondition cond1,
 			QuantificationLabel label2, QuantCondition cond2) throws FileNotFoundException {
-		final Map<QuantCondition, QuantificationLabel> map = new THashMap<QuantCondition, QuantificationLabel>();
-		map.put(cond1, label1);
-		map.put(cond2, label2);
+		final Map<QuantificationLabel, QuantCondition> map = new THashMap<QuantificationLabel, QuantCondition>();
+		map.put(label1, cond1);
+		map.put(label2, cond2);
 		addFile(inputFile, map, label1, label2);
 	}
 
 	public AbstractQuantParser(File inputFile, QuantificationLabel label1, QuantCondition cond1,
 			QuantificationLabel label2, QuantCondition cond2, QuantificationLabel label3, QuantCondition cond3)
 			throws FileNotFoundException {
-		final Map<QuantCondition, QuantificationLabel> map = new THashMap<QuantCondition, QuantificationLabel>();
-		map.put(cond1, label1);
-		map.put(cond2, label2);
-		map.put(cond3, label3);
+		final Map<QuantificationLabel, QuantCondition> map = new THashMap<QuantificationLabel, QuantCondition>();
+		map.put(label1, cond1);
+		map.put(label2, cond2);
+		map.put(label3, cond3);
 		addFile(inputFile, map, label1, label2, label3);
 	}
 
 	@Override
-	public void addFile(File xmlFile, Map<QuantCondition, QuantificationLabel> labelsByConditions,
+	public void addFile(File xmlFile, Map<QuantificationLabel, QuantCondition> conditionsByLabels,
 			QuantificationLabel labelNumerator, QuantificationLabel labelDenominator) throws FileNotFoundException {
 		if (!xmlFile.exists()) {
 			throw new FileNotFoundException(xmlFile.getAbsolutePath() + " is not found in the file system");
 		}
 		final RemoteSSHFileReference remoteFileReference = new RemoteSSHFileReference(xmlFile);
-		addFile(remoteFileReference, labelsByConditions, labelNumerator, labelDenominator);
+		addFile(remoteFileReference, conditionsByLabels, labelNumerator, labelDenominator);
 	}
 
 	@Override
-	public void addFile(File xmlFile, Map<QuantCondition, QuantificationLabel> labelsByConditions,
+	public void addFile(File xmlFile, Map<QuantificationLabel, QuantCondition> conditionsByLabels,
 			QuantificationLabel labelL, QuantificationLabel labelM, QuantificationLabel labelH)
 			throws FileNotFoundException {
 		if (!xmlFile.exists()) {
 			throw new FileNotFoundException(xmlFile.getAbsolutePath() + " is not found in the file system");
 		}
 		final RemoteSSHFileReference remoteFileReference = new RemoteSSHFileReference(xmlFile);
-		addFile(remoteFileReference, labelsByConditions, labelL, labelM, labelH);
+		addFile(remoteFileReference, conditionsByLabels, labelL, labelM, labelH);
 	}
 
 	@Override
 	public void addFile(RemoteSSHFileReference remoteFileReference,
-			Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelNumerator,
+			Map<QuantificationLabel, QuantCondition> conditionsByLabels, QuantificationLabel labelNumerator,
 			QuantificationLabel labelDenominator) {
-		labelsByConditionsByFile.put(remoteFileReference, labelsByConditions);
-		conditionsByLabelsByFile.put(remoteFileReference, QuantUtils.getConditionsByLabels(labelsByConditions));
+		conditionsByLabelsByFile.put(remoteFileReference, conditionsByLabels);
 		QuantCondition condition1 = null;
 		QuantCondition condition2 = null;
-		if (labelsByConditions != null) {
-			for (final QuantCondition condition : labelsByConditions.keySet()) {
-				final QuantificationLabel quantificationLabel = labelsByConditions.get(condition);
+		if (conditionsByLabels != null) {
+			for (final QuantificationLabel quantificationLabel : conditionsByLabels.keySet()) {
+				final QuantCondition condition = conditionsByLabels.get(quantificationLabel);
 				if (quantificationLabel == labelNumerator) {
 					condition1 = condition;
 				} else if (quantificationLabel == labelDenominator) {
@@ -275,21 +277,22 @@ public abstract class AbstractQuantParser implements QuantParser {
 
 	@Override
 	public void addFile(RemoteSSHFileReference remoteFileReference,
-			Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelL,
+			Map<QuantificationLabel, QuantCondition> conditionsByLabels, QuantificationLabel labelL,
 			QuantificationLabel labelM, QuantificationLabel labelH) {
-		labelsByConditionsByFile.put(remoteFileReference, labelsByConditions);
-		conditionsByLabelsByFile.put(remoteFileReference, QuantUtils.getConditionsByLabels(labelsByConditions));
+		conditionsByLabelsByFile.put(remoteFileReference, conditionsByLabels);
 		QuantCondition conditionL = null;
 		QuantCondition conditionM = null;
 		QuantCondition conditionH = null;
-		for (final QuantCondition condition : labelsByConditions.keySet()) {
-			final QuantificationLabel quantificationLabel = labelsByConditions.get(condition);
-			if (quantificationLabel == labelL) {
-				conditionL = condition;
-			} else if (quantificationLabel == labelM) {
-				conditionM = condition;
-			} else if (quantificationLabel == labelH) {
-				conditionH = condition;
+		if (conditionsByLabels != null) {
+			for (final QuantificationLabel quantificationLabel : conditionsByLabels.keySet()) {
+				final QuantCondition condition = conditionsByLabels.get(quantificationLabel);
+				if (quantificationLabel == labelL) {
+					conditionL = condition;
+				} else if (quantificationLabel == labelM) {
+					conditionM = condition;
+				} else if (quantificationLabel == labelH) {
+					conditionH = condition;
+				}
 			}
 		}
 		// L/M
@@ -585,7 +588,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 							.getPrimaryAndSecondaryAccessionsFromIPI(primaryAccession);
 					if (pair.getFirstelement() != null) {
 						primaryAccession = pair.getFirstelement();
-						if (!newMap.containsKey(primaryAccession)) {
+						if (!newMap.containsKey(primaryAccession.getAccession())) {
 							newMap.put(primaryAccession.getAccession(), quantProtein);
 						}
 					}
@@ -827,5 +830,34 @@ public abstract class AbstractQuantParser implements QuantParser {
 
 	public boolean isCapturingRatioName(String ratioName) {
 		return ratiosToCapture.contains(ratioName.toLowerCase());
+	}
+
+	@Override
+	public int getReCalculatedIonCount(QuantifiedPSMInterface psm) {
+		if (!reCalculatedIonsCountsReady) {
+			try {
+				final Map<String, Set<QuantifiedPSMInterface>> psmsByIonKey = new THashMap<String, Set<QuantifiedPSMInterface>>();
+				getPSMMap().values().stream().forEach(psm2 -> {
+					final String ionkey = psm2.getFullSequence() + "-" + psm2.getChargeState();
+					if (!psmsByIonKey.containsKey(ionkey)) {
+						psmsByIonKey.put(ionkey, new THashSet<QuantifiedPSMInterface>());
+					}
+					psmsByIonKey.get(ionkey).add(psm2);
+				});
+				for (final String ionKey : psmsByIonKey.keySet()) {
+					final int size = psmsByIonKey.get(ionKey).size();
+					reCalculatedIonCounts.put(ionKey, size);
+				}
+				reCalculatedIonsCountsReady = true;
+			} catch (final QuantParserException e) {
+			}
+		}
+		final String ionkey = psm.getFullSequence() + "-" + psm.getChargeState();
+		return reCalculatedIonCounts.get(ionkey);
+	}
+
+	@Override
+	public int getReCalculatedIonCount(QuantifiedPeptideInterface peptide) {
+		return getReCalculatedIonCount(peptide.getQuantifiedPSMs().iterator().next());
 	}
 }

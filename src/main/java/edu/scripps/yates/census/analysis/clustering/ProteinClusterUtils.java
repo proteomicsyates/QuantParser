@@ -33,19 +33,19 @@ public class ProteinClusterUtils {
 
 	public static Map<String, Set<NWResult>> alignPeptides(Collection<QuantifiedPeptideInterface> peptideCollection,
 			int minAlignmentScore, double minPercentajeOfsmilirarity, int minConsecutiveLength) {
-		Set<NWResult> gAS = new THashSet<NWResult>();
+		final Set<NWResult> gAS = new THashSet<NWResult>();
 		Map<String, Set<NWResult>> gAM = new THashMap<String, Set<NWResult>>();
 
-		List<QuantifiedPeptideInterface> peptideList = new ArrayList<QuantifiedPeptideInterface>();
+		final List<QuantifiedPeptideInterface> peptideList = new ArrayList<QuantifiedPeptideInterface>();
 		peptideList.addAll(peptideCollection);
 		log.info("Aligning " + peptideList.size() + " with parameters: " + minAlignmentScore + ","
 				+ minConsecutiveLength + "," + minPercentajeOfsmilirarity);
 		for (int i = 0; i < peptideList.size(); i++) {
-			QuantifiedPeptideInterface pep1 = peptideList.get(i);
+			final QuantifiedPeptideInterface pep1 = peptideList.get(i);
 
 			for (int j = i + 1; j < peptideList.size(); j++) {
-				QuantifiedPeptideInterface pep2 = peptideList.get(j);
-				NWResult pepResults = NWAlign.needlemanWunsch(pep1.getSequence(), pep2.getSequence(), -11, -1);
+				final QuantifiedPeptideInterface pep2 = peptideList.get(j);
+				final NWResult pepResults = NWAlign.needlemanWunsch(pep1.getSequence(), pep2.getSequence(), -11, -1);
 				if ((pepResults.getFinalAlignmentScore() >= minAlignmentScore
 						&& pepResults.getSequenceIdentity() >= minPercentajeOfsmilirarity)
 						&& pepResults.getMaxConsecutiveIdenticalAlignment() >= minConsecutiveLength) {
@@ -64,7 +64,7 @@ public class ProteinClusterUtils {
 
 	public static Map<String, Set<NWResult>> putAlignmentResultInMap(Map<String, Set<NWResult>> gAM, NWResult result,
 			Set<NWResult> gAS, QuantifiedPeptideInterface pep) {
-		String seq = pep.getSequence();
+		final String seq = pep.getSequence();
 
 		// if gAM has the sequence, use that sequence to get the result
 		if ((gAM.containsKey(seq))) {
@@ -73,7 +73,7 @@ public class ProteinClusterUtils {
 		// if gAM does not have the sequence, make a new set of results, add the
 		// results to this set, and then put the sequence and the set in gAM
 		else {
-			Set<NWResult> set = new THashSet<NWResult>();
+			final Set<NWResult> set = new THashSet<NWResult>();
 			set.add(result);
 			gAM.put(seq, set);
 		}
@@ -84,39 +84,39 @@ public class ProteinClusterUtils {
 
 	public static ProteinCluster mergeClusters(ProteinCluster clusterReceiver, ProteinCluster clusterDonor) {
 		log.info("Merging clusters...");
-		for (QuantifiedPeptideInterface peptide : clusterDonor.getPeptideSet()) {
+		for (final QuantifiedPeptideInterface peptide : clusterDonor.getPeptideSet()) {
 			clusterReceiver.addPeptide(peptide);
 		}
 
-		for (QuantifiedProteinInterface protein : clusterDonor.getProteinSet()) {
+		for (final QuantifiedProteinInterface protein : clusterDonor.getProteinSet()) {
 			clusterReceiver.addProtein(protein);
 		}
 		return clusterReceiver;
 	}
 
 	public static CensusChroParser getCensusChroParser(String fastaName, List<String> filePaths,
-			List<Map<QuantCondition, QuantificationLabel>> labelsByConditions, QuantificationLabel numeratorLabel,
+			List<Map<QuantificationLabel, QuantCondition>> conditionsByLabels, QuantificationLabel numeratorLabel,
 			QuantificationLabel denominatorLabel) throws FileNotFoundException {
 
 		int i = 0;
-		CensusChroParser parser = new CensusChroParser();
-		for (String filePath : filePaths) {
-			parser.addFile(new File(filePath), labelsByConditions.get(i), numeratorLabel, denominatorLabel);
+		final CensusChroParser parser = new CensusChroParser();
+		for (final String filePath : filePaths) {
+			parser.addFile(new File(filePath), conditionsByLabels.get(i), numeratorLabel, denominatorLabel);
 			i++;
 		}
 
 		parser.addIonExclusion(IonSerieType.B, 1);
 		parser.addIonExclusion(IonSerieType.Y, 1);
 
-		File fastaFile = new File(fastaName);
+		final File fastaFile = new File(fastaName);
 
-		DBIndexSearchParams defaultDBIndexParams = DBIndexImpl.getDefaultDBIndexParams(fastaFile);
-		char[] enzymeArray = { 'K' };
+		final DBIndexSearchParams defaultDBIndexParams = DBIndexImpl.getDefaultDBIndexParams(fastaFile);
+		final char[] enzymeArray = { 'K' };
 		((DBIndexSearchParamsImpl) defaultDBIndexParams).setEnzymeArr(enzymeArray, 2, false);
 		((DBIndexSearchParamsImpl) defaultDBIndexParams).setEnzymeOffset(0);
 		((DBIndexSearchParamsImpl) defaultDBIndexParams).setEnzymeNocutResidues("");
 		((DBIndexSearchParamsImpl) defaultDBIndexParams).setH2OPlusProtonAdded(true);
-		DBIndexImpl dbIndex = new DBIndexImpl(defaultDBIndexParams);
+		final DBIndexImpl dbIndex = new DBIndexImpl(defaultDBIndexParams);
 		parser.setDbIndex(dbIndex);
 		// gets rid of decoys
 		parser.setDecoyPattern("Reverse");
@@ -125,20 +125,20 @@ public class ProteinClusterUtils {
 	}
 
 	public static CensusChroParser getCensusChroParser(DBIndexSearchParams dbIndexParams, List<String> filePaths,
-			List<Map<QuantCondition, QuantificationLabel>> labelsByConditions, QuantificationLabel numeratorLabel,
+			List<Map<QuantificationLabel, QuantCondition>> conditionsByLabels, QuantificationLabel numeratorLabel,
 			QuantificationLabel denominatorLabel) throws FileNotFoundException {
 
 		int i = 0;
-		CensusChroParser parser = new CensusChroParser();
-		for (String filePath : filePaths) {
-			parser.addFile(new File(filePath), labelsByConditions.get(i), numeratorLabel, denominatorLabel);
+		final CensusChroParser parser = new CensusChroParser();
+		for (final String filePath : filePaths) {
+			parser.addFile(new File(filePath), conditionsByLabels.get(i), numeratorLabel, denominatorLabel);
 			i++;
 		}
 
 		parser.addIonExclusion(IonSerieType.B, 1);
 		parser.addIonExclusion(IonSerieType.Y, 1);
 
-		DBIndexImpl dbIndex = new DBIndexImpl(dbIndexParams);
+		final DBIndexImpl dbIndex = new DBIndexImpl(dbIndexParams);
 		parser.setDbIndex(dbIndex);
 		// gets rid of decoys
 		parser.setDecoyPattern("Reverse");
@@ -147,14 +147,14 @@ public class ProteinClusterUtils {
 	}
 
 	public static CensusChroParser getCensusChroParser(String fastaName, List<String> filePaths,
-			List<Map<QuantCondition, QuantificationLabel>> labelsByConditions, List<QuantificationLabel> numeratorLabel,
+			List<Map<QuantificationLabel, QuantCondition>> conditionsByLabels, List<QuantificationLabel> numeratorLabel,
 			List<QuantificationLabel> denominatorLabel) throws FileNotFoundException {
 		// Set parser (6 files) to peptides
 
 		int i = 0;
-		CensusChroParser parser = new CensusChroParser();
-		for (String filePath : filePaths) {
-			parser.addFile(new File(filePath), labelsByConditions.get(i), numeratorLabel.get(i),
+		final CensusChroParser parser = new CensusChroParser();
+		for (final String filePath : filePaths) {
+			parser.addFile(new File(filePath), conditionsByLabels.get(i), numeratorLabel.get(i),
 					denominatorLabel.get(i));
 			i++;
 		}
@@ -162,15 +162,15 @@ public class ProteinClusterUtils {
 		parser.addIonExclusion(IonSerieType.B, 1);
 		parser.addIonExclusion(IonSerieType.Y, 1);
 
-		File fastaFile = new File(fastaName);
+		final File fastaFile = new File(fastaName);
 
-		DBIndexSearchParams defaultDBIndexParams = DBIndexImpl.getDefaultDBIndexParams(fastaFile);
-		char[] enzymeArray = { 'K' };
+		final DBIndexSearchParams defaultDBIndexParams = DBIndexImpl.getDefaultDBIndexParams(fastaFile);
+		final char[] enzymeArray = { 'K' };
 		((DBIndexSearchParamsImpl) defaultDBIndexParams).setEnzymeArr(enzymeArray, 2, false);
 		((DBIndexSearchParamsImpl) defaultDBIndexParams).setEnzymeOffset(0);
 		((DBIndexSearchParamsImpl) defaultDBIndexParams).setEnzymeNocutResidues("");
 		((DBIndexSearchParamsImpl) defaultDBIndexParams).setH2OPlusProtonAdded(true);
-		DBIndexImpl dbIndex = new DBIndexImpl(defaultDBIndexParams);
+		final DBIndexImpl dbIndex = new DBIndexImpl(defaultDBIndexParams);
 		parser.setDbIndex(dbIndex);
 		// gets rid of decoys
 		parser.setDecoyPattern("Reverse");
@@ -179,12 +179,12 @@ public class ProteinClusterUtils {
 	}
 
 	public static double getCountRatio(IsobaricQuantifiedPeptide peptide, QuantCondition cond1, QuantCondition cond2) {
-		Set<Ion> ions1 = peptide.getIonsByCondition().get(cond1);
+		final Set<Ion> ions1 = peptide.getIonsByCondition().get(cond1);
 		int numIons1 = 0;
 		if (ions1 != null) {
 			numIons1 = ions1.size();
 		}
-		Set<Ion> ions2 = peptide.getIonsByCondition().get(cond2);
+		final Set<Ion> ions2 = peptide.getIonsByCondition().get(cond2);
 		int numIons2 = 0;
 		if (ions2 != null) {
 			numIons2 = ions2.size();
@@ -208,20 +208,20 @@ public class ProteinClusterUtils {
 
 		// align all peptides
 		log.info("Aligning " + peptideMap.size() + " peptides");
-		Map<String, Set<NWResult>> gAM = ProteinClusterUtils.alignPeptides(peptideMap.values(), minAlignmentScore,
+		final Map<String, Set<NWResult>> gAM = ProteinClusterUtils.alignPeptides(peptideMap.values(), minAlignmentScore,
 				minPercentajeOfsmilirarity, minConsecutiveLength);
 		log.info(gAM.size() + " peptides aligned");
 		// cluster set
-		Set<ProteinCluster> clusterSet = new THashSet<ProteinCluster>();
+		final Set<ProteinCluster> clusterSet = new THashSet<ProteinCluster>();
 		// map clusters by peptide sequence
-		Map<QuantifiedPeptideInterface, ProteinCluster> clustersByPeptides = new THashMap<QuantifiedPeptideInterface, ProteinCluster>();
+		final Map<QuantifiedPeptideInterface, ProteinCluster> clustersByPeptides = new THashMap<QuantifiedPeptideInterface, ProteinCluster>();
 
 		// iterate over peptides
 		int numPeptides = 0;
-		for (QuantifiedPeptideInterface peptide1 : peptideMap.values()) {
+		for (final QuantifiedPeptideInterface peptide1 : peptideMap.values()) {
 			log.info(numPeptides++ + "/" + peptideMap.values().size() + " peptides. " + clusterSet.size()
 					+ " clusters.");
-			String sequence1 = peptide1.getSequence();
+			final String sequence1 = peptide1.getSequence();
 
 			ProteinCluster proteinCluster = null;
 			// if there was already a cluster associated with that peptide, take
@@ -239,26 +239,26 @@ public class ProteinClusterUtils {
 			clustersByPeptides.put(peptide1, proteinCluster);
 
 			// get proteins of the peptide
-			Set<QuantifiedProteinInterface> proteinSet = peptide1.getQuantifiedProteins();
+			final Set<QuantifiedProteinInterface> proteinSet = peptide1.getQuantifiedProteins();
 
-			for (QuantifiedProteinInterface protein : proteinSet) {
+			for (final QuantifiedProteinInterface protein : proteinSet) {
 
 				// put protein in cluster
 				proteinCluster.addProtein(protein);
 
 				// peptide 2 <- protein
-				Set<QuantifiedPeptideInterface> peptides = protein.getQuantifiedPeptides();
+				final Set<QuantifiedPeptideInterface> peptides = protein.getQuantifiedPeptides();
 
-				for (QuantifiedPeptideInterface peptide2 : peptides) {
+				for (final QuantifiedPeptideInterface peptide2 : peptides) {
 
 					// check the if peptide2 has already a cluster and merge it
 					// if different
 					if (clustersByPeptides.containsKey(peptide2)) {
-						ProteinCluster proteinCluster2 = clustersByPeptides.get(peptide2);
+						final ProteinCluster proteinCluster2 = clustersByPeptides.get(peptide2);
 						if (proteinCluster2 != proteinCluster) {
 							clusterSet.remove(proteinCluster2);
 							ProteinClusterUtils.mergeClusters(proteinCluster, proteinCluster2);
-							for (QuantifiedPeptideInterface quantifiedPeptide : proteinCluster.getPeptideSet()) {
+							for (final QuantifiedPeptideInterface quantifiedPeptide : proteinCluster.getPeptideSet()) {
 								clustersByPeptides.put(quantifiedPeptide, proteinCluster);
 							}
 						}
@@ -275,8 +275,8 @@ public class ProteinClusterUtils {
 			// check if the peptide has been aligned with other peptide
 			// in that case,
 			if (gAM.containsKey(sequence1)) {
-				Set<NWResult> goodAlignments = gAM.get(sequence1);
-				for (NWResult goodAlignment : goodAlignments) {
+				final Set<NWResult> goodAlignments = gAM.get(sequence1);
+				for (final NWResult goodAlignment : goodAlignments) {
 
 					String sequence2 = goodAlignment.getSeq1();
 					if (sequence2.equals(sequence1)) {
@@ -284,13 +284,13 @@ public class ProteinClusterUtils {
 					}
 					// check the if peptide2 has already a cluster and merge it
 					// if different
-					QuantifiedPeptideInterface peptide2 = peptideMap.get(sequence2);
+					final QuantifiedPeptideInterface peptide2 = peptideMap.get(sequence2);
 					if (clustersByPeptides.containsKey(peptide2)) {
-						ProteinCluster proteinCluster2 = clustersByPeptides.get(peptide2);
+						final ProteinCluster proteinCluster2 = clustersByPeptides.get(peptide2);
 						if (proteinCluster2 != proteinCluster) {
 							clusterSet.remove(proteinCluster2);
 							ProteinClusterUtils.mergeClusters(proteinCluster, proteinCluster2);
-							for (QuantifiedPeptideInterface quantifiedPeptide : proteinCluster.getPeptideSet()) {
+							for (final QuantifiedPeptideInterface quantifiedPeptide : proteinCluster.getPeptideSet()) {
 								clustersByPeptides.put(quantifiedPeptide, proteinCluster);
 							}
 						}
@@ -304,8 +304,8 @@ public class ProteinClusterUtils {
 		}
 		log.info(clusterSet.size() + " protein clusters created");
 
-		Set<String> set = new THashSet<String>();
-		List<ProteinCluster> list = new ArrayList<ProteinCluster>();
+		final Set<String> set = new THashSet<String>();
+		final List<ProteinCluster> list = new ArrayList<ProteinCluster>();
 		list.addAll(clusterSet);
 		Collections.sort(list, new Comparator<ProteinCluster>() {
 
@@ -314,7 +314,7 @@ public class ProteinClusterUtils {
 				return o1.getProteinClusterKey().compareTo(o2.getProteinClusterKey());
 			}
 		});
-		for (ProteinCluster proteinCluster2 : list) {
+		for (final ProteinCluster proteinCluster2 : list) {
 			if (set.contains(proteinCluster2.getProteinClusterKey())) {
 				throw new IllegalArgumentException("Two clusters cannot have the same proteins!");
 			}

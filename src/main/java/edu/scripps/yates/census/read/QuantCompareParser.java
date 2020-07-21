@@ -157,7 +157,7 @@ public class QuantCompareParser extends AbstractQuantParser {
 							if (i != 1) {
 								scanNumberStringForPSM += "_" + i;
 							}
-							QuantifiedPSMInterface quantPSM = new QuantifiedPSM(rawSequence, null, peptideToSpectraMap,
+							QuantifiedPSMInterface quantPSM = new QuantifiedPSM(rawSequence, peptideToSpectraMap,
 									scanNumberStringForPSM, chargeState, rawFileName, singleton,
 									isDistinguishModifiedSequences(), isChargeSensible());
 							// make this PSM to be from replicate rep

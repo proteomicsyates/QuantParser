@@ -31,42 +31,42 @@ public abstract class AbstractIsobaricQuantParser extends AbstractQuantParser im
 	}
 
 	public AbstractIsobaricQuantParser(List<RemoteSSHFileReference> remoteSSHServers,
-			List<Map<QuantCondition, QuantificationLabel>> labelsByConditions, QuantificationLabel labelNumerator,
+			List<Map<QuantificationLabel, QuantCondition>> conditionsByLabels, QuantificationLabel labelNumerator,
 			QuantificationLabel labelDenominator) {
-		super(remoteSSHServers, labelsByConditions, labelNumerator, labelDenominator);
+		super(remoteSSHServers, conditionsByLabels, labelNumerator, labelDenominator);
 	}
 
-	public AbstractIsobaricQuantParser(Map<QuantCondition, QuantificationLabel> labelsByConditions,
+	public AbstractIsobaricQuantParser(Map<QuantificationLabel, QuantCondition> conditionsByLabels,
 			Collection<RemoteSSHFileReference> remoteSSHServers, QuantificationLabel labelNumerator,
 			QuantificationLabel labelDenominator) {
-		super(labelsByConditions, remoteSSHServers, labelNumerator, labelDenominator);
+		super(conditionsByLabels, remoteSSHServers, labelNumerator, labelDenominator);
 	}
 
 	public AbstractIsobaricQuantParser(RemoteSSHFileReference remoteSSHServer,
-			Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelNumerator,
+			Map<QuantificationLabel, QuantCondition> conditionsByLabels, QuantificationLabel labelNumerator,
 			QuantificationLabel labelDenominator) throws FileNotFoundException {
-		super(remoteSSHServer, labelsByConditions, labelNumerator, labelDenominator);
+		super(remoteSSHServer, conditionsByLabels, labelNumerator, labelDenominator);
 	}
 
-	public AbstractIsobaricQuantParser(File xmlFile, Map<QuantCondition, QuantificationLabel> labelsByConditions,
+	public AbstractIsobaricQuantParser(File xmlFile, Map<QuantificationLabel, QuantCondition> conditionsByLabels,
 			QuantificationLabel labelNumerator, QuantificationLabel labelDenominator) throws FileNotFoundException {
-		super(xmlFile, labelsByConditions, labelNumerator, labelDenominator);
+		super(xmlFile, conditionsByLabels, labelNumerator, labelDenominator);
 	}
 
-	public AbstractIsobaricQuantParser(File[] xmlFiles, Map<QuantCondition, QuantificationLabel> labelsByConditions,
+	public AbstractIsobaricQuantParser(File[] xmlFiles, Map<QuantificationLabel, QuantCondition> conditionsByLabels,
 			QuantificationLabel labelNumerator, QuantificationLabel labelDenominator) throws FileNotFoundException {
-		super(xmlFiles, labelsByConditions, labelNumerator, labelDenominator);
+		super(xmlFiles, conditionsByLabels, labelNumerator, labelDenominator);
 	}
 
-	public AbstractIsobaricQuantParser(File[] xmlFiles, Map<QuantCondition, QuantificationLabel>[] labelsByConditions,
+	public AbstractIsobaricQuantParser(File[] xmlFiles, Map<QuantificationLabel, QuantCondition>[] conditionsByLabels,
 			QuantificationLabel[] labelNumerator, QuantificationLabel[] labelDenominator) throws FileNotFoundException {
-		super(xmlFiles, labelsByConditions, labelNumerator, labelDenominator);
+		super(xmlFiles, conditionsByLabels, labelNumerator, labelDenominator);
 	}
 
 	public AbstractIsobaricQuantParser(Collection<File> xmlFiles,
-			Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelNumerator,
+			Map<QuantificationLabel, QuantCondition> conditionsByLabels, QuantificationLabel labelNumerator,
 			QuantificationLabel labelDenominator) throws FileNotFoundException {
-		super(xmlFiles, labelsByConditions, labelNumerator, labelDenominator);
+		super(xmlFiles, conditionsByLabels, labelNumerator, labelDenominator);
 	}
 
 	public AbstractIsobaricQuantParser(RemoteSSHFileReference remoteServer, QuantificationLabel label1,

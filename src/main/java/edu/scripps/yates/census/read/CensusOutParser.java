@@ -135,21 +135,21 @@ public class CensusOutParser extends AbstractQuantParser {
 	}
 
 	public CensusOutParser(List<RemoteSSHFileReference> remoteSSHServers,
-			List<Map<QuantCondition, QuantificationLabel>> labelsByConditions, QuantificationLabel labelNumerator,
+			List<Map<QuantificationLabel, QuantCondition>> conditionsByLabels, QuantificationLabel labelNumerator,
 			QuantificationLabel labelDenominator) {
-		super(remoteSSHServers, labelsByConditions, labelNumerator, labelDenominator);
+		super(remoteSSHServers, conditionsByLabels, labelNumerator, labelDenominator);
 	}
 
-	public CensusOutParser(Map<QuantCondition, QuantificationLabel> labelsByConditions,
+	public CensusOutParser(Map<QuantificationLabel, QuantCondition> conditionsByLabels,
 			Collection<RemoteSSHFileReference> remoteSSHServers, QuantificationLabel labelNumerator,
 			QuantificationLabel labelDenominator) {
-		super(labelsByConditions, remoteSSHServers, labelNumerator, labelDenominator);
+		super(conditionsByLabels, remoteSSHServers, labelNumerator, labelDenominator);
 	}
 
 	public CensusOutParser(RemoteSSHFileReference remoteSSHServer,
-			Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelNumerator,
+			Map<QuantificationLabel, QuantCondition> conditionsByLabels, QuantificationLabel labelNumerator,
 			QuantificationLabel labelDenominator) throws FileNotFoundException {
-		super(remoteSSHServer, labelsByConditions, labelNumerator, labelDenominator);
+		super(remoteSSHServer, conditionsByLabels, labelNumerator, labelDenominator);
 	}
 
 	/**
@@ -165,24 +165,24 @@ public class CensusOutParser extends AbstractQuantParser {
 		super(inputFile, conditionsByLabels);
 	}
 
-	public CensusOutParser(File xmlFile, Map<QuantCondition, QuantificationLabel> labelsByConditions,
+	public CensusOutParser(File xmlFile, Map<QuantificationLabel, QuantCondition> conditionsByLabels,
 			QuantificationLabel labelNumerator, QuantificationLabel labelDenominator) throws FileNotFoundException {
-		super(xmlFile, labelsByConditions, labelNumerator, labelDenominator);
+		super(xmlFile, conditionsByLabels, labelNumerator, labelDenominator);
 	}
 
-	public CensusOutParser(File[] xmlFiles, Map<QuantCondition, QuantificationLabel> labelsByConditions,
+	public CensusOutParser(File[] xmlFiles, Map<QuantificationLabel, QuantCondition> conditionsByLabels,
 			QuantificationLabel labelNumerator, QuantificationLabel labelDenominator) throws FileNotFoundException {
-		super(xmlFiles, labelsByConditions, labelNumerator, labelDenominator);
+		super(xmlFiles, conditionsByLabels, labelNumerator, labelDenominator);
 	}
 
-	public CensusOutParser(File[] xmlFiles, Map<QuantCondition, QuantificationLabel>[] labelsByConditions,
+	public CensusOutParser(File[] xmlFiles, Map<QuantificationLabel, QuantCondition>[] conditionsByLabels,
 			QuantificationLabel[] labelNumerator, QuantificationLabel[] labelDenominator) throws FileNotFoundException {
-		super(xmlFiles, labelsByConditions, labelNumerator, labelDenominator);
+		super(xmlFiles, conditionsByLabels, labelNumerator, labelDenominator);
 	}
 
-	public CensusOutParser(Collection<File> xmlFiles, Map<QuantCondition, QuantificationLabel> labelsByConditions,
+	public CensusOutParser(Collection<File> xmlFiles, Map<QuantificationLabel, QuantCondition> conditionsByLabels,
 			QuantificationLabel labelNumerator, QuantificationLabel labelDenominator) throws FileNotFoundException {
-		super(xmlFiles, labelsByConditions, labelNumerator, labelDenominator);
+		super(xmlFiles, conditionsByLabels, labelNumerator, labelDenominator);
 	}
 
 	public CensusOutParser(RemoteSSHFileReference remoteServer, QuantificationLabel label1, QuantCondition cond1,
@@ -195,9 +195,10 @@ public class CensusOutParser extends AbstractQuantParser {
 		super(inputFile, label1, cond1, label2, cond2);
 	}
 
-	public CensusOutParser(File inputFile, Map<QuantCondition, QuantificationLabel> map, QuantificationLabel light,
-			QuantificationLabel medium, QuantificationLabel heavy) throws FileNotFoundException {
-		super(inputFile, map, light, medium, heavy);
+	public CensusOutParser(File inputFile, Map<QuantificationLabel, QuantCondition> conditionsByLabels,
+			QuantificationLabel light, QuantificationLabel medium, QuantificationLabel heavy)
+			throws FileNotFoundException {
+		super(inputFile, conditionsByLabels, light, medium, heavy);
 	}
 
 	public Map<RemoteSSHFileReference, Boolean> isTMT6() throws IOException {
@@ -409,25 +410,11 @@ public class CensusOutParser extends AbstractQuantParser {
 			int numDecoy = 0;
 			boolean someValidFile = false;
 			for (final RemoteSSHFileReference remoteFileRetriever : remoteFileRetrievers) {
-				Map<QuantCondition, QuantificationLabel> labelsByConditions = labelsByConditionsByFile
+				final Map<QuantCondition, Set<QuantificationLabel>> labelsByConditions = QuantUtils
+						.getLabelsByConditions(conditionsByLabelsByFile.get(remoteFileRetriever));
+				final Map<QuantificationLabel, QuantCondition> conditionsByLabels = conditionsByLabelsByFile
 						.get(remoteFileRetriever);
-				Map<QuantificationLabel, QuantCondition> conditionsByLabels = new THashMap<QuantificationLabel, QuantCondition>();
-				if (this.conditionsByLabelsByFile.containsKey(remoteFileRetriever)) {
-					conditionsByLabels = this.conditionsByLabelsByFile.get(remoteFileRetriever);
-					if (conditionsByLabels != null && labelsByConditions == null) {
-						labelsByConditions = new THashMap<QuantCondition, QuantificationLabel>();
-						for (final QuantificationLabel label : conditionsByLabels.keySet()) {
-							final QuantCondition cond = conditionsByLabels.get(label);
-							labelsByConditions.put(cond, label);
-						}
-					}
-				} else {
-					if (labelsByConditions != null) {
-						for (final QuantCondition cond : labelsByConditions.keySet()) {
-							conditionsByLabels.put(labelsByConditions.get(cond), cond);
-						}
-					}
-				}
+
 				final List<RatioDescriptor> ratioDescriptors = ratioDescriptorsByFile.get(remoteFileRetriever);
 				// QuantificationLabel labelNumerator =
 				// numeratorLabelByFile.get(remoteFileRetriever);
@@ -760,7 +747,7 @@ public class CensusOutParser extends AbstractQuantParser {
 	private void processPSMLine(String line, List<String> sLineHeaderList,
 			Set<QuantifiedProteinInterface> quantifiedProteins,
 			Map<QuantificationLabel, QuantCondition> conditionsByLabels,
-			Map<QuantCondition, QuantificationLabel> labelsByConditions, List<RatioDescriptor> ratioDescriptors,
+			Map<QuantCondition, Set<QuantificationLabel>> labelsByConditions, List<RatioDescriptor> ratioDescriptors,
 			String experimentKey, RemoteSSHFileReference remoteFileRetriever, boolean singleton) throws IOException {
 
 		// new psm
@@ -791,7 +778,7 @@ public class CensusOutParser extends AbstractQuantParser {
 			// Double.valueOf(mapValues.get(CS)).intValue(), rawFileName,
 			// singleton);
 			// } else {
-			quantifiedPSM = new QuantifiedPSM(sequence, labelsByConditions, peptideToSpectraMap, scanNumber,
+			quantifiedPSM = new QuantifiedPSM(sequence, peptideToSpectraMap, scanNumber,
 					Double.valueOf(mapValues.get(CS)).intValue(), rawFileName, singleton,
 					isDistinguishModifiedSequences(), isChargeSensible());
 			// }
@@ -1167,8 +1154,6 @@ public class CensusOutParser extends AbstractQuantParser {
 			boolean isTMT6Plex = false;
 			if (!conditionsByLabels.isEmpty()) {
 				isTMT6Plex = isTMT6Plex(conditionsByLabels.keySet());
-			} else {
-				isTMT6Plex = isTMT6Plex(labelsByConditions.values());
 			}
 			if (isTMT6Plex) {
 				for (final QuantificationLabel label : QuantificationLabel.getTMT6PlexLabels()) {
@@ -1192,8 +1177,6 @@ public class CensusOutParser extends AbstractQuantParser {
 			boolean isTMT10Plex = false;
 			if (!conditionsByLabels.isEmpty()) {
 				isTMT10Plex = isTMT10Plex(conditionsByLabels.keySet());
-			} else {
-				isTMT10Plex = isTMT10Plex(labelsByConditions.values());
 			}
 			if (isTMT10Plex) {
 				for (final QuantificationLabel label : QuantificationLabel.getTMT10PlexLabels()) {
@@ -1217,8 +1200,6 @@ public class CensusOutParser extends AbstractQuantParser {
 			boolean isTMT11Plex = false;
 			if (!conditionsByLabels.isEmpty()) {
 				isTMT11Plex = isTMT11Plex(conditionsByLabels.keySet());
-			} else {
-				isTMT11Plex = isTMT11Plex(labelsByConditions.values());
 			}
 			if (isTMT11Plex) {
 				for (final QuantificationLabel label : QuantificationLabel.getTMT11PlexLabels()) {
@@ -1681,25 +1662,25 @@ public class CensusOutParser extends AbstractQuantParser {
 	 */
 	private String getHeaderForPeptideNormalizedIntensityInTMT10Plex(QuantificationLabel label, List<String> headers) {
 		switch (label) {
-		case TMT_10PLEX_126_127726:
+		case TMT_10PLEX_126:
 			return findStartingBy(headers, "norm_m/z_126.12");
-		case TMT_10PLEX_127_124761:
+		case TMT_10PLEX_127N:
 			return findStartingBy(headers, "norm_m/z_127.124");
-		case TMT_10PLEX_127_131081:
+		case TMT_10PLEX_127C:
 			return findStartingBy(headers, "norm_m/z_127.131");
-		case TMT_10PLEX_128_128116:
+		case TMT_10PLEX_128N:
 			return findStartingBy(headers, "norm_m/z_128.128");
-		case TMT_10PLEX_128_134436:
+		case TMT_10PLEX_128C:
 			return findStartingBy(headers, "norm_m/z_128.134");
-		case TMT_10PLEX_129_131471:
+		case TMT_10PLEX_129N:
 			return findStartingBy(headers, "norm_m/z_129.131");
-		case TMT_10PLEX_129_13779:
+		case TMT_10PLEX_129C:
 			return findStartingBy(headers, "norm_m/z_129.137");
-		case TMT_10PLEX_130_134825:
+		case TMT_10PLEX_130N:
 			return findStartingBy(headers, "norm_m/z_130.134");
-		case TMT_10PLEX_130_141145:
+		case TMT_10PLEX_130C:
 			return findStartingBy(headers, "norm_m/z_130.141");
-		case TMT_10PLEX_131_13818:
+		case TMT_10PLEX_131:
 			return findStartingBy(headers, "norm_m/z_131.138");
 		default:
 			return null;
@@ -1715,27 +1696,27 @@ public class CensusOutParser extends AbstractQuantParser {
 	 */
 	private String getHeaderForPeptideNormalizedIntensityInTMT11Plex(QuantificationLabel label, List<String> headers) {
 		switch (label) {
-		case TMT_11PLEX_126_127726:
+		case TMT_11PLEX_126:
 			return findStartingBy(headers, "norm_m/z_126.12");
-		case TMT_11PLEX_127_124761:
+		case TMT_11PLEX_127N:
 			return findStartingBy(headers, "norm_m/z_127.124");
-		case TMT_11PLEX_127_131081:
+		case TMT_11PLEX_127C:
 			return findStartingBy(headers, "norm_m/z_127.131");
-		case TMT_11PLEX_128_128116:
+		case TMT_11PLEX_128N:
 			return findStartingBy(headers, "norm_m/z_128.128");
-		case TMT_11PLEX_128_134436:
+		case TMT_11PLEX_128C:
 			return findStartingBy(headers, "norm_m/z_128.134");
-		case TMT_11PLEX_129_131471:
+		case TMT_11PLEX_129N:
 			return findStartingBy(headers, "norm_m/z_129.131");
-		case TMT_11PLEX_129_13779:
+		case TMT_11PLEX_129C:
 			return findStartingBy(headers, "norm_m/z_129.137");
-		case TMT_11PLEX_130_134825:
+		case TMT_11PLEX_130N:
 			return findStartingBy(headers, "norm_m/z_130.134");
-		case TMT_11PLEX_130_141145:
+		case TMT_11PLEX_130C:
 			return findStartingBy(headers, "norm_m/z_130.141");
-		case TMT_11PLEX_131_13818:
+		case TMT_11PLEX_131:
 			return findStartingBy(headers, "norm_m/z_131.138");
-		case TMT_11PLEX_131_144499:
+		case TMT_11PLEX_131C:
 			return findStartingBy(headers, "norm_m/z_131.144");
 		default:
 			return null;
@@ -1760,25 +1741,25 @@ public class CensusOutParser extends AbstractQuantParser {
 	 */
 	private String getHeaderForPeptideRawIntensityInTMT10Plex(QuantificationLabel label, List<String> headers) {
 		switch (label) {
-		case TMT_10PLEX_126_127726:
+		case TMT_10PLEX_126:
 			return findStartingBy(headers, "m/z_126.127");
-		case TMT_10PLEX_127_124761:
+		case TMT_10PLEX_127N:
 			return findStartingBy(headers, "m/z_127.124");
-		case TMT_10PLEX_127_131081:
+		case TMT_10PLEX_127C:
 			return findStartingBy(headers, "m/z_127.131");
-		case TMT_10PLEX_128_128116:
+		case TMT_10PLEX_128N:
 			return findStartingBy(headers, "m/z_128.128");
-		case TMT_10PLEX_128_134436:
+		case TMT_10PLEX_128C:
 			return findStartingBy(headers, "m/z_128.134");
-		case TMT_10PLEX_129_131471:
+		case TMT_10PLEX_129N:
 			return findStartingBy(headers, "m/z_129.131");
-		case TMT_10PLEX_129_13779:
+		case TMT_10PLEX_129C:
 			return findStartingBy(headers, "m/z_129.137");
-		case TMT_10PLEX_130_134825:
+		case TMT_10PLEX_130N:
 			return findStartingBy(headers, "m/z_130.134");
-		case TMT_10PLEX_130_141145:
+		case TMT_10PLEX_130C:
 			return findStartingBy(headers, "m/z_130.141");
-		case TMT_10PLEX_131_13818:
+		case TMT_10PLEX_131:
 			return findStartingBy(headers, "m/z_131.138");
 		default:
 			return null;
@@ -1794,27 +1775,27 @@ public class CensusOutParser extends AbstractQuantParser {
 	 */
 	private String getHeaderForPeptideRawIntensityInTMT11Plex(QuantificationLabel label, List<String> headers) {
 		switch (label) {
-		case TMT_11PLEX_126_127726:
+		case TMT_11PLEX_126:
 			return findStartingBy(headers, "m/z_126.127");
-		case TMT_11PLEX_127_124761:
+		case TMT_11PLEX_127N:
 			return findStartingBy(headers, "m/z_127.124");
-		case TMT_11PLEX_127_131081:
+		case TMT_11PLEX_127C:
 			return findStartingBy(headers, "m/z_127.131");
-		case TMT_11PLEX_128_128116:
+		case TMT_11PLEX_128N:
 			return findStartingBy(headers, "m/z_128.128");
-		case TMT_11PLEX_128_134436:
+		case TMT_11PLEX_128C:
 			return findStartingBy(headers, "m/z_128.134");
-		case TMT_11PLEX_129_131471:
+		case TMT_11PLEX_129N:
 			return findStartingBy(headers, "m/z_129.131");
-		case TMT_11PLEX_129_13779:
+		case TMT_11PLEX_129C:
 			return findStartingBy(headers, "m/z_129.137");
-		case TMT_11PLEX_130_134825:
+		case TMT_11PLEX_130N:
 			return findStartingBy(headers, "m/z_130.134");
-		case TMT_11PLEX_130_141145:
+		case TMT_11PLEX_130C:
 			return findStartingBy(headers, "m/z_130.141");
-		case TMT_11PLEX_131_13818:
+		case TMT_11PLEX_131:
 			return findStartingBy(headers, "m/z_131.138");
-		case TMT_11PLEX_131_144499:
+		case TMT_11PLEX_131C:
 			return findStartingBy(headers, "m/z_131.144");
 		default:
 			return null;
@@ -1883,25 +1864,25 @@ public class CensusOutParser extends AbstractQuantParser {
 	 */
 	private String getHeaderForProteinNormalizedIntensityInTMT10Plex(QuantificationLabel label, List<String> headers) {
 		switch (label) {
-		case TMT_10PLEX_126_127726:
+		case TMT_10PLEX_126:
 			return findStartingBy(headers, "norm_total m/z_126.127");
-		case TMT_10PLEX_127_124761:
+		case TMT_10PLEX_127N:
 			return findStartingBy(headers, "norm_total m/z_127.124");
-		case TMT_10PLEX_127_131081:
+		case TMT_10PLEX_127C:
 			return findStartingBy(headers, "norm_total m/z_127.131");
-		case TMT_10PLEX_128_128116:
+		case TMT_10PLEX_128N:
 			return findStartingBy(headers, "norm_total m/z_128.128");
-		case TMT_10PLEX_128_134436:
+		case TMT_10PLEX_128C:
 			return findStartingBy(headers, "norm_total m/z_128.134");
-		case TMT_10PLEX_129_131471:
+		case TMT_10PLEX_129N:
 			return findStartingBy(headers, "norm_total m/z_129.131");
-		case TMT_10PLEX_129_13779:
+		case TMT_10PLEX_129C:
 			return findStartingBy(headers, "norm_total m/z_129.137");
-		case TMT_10PLEX_130_134825:
+		case TMT_10PLEX_130N:
 			return findStartingBy(headers, "norm_total m/z_130.134");
-		case TMT_10PLEX_130_141145:
+		case TMT_10PLEX_130C:
 			return findStartingBy(headers, "norm_total m/z_130.141");
-		case TMT_10PLEX_131_13818:
+		case TMT_10PLEX_131:
 			return findStartingBy(headers, "norm_total m/z_131.138");
 		default:
 			return null;
@@ -1917,25 +1898,25 @@ public class CensusOutParser extends AbstractQuantParser {
 	 */
 	private String getHeaderForProteinRawIntensityInTMT10Plex(QuantificationLabel label, List<String> headers) {
 		switch (label) {
-		case TMT_10PLEX_126_127726:
+		case TMT_10PLEX_126:
 			return findStartingBy(headers, "total m/z_126.127");
-		case TMT_10PLEX_127_124761:
+		case TMT_10PLEX_127N:
 			return findStartingBy(headers, "total m/z_127.124");
-		case TMT_10PLEX_127_131081:
+		case TMT_10PLEX_127C:
 			return findStartingBy(headers, "total m/z_127.131");
-		case TMT_10PLEX_128_128116:
+		case TMT_10PLEX_128N:
 			return findStartingBy(headers, "total m/z_128.128");
-		case TMT_10PLEX_128_134436:
+		case TMT_10PLEX_128C:
 			return findStartingBy(headers, "total m/z_128.134");
-		case TMT_10PLEX_129_131471:
+		case TMT_10PLEX_129N:
 			return findStartingBy(headers, "total m/z_129.131");
-		case TMT_10PLEX_129_13779:
+		case TMT_10PLEX_129C:
 			return findStartingBy(headers, "total m/z_129.137");
-		case TMT_10PLEX_130_134825:
+		case TMT_10PLEX_130N:
 			return findStartingBy(headers, "total m/z_130.134");
-		case TMT_10PLEX_130_141145:
+		case TMT_10PLEX_130C:
 			return findStartingBy(headers, "total m/z_130.141");
-		case TMT_10PLEX_131_13818:
+		case TMT_10PLEX_131:
 			return findStartingBy(headers, "total m/z_131.138");
 		default:
 			return null;
@@ -1951,27 +1932,27 @@ public class CensusOutParser extends AbstractQuantParser {
 	 */
 	private String getHeaderForProteinRawIntensityInTMT11Plex(QuantificationLabel label, List<String> headers) {
 		switch (label) {
-		case TMT_11PLEX_126_127726:
+		case TMT_11PLEX_126:
 			return findStartingBy(headers, "total m/z_126.127");
-		case TMT_11PLEX_127_124761:
+		case TMT_11PLEX_127N:
 			return findStartingBy(headers, "total m/z_127.124");
-		case TMT_11PLEX_127_131081:
+		case TMT_11PLEX_127C:
 			return findStartingBy(headers, "total m/z_127.131");
-		case TMT_11PLEX_128_128116:
+		case TMT_11PLEX_128N:
 			return findStartingBy(headers, "total m/z_128.128");
-		case TMT_11PLEX_128_134436:
+		case TMT_11PLEX_128C:
 			return findStartingBy(headers, "total m/z_128.134");
-		case TMT_11PLEX_129_131471:
+		case TMT_11PLEX_129N:
 			return findStartingBy(headers, "total m/z_129.131");
-		case TMT_11PLEX_129_13779:
+		case TMT_11PLEX_129C:
 			return findStartingBy(headers, "total m/z_129.137");
-		case TMT_11PLEX_130_134825:
+		case TMT_11PLEX_130N:
 			return findStartingBy(headers, "total m/z_130.134");
-		case TMT_11PLEX_130_141145:
+		case TMT_11PLEX_130C:
 			return findStartingBy(headers, "total m/z_130.141");
-		case TMT_11PLEX_131_13818:
+		case TMT_11PLEX_131:
 			return findStartingBy(headers, "total m/z_131.138");
-		case TMT_11PLEX_131_144499:
+		case TMT_11PLEX_131C:
 			return findStartingBy(headers, "total m/z_131.144");
 		default:
 			return null;

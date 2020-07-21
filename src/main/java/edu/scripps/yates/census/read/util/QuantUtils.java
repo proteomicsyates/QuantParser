@@ -789,11 +789,30 @@ public class QuantUtils {
 	}
 
 	public static Map<QuantificationLabel, QuantCondition> getConditionsByLabels(
-			Map<QuantCondition, QuantificationLabel> labelsByConditions) {
+			Map<QuantCondition, Set<QuantificationLabel>> labelsByConditions) {
 		final Map<QuantificationLabel, QuantCondition> ret = new THashMap<QuantificationLabel, QuantCondition>();
 		if (labelsByConditions != null) {
 			for (final QuantCondition condition : labelsByConditions.keySet()) {
-				ret.put(labelsByConditions.get(condition), condition);
+				final Set<QuantificationLabel> labels = labelsByConditions.get(condition);
+				for (final QuantificationLabel label : labels) {
+					ret.put(label, condition);
+				}
+
+			}
+		}
+		return ret;
+	}
+
+	public static Map<QuantCondition, Set<QuantificationLabel>> getLabelsByConditions(
+			Map<QuantificationLabel, QuantCondition> conditionsByLabels) {
+		final Map<QuantCondition, Set<QuantificationLabel>> ret = new THashMap<QuantCondition, Set<QuantificationLabel>>();
+		if (conditionsByLabels != null) {
+			for (final QuantificationLabel label : conditionsByLabels.keySet()) {
+				final QuantCondition condition = conditionsByLabels.get(label);
+				if (!ret.containsKey(condition)) {
+					ret.put(condition, new THashSet<QuantificationLabel>());
+				}
+				ret.get(condition).add(label);
 			}
 		}
 		return ret;

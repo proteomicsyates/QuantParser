@@ -15,18 +15,18 @@ import edu.scripps.yates.utilities.remote.RemoteSSHFileReference;
 
 public interface QuantParser {
 
-	void addFile(File xmlFile, Map<QuantCondition, QuantificationLabel> labelsByConditions,
+	void addFile(File xmlFile, Map<QuantificationLabel, QuantCondition> conditionsByLabels,
 			QuantificationLabel labelNumerator, QuantificationLabel labelDenominator) throws FileNotFoundException;
 
-	void addFile(File xmlFile, Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelL,
+	void addFile(File xmlFile, Map<QuantificationLabel, QuantCondition> conditionsByLabels, QuantificationLabel labelL,
 			QuantificationLabel labelM, QuantificationLabel labelH) throws FileNotFoundException;
 
 	void addFile(RemoteSSHFileReference remoteFileReference,
-			Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelNumerator,
+			Map<QuantificationLabel, QuantCondition> conditionsByLabels, QuantificationLabel labelNumerator,
 			QuantificationLabel labelDenominator);
 
 	void addFile(RemoteSSHFileReference remoteFileReference,
-			Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelL,
+			Map<QuantificationLabel, QuantCondition> conditionsByLabels, QuantificationLabel labelL,
 			QuantificationLabel labelM, QuantificationLabel labelH);
 
 	Map<String, QuantifiedPeptideInterface> getPeptideMap() throws QuantParserException;
@@ -62,4 +62,23 @@ public interface QuantParser {
 	boolean isIgnoreTaxonomies();
 
 	Map<String, Set<String>> getPTMToSpectraMap() throws QuantParserException;
+
+	/**
+	 * Returns the IonCount, that is, the number of PSMs that are present with the
+	 * peptide (full sequence) + charge in this parser
+	 * 
+	 * @param psm
+	 * @return
+	 */
+	int getReCalculatedIonCount(QuantifiedPSMInterface psm);
+
+	/**
+	 * Regardless of how the peptides are formed (using distinguish by charge state
+	 * or PTMs), this will return the ion count of the ion that represent this
+	 * peptide, that is, the peptide's full sequence + charge
+	 * 
+	 * @param peptide
+	 * @return
+	 */
+	int getReCalculatedIonCount(QuantifiedPeptideInterface peptide);
 }

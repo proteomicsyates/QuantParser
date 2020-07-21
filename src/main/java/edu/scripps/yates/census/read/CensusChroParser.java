@@ -49,49 +49,49 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 	}
 
 	public CensusChroParser(List<RemoteSSHFileReference> remoteSSHServers,
-			List<Map<QuantCondition, QuantificationLabel>> labelsByConditions, QuantificationLabel labelNumerator,
+			List<Map<QuantificationLabel, QuantCondition>> labelsByConditions, QuantificationLabel labelNumerator,
 			QuantificationLabel labelDenominator) {
 		super(remoteSSHServers, labelsByConditions, labelNumerator, labelDenominator);
 	}
 
-	public CensusChroParser(Map<QuantCondition, QuantificationLabel> labelsByConditions,
+	public CensusChroParser(Map<QuantificationLabel, QuantCondition> labelsByConditions,
 			Collection<RemoteSSHFileReference> remoteSSHServers, QuantificationLabel labelNumerator,
 			QuantificationLabel labelDenominator) {
 		super(labelsByConditions, remoteSSHServers, labelNumerator, labelDenominator);
 	}
 
 	public CensusChroParser(RemoteSSHFileReference remoteSSHServer,
-			Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelNumerator,
+			Map<QuantificationLabel, QuantCondition> labelsByConditions, QuantificationLabel labelNumerator,
 			QuantificationLabel labelDenominator) throws FileNotFoundException {
 		super(remoteSSHServer, labelsByConditions, labelNumerator, labelDenominator);
 	}
 
 	public CensusChroParser(File xmlFile) throws FileNotFoundException {
 		super();
-		final Map<QuantCondition, QuantificationLabel> labelsByConditions = new THashMap<QuantCondition, QuantificationLabel>();
-		labelsByConditions.put(new QuantCondition("condition 1"), QuantificationLabel.LIGHT);
-		labelsByConditions.put(new QuantCondition("condition 2"), QuantificationLabel.HEAVY);
-		addFile(xmlFile, labelsByConditions, QuantificationLabel.LIGHT, QuantificationLabel.HEAVY);
+		final Map<QuantificationLabel, QuantCondition> conditionsByLabels = new THashMap<QuantificationLabel, QuantCondition>();
+		conditionsByLabels.put(QuantificationLabel.LIGHT, new QuantCondition("condition 1"));
+		conditionsByLabels.put(QuantificationLabel.HEAVY, new QuantCondition("condition 2"));
+		addFile(xmlFile, conditionsByLabels, QuantificationLabel.LIGHT, QuantificationLabel.HEAVY);
 	}
 
-	public CensusChroParser(File xmlFile, Map<QuantCondition, QuantificationLabel> labelsByConditions,
+	public CensusChroParser(File xmlFile, Map<QuantificationLabel, QuantCondition> conditionsByLabels,
 			QuantificationLabel labelNumerator, QuantificationLabel labelDenominator) throws FileNotFoundException {
-		super(xmlFile, labelsByConditions, labelNumerator, labelDenominator);
+		super(xmlFile, conditionsByLabels, labelNumerator, labelDenominator);
 	}
 
-	public CensusChroParser(File[] xmlFiles, Map<QuantCondition, QuantificationLabel> labelsByConditions,
+	public CensusChroParser(File[] xmlFiles, Map<QuantificationLabel, QuantCondition> conditionsByLabels,
 			QuantificationLabel labelNumerator, QuantificationLabel labelDenominator) throws FileNotFoundException {
-		super(xmlFiles, labelsByConditions, labelNumerator, labelDenominator);
+		super(xmlFiles, conditionsByLabels, labelNumerator, labelDenominator);
 	}
 
-	public CensusChroParser(File[] xmlFiles, Map<QuantCondition, QuantificationLabel>[] labelsByConditions,
+	public CensusChroParser(File[] xmlFiles, Map<QuantificationLabel, QuantCondition>[] conditionsByLabels,
 			QuantificationLabel[] labelNumerator, QuantificationLabel[] labelDenominator) throws FileNotFoundException {
-		super(xmlFiles, labelsByConditions, labelNumerator, labelDenominator);
+		super(xmlFiles, conditionsByLabels, labelNumerator, labelDenominator);
 	}
 
-	public CensusChroParser(Collection<File> xmlFiles, Map<QuantCondition, QuantificationLabel> labelsByConditions,
+	public CensusChroParser(Collection<File> xmlFiles, Map<QuantificationLabel, QuantCondition> conditionsByLabels,
 			QuantificationLabel labelNumerator, QuantificationLabel labelDenominator) throws FileNotFoundException {
-		super(xmlFiles, labelsByConditions, labelNumerator, labelDenominator);
+		super(xmlFiles, conditionsByLabels, labelNumerator, labelDenominator);
 	}
 
 	public CensusChroParser(RemoteSSHFileReference remoteServer, QuantificationLabel label1, QuantCondition cond1,
@@ -208,7 +208,7 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 									quantifiedPSM = (IsobaricQuantifiedPSM) StaticQuantMaps.psmMap.getItem(spectrumKey);
 								} else {
 									quantifiedPSM = new IsobaricQuantifiedPSM(peptide,
-											labelsByConditionsByFile.get(remoteFileRetriever), ionExclusions,
+											conditionsByLabelsByFile.get(remoteFileRetriever), ionExclusions,
 											getQuantifiedAAs(), isDistinguishModifiedSequences(), isChargeSensible());
 								}
 								final String spectrumKey2 = KeyUtils.getInstance().getSpectrumKey(quantifiedPSM,

@@ -21,32 +21,23 @@ import edu.scripps.yates.utilities.proteomicsmodel.enums.AggregationLevel;
 import edu.scripps.yates.utilities.proteomicsmodel.factories.MSRunEx;
 import edu.scripps.yates.utilities.proteomicsmodel.staticstorage.StaticProteomicsModelStorage;
 import gnu.trove.list.array.TDoubleArrayList;
-import gnu.trove.map.hash.THashMap;
 import gnu.trove.set.hash.THashSet;
 
 public class QuantifiedPSM extends AbstractPSM implements QuantifiedPSMInterface {
 	private final Set<edu.scripps.yates.census.read.util.QuantificationLabel> labels = new THashSet<QuantificationLabel>();
 	private final Set<String> rawFileNames = new THashSet<String>();
-	private final Map<QuantificationLabel, QuantCondition> conditionsByLabels;
 	private final Set<String> fileNames = new THashSet<String>();
 	private boolean discarded;
 	private boolean singleton;
 	private Set<QuantRatio> quantRatios;
 
-	public QuantifiedPSM(String sequence, Map<QuantCondition, QuantificationLabel> labelsByConditions,
-			Map<String, Set<String>> peptideToSpectraMap, String scanNumber, int chargeState, String rawFileName,
-			boolean singleton, boolean distinguishModifiedSequence, boolean chargeStateSensible) {
+	public QuantifiedPSM(String sequence, Map<String, Set<String>> peptideToSpectraMap, String scanNumber,
+			int chargeState, String rawFileName, boolean singleton, boolean distinguishModifiedSequence,
+			boolean chargeStateSensible) {
 		super(distinguishModifiedSequence, chargeStateSensible);
 		setFullSequence(sequence);
 		setSequence(FastaParser.cleanSequence(sequence));
 		setScanNumber(scanNumber);
-		conditionsByLabels = new THashMap<QuantificationLabel, QuantCondition>();
-		if (labelsByConditions != null) {
-			for (final QuantCondition condition : labelsByConditions.keySet()) {
-				final QuantificationLabel quantificationLabel = labelsByConditions.get(condition);
-				conditionsByLabels.put(quantificationLabel, condition);
-			}
-		}
 		setChargeState(chargeState);
 		// remove the H of HEAVY
 		if (rawFileName != null && rawFileName.startsWith("H")) {

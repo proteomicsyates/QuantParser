@@ -36,7 +36,6 @@ import edu.scripps.yates.utilities.remote.RemoteSSHFileReference;
 import edu.scripps.yates.utilities.sequence.PositionInPeptide;
 import edu.scripps.yates.utilities.strings.StringUtils;
 import gnu.trove.list.array.TIntArrayList;
-import gnu.trove.map.hash.THashMap;
 
 public class SeparatedValuesParser extends AbstractQuantParser {
 	private final static Logger log = Logger.getLogger(SeparatedValuesParser.class);
@@ -56,57 +55,57 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 	}
 
 	public SeparatedValuesParser(List<RemoteSSHFileReference> remoteSSHServers, String separator,
-			List<Map<QuantCondition, QuantificationLabel>> labelsByConditions, QuantificationLabel labelNumerator,
+			List<Map<QuantificationLabel, QuantCondition>> conditionsByLabels, QuantificationLabel labelNumerator,
 			QuantificationLabel labelDenominator, boolean ignoreTaxonomies) {
-		super(remoteSSHServers, labelsByConditions, labelNumerator, labelDenominator);
+		super(remoteSSHServers, conditionsByLabels, labelNumerator, labelDenominator);
 		this.separator = separator;
 		setIgnoreTaxonomies(ignoreTaxonomies);
 	}
 
-	public SeparatedValuesParser(String separator, Map<QuantCondition, QuantificationLabel> labelsByConditions,
+	public SeparatedValuesParser(String separator, Map<QuantificationLabel, QuantCondition> conditionsByLabels,
 			Collection<RemoteSSHFileReference> remoteSSHServers, QuantificationLabel labelNumerator,
 			QuantificationLabel labelDenominator, boolean ignoreTaxonomies) {
-		super(labelsByConditions, remoteSSHServers, labelNumerator, labelDenominator);
+		super(conditionsByLabels, remoteSSHServers, labelNumerator, labelDenominator);
 		this.separator = separator;
 		setIgnoreTaxonomies(ignoreTaxonomies);
 	}
 
 	public SeparatedValuesParser(RemoteSSHFileReference remoteSSHServer, String separator,
-			Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelNumerator,
+			Map<QuantificationLabel, QuantCondition> conditionsByLabels, QuantificationLabel labelNumerator,
 			QuantificationLabel labelDenominator, boolean ignoreTaxonomies) throws FileNotFoundException {
-		super(remoteSSHServer, labelsByConditions, labelNumerator, labelDenominator);
+		super(remoteSSHServer, conditionsByLabels, labelNumerator, labelDenominator);
 		this.separator = separator;
 		setIgnoreTaxonomies(ignoreTaxonomies);
 	}
 
 	public SeparatedValuesParser(File xmlFile, String separator,
-			Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelNumerator,
+			Map<QuantificationLabel, QuantCondition> conditionsByLabels, QuantificationLabel labelNumerator,
 			QuantificationLabel labelDenominator, boolean ignoreTaxonomies) throws FileNotFoundException {
-		super(xmlFile, labelsByConditions, labelNumerator, labelDenominator);
+		super(xmlFile, conditionsByLabels, labelNumerator, labelDenominator);
 		this.separator = separator;
 		setIgnoreTaxonomies(ignoreTaxonomies);
 	}
 
 	public SeparatedValuesParser(File[] xmlFiles, String separator,
-			Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelNumerator,
+			Map<QuantificationLabel, QuantCondition> conditionsByLabels, QuantificationLabel labelNumerator,
 			QuantificationLabel labelDenominator, boolean ignoreTaxonomies) throws FileNotFoundException {
-		super(xmlFiles, labelsByConditions, labelNumerator, labelDenominator);
+		super(xmlFiles, conditionsByLabels, labelNumerator, labelDenominator);
 		this.separator = separator;
 		setIgnoreTaxonomies(ignoreTaxonomies);
 	}
 
 	public SeparatedValuesParser(File[] xmlFiles, String separator,
-			Map<QuantCondition, QuantificationLabel>[] labelsByConditions, QuantificationLabel[] labelNumerator,
+			Map<QuantificationLabel, QuantCondition>[] conditionsByLabels, QuantificationLabel[] labelNumerator,
 			QuantificationLabel[] labelDenominator, boolean ignoreTaxonomies) throws FileNotFoundException {
-		super(xmlFiles, labelsByConditions, labelNumerator, labelDenominator);
+		super(xmlFiles, conditionsByLabels, labelNumerator, labelDenominator);
 		this.separator = separator;
 		setIgnoreTaxonomies(ignoreTaxonomies);
 	}
 
 	public SeparatedValuesParser(Collection<File> xmlFiles, String separator,
-			Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelNumerator,
+			Map<QuantificationLabel, QuantCondition> conditionsByLabels, QuantificationLabel labelNumerator,
 			QuantificationLabel labelDenominator, boolean ignoreTaxonomies) throws FileNotFoundException {
-		super(xmlFiles, labelsByConditions, labelNumerator, labelDenominator);
+		super(xmlFiles, conditionsByLabels, labelNumerator, labelDenominator);
 		this.separator = separator;
 		setIgnoreTaxonomies(ignoreTaxonomies);
 	}
@@ -133,12 +132,8 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 		int numDecoy = 0;
 		boolean someValidFile = false;
 		for (final RemoteSSHFileReference remoteFileRetriever : remoteFileRetrievers) {
-			final Map<QuantCondition, QuantificationLabel> labelsByConditions = labelsByConditionsByFile
+			final Map<QuantificationLabel, QuantCondition> conditionsByLabels = conditionsByLabelsByFile
 					.get(remoteFileRetriever);
-			final Map<QuantificationLabel, QuantCondition> conditionsByLabels = new THashMap<QuantificationLabel, QuantCondition>();
-			for (final QuantCondition cond : labelsByConditions.keySet()) {
-				conditionsByLabels.put(labelsByConditions.get(cond), cond);
-			}
 
 			final QuantificationLabel labelNumerator = ratioDescriptorsByFile.get(remoteFileRetriever).get(0)
 					.getLabel1();
@@ -211,9 +206,8 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 								continue;
 							}
 						}
-						processPSMLine(psmID, seq, ratio, ratioWeigth, proteinAcc, conditionsByLabels,
-								labelsByConditions, labelNumerator, labelDenominator, experimentKey,
-								remoteFileRetriever);
+						processPSMLine(psmID, seq, ratio, ratioWeigth, proteinAcc, conditionsByLabels, labelNumerator,
+								labelDenominator, experimentKey, remoteFileRetriever);
 					}
 
 				}
@@ -265,9 +259,8 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 
 	private void processPSMLine(String psmId, String sequence, Double nonLogRatioValue, Double ratioWeigth,
 			String proteinACC, Map<QuantificationLabel, QuantCondition> conditionsByLabels,
-			Map<QuantCondition, QuantificationLabel> labelsByConditions, QuantificationLabel labelNumerator,
-			QuantificationLabel labelDenominator, String experimentKey, RemoteSSHFileReference remoteFileRetriever)
-			throws IOException, DBIndexStoreException {
+			QuantificationLabel labelNumerator, QuantificationLabel labelDenominator, String experimentKey,
+			RemoteSSHFileReference remoteFileRetriever) throws IOException, DBIndexStoreException {
 
 		// new psm
 
@@ -296,12 +289,12 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 		}
 		QuantifiedPSMInterface quantifiedPSM = null;
 		// if (!isGetPTMInProteinMap()) {
-		// quantifiedPSM = new QuantifiedPSM(sequence, labelsByConditions,
+		// quantifiedPSM = new QuantifiedPSM(sequence, conditionsByLabels,
 		// peptideToSpectraMap, scanNumber,
 		// chargeState, rawFileName, false);
 		// } else {
-		quantifiedPSM = new QuantifiedPSM(sequence, labelsByConditions, peptideToSpectraMap, scanNumber, chargeState,
-				rawFileName, false, isDistinguishModifiedSequences(), isChargeSensible());
+		quantifiedPSM = new QuantifiedPSM(sequence, peptideToSpectraMap, scanNumber, chargeState, rawFileName, false,
+				isDistinguishModifiedSequences(), isChargeSensible());
 		// }
 		quantifiedPSM.getFileNames().add(inputFileName);
 		final String psmKey = KeyUtils.getInstance().getSpectrumKey(quantifiedPSM, isDistinguishModifiedSequences(),

@@ -51,7 +51,6 @@ public class IsobaricQuantifiedPSM extends AbstractPSM implements QuantifiedPSMI
 	private Set<QuantRatio> quantRatios;
 	private final Collection<IonExclusion> ionExclusions;
 	private static int scanNum = 0;
-	private final Map<QuantCondition, QuantificationLabel> labelsByConditions;
 	private final Map<QuantificationLabel, QuantCondition> conditionsByLabels;
 	private final Map<String, IonCountRatio> countRatiosByConditionKey = new THashMap<String, IonCountRatio>();
 	private final Set<String> fileNames = new THashSet<String>();
@@ -72,7 +71,7 @@ public class IsobaricQuantifiedPSM extends AbstractPSM implements QuantifiedPSMI
 	 * @param string
 	 * @throws IOException
 	 */
-	public IsobaricQuantifiedPSM(Peptide peptide, Map<QuantCondition, QuantificationLabel> labelsByConditions,
+	public IsobaricQuantifiedPSM(Peptide peptide, Map<QuantificationLabel, QuantCondition> conditionsByLabels,
 			Collection<IonExclusion> ionExclusions, Set<Character> quantifiedSites, boolean distinguishModifiedSequence,
 			boolean chargeStateSensible) {
 		super(distinguishModifiedSequence, chargeStateSensible);
@@ -80,13 +79,8 @@ public class IsobaricQuantifiedPSM extends AbstractPSM implements QuantifiedPSMI
 		this.ionExclusions = ionExclusions;
 		setScanNumber(peptide.getScan());
 		setSequence(peptide.getSeq());
-		this.labelsByConditions = labelsByConditions;
+		this.conditionsByLabels = conditionsByLabels;
 		this.quantifiedSites = quantifiedSites;
-		conditionsByLabels = new THashMap<QuantificationLabel, QuantCondition>();
-		for (final QuantCondition condition : labelsByConditions.keySet()) {
-			final QuantificationLabel quantificationLabel = labelsByConditions.get(condition);
-			conditionsByLabels.put(quantificationLabel, condition);
-		}
 
 		process();
 		setKey(QuantKeyUtils.getInstance().getSpectrumKey(this, distinguishModifiedSequence, chargeStateSensible));
