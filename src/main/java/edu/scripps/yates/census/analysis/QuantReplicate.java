@@ -2,29 +2,26 @@ package edu.scripps.yates.census.analysis;
 
 import java.io.FileNotFoundException;
 import java.util.Map;
+import java.util.Set;
 
 import edu.scripps.yates.census.read.model.IonSerie.IonSerieType;
 import edu.scripps.yates.census.read.model.interfaces.IsobaricQuantParser;
 import edu.scripps.yates.census.read.model.interfaces.QuantParser;
+import edu.scripps.yates.census.read.util.QuantUtils;
 import edu.scripps.yates.census.read.util.QuantificationLabel;
 import gnu.trove.map.hash.THashMap;
 
 public class QuantReplicate {
-	private final Map<QuantCondition, QuantificationLabel> labelsByConditions = new THashMap<QuantCondition, QuantificationLabel>();
 	private final Map<QuantificationLabel, QuantCondition> conditionsByLabels = new THashMap<QuantificationLabel, QuantCondition>();
 	private final String name;
 	private final QuantParser parser;
 
 	public QuantReplicate(String name, QuantParser quantParser,
-			Map<QuantCondition, QuantificationLabel> labelsByConditions) throws FileNotFoundException {
+			Map<QuantificationLabel, QuantCondition> conditionsByLabels) throws FileNotFoundException {
 		this.name = name;
 		parser = quantParser;
 
-		this.labelsByConditions.putAll(labelsByConditions);
-
-		for (QuantCondition cond : labelsByConditions.keySet()) {
-			conditionsByLabels.put(labelsByConditions.get(cond), cond);
-		}
+		this.conditionsByLabels.putAll(conditionsByLabels);
 	}
 
 	public void addIonExclusion(IonSerieType serieType, int ionNumber) {
@@ -38,8 +35,8 @@ public class QuantReplicate {
 	/**
 	 * @return the labelsByConditions
 	 */
-	public Map<QuantCondition, QuantificationLabel> getLabelsByConditions() {
-		return labelsByConditions;
+	public Map<QuantCondition, Set<QuantificationLabel>> getLabelsByConditions() {
+		return QuantUtils.getLabelsByConditions(conditionsByLabels);
 	}
 
 	/**
