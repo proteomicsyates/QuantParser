@@ -29,7 +29,6 @@ import edu.scripps.yates.utilities.proteomicsmodel.AbstractPSM;
 import edu.scripps.yates.utilities.proteomicsmodel.Protein;
 import edu.scripps.yates.utilities.proteomicsmodel.Ratio;
 import edu.scripps.yates.utilities.proteomicsmodel.enums.AggregationLevel;
-import edu.scripps.yates.utilities.proteomicsmodel.factories.AmountEx;
 import edu.scripps.yates.utilities.sequence.PositionInPeptide;
 import edu.scripps.yates.utilities.strings.StringUtils;
 import gnu.trove.list.array.TDoubleArrayList;
@@ -183,8 +182,9 @@ public class IsobaricQuantifiedPSM extends AbstractPSM implements QuantifiedPSMI
 			final Set<Ion> ions = getIonsByCondition().get(condition);
 			if (ions != null) {
 				for (final Ion ion : ions) {
-					final AmountEx amount = new AmountEx(ion.getIntensity(),
-							edu.scripps.yates.utilities.proteomicsmodel.enums.AmountType.INTENSITY, condition);
+					final QuantAmount amount = new QuantAmount(ion.getIntensity(),
+							edu.scripps.yates.utilities.proteomicsmodel.enums.AmountType.INTENSITY, condition,
+							ion.getLabel());
 					// singleton or not
 					final boolean singleton = ion.isSingleton();
 					amount.setSingleton(singleton);

@@ -3,6 +3,7 @@ package edu.scripps.yates.census.read.model;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import edu.scripps.yates.census.analysis.QuantCondition;
+import edu.scripps.yates.census.read.util.QuantificationLabel;
 import edu.scripps.yates.utilities.proteomicsmodel.Amount;
 import edu.scripps.yates.utilities.proteomicsmodel.Condition;
 import edu.scripps.yates.utilities.proteomicsmodel.enums.AmountType;
@@ -18,14 +19,16 @@ public class QuantAmount implements Amount {
 
 	private Boolean manualSpc = false;
 	private QuantCondition quantCondition;
+	private QuantificationLabel label;
 	private Condition condition;
 	private int hashCode = -1;
 
-	public QuantAmount(double value, AmountType amountType, QuantCondition condition) {
+	public QuantAmount(double value, AmountType amountType, QuantCondition condition, QuantificationLabel label) {
 
 		this.value = value;
 		this.amountType = amountType;
 		quantCondition = condition;
+		this.setLabel(label);
 	}
 
 	/**
@@ -161,6 +164,14 @@ public class QuantAmount implements Amount {
 	@Override
 	public void setCondition(Condition condition) {
 		this.condition = condition;
+	}
+
+	public QuantificationLabel getLabel() {
+		return label;
+	}
+
+	public void setLabel(QuantificationLabel label) {
+		this.label = label;
 	}
 
 }

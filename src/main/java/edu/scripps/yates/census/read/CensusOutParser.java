@@ -1161,14 +1161,14 @@ public class CensusOutParser extends AbstractQuantParser {
 					if (mapValues.containsKey(header)) {
 						final Double normalizedIntensity = Double.valueOf(mapValues.get(header));
 						final QuantAmount amount = new QuantAmount(normalizedIntensity, AmountType.NORMALIZED_INTENSITY,
-								conditionsByLabels.get(label));
+								conditionsByLabels.get(label), label);
 						quantifiedPSM.addAmount(amount);
 					}
 					header = getHeaderForPeptideRawIntensityInTMT6Plex(label, sLineHeaderList);
 					if (mapValues.containsKey(header)) {
 						final Double rawIntensity = Double.valueOf(mapValues.get(header));
 						final QuantAmount amount = new QuantAmount(rawIntensity, AmountType.INTENSITY,
-								conditionsByLabels.get(label));
+								conditionsByLabels.get(label), label);
 						quantifiedPSM.addAmount(amount);
 					}
 				}
@@ -1184,14 +1184,14 @@ public class CensusOutParser extends AbstractQuantParser {
 					if (mapValues.containsKey(header)) {
 						final Double normalizedIntensity = Double.valueOf(mapValues.get(header));
 						final QuantAmount amount = new QuantAmount(normalizedIntensity, AmountType.NORMALIZED_INTENSITY,
-								conditionsByLabels.get(label));
+								conditionsByLabels.get(label), label);
 						quantifiedPSM.addAmount(amount);
 					}
 					header = getHeaderForPeptideRawIntensityInTMT10Plex(label, sLineHeaderList);
 					if (mapValues.containsKey(header)) {
 						final Double rawIntensity = Double.valueOf(mapValues.get(header));
 						final QuantAmount amount = new QuantAmount(rawIntensity, AmountType.INTENSITY,
-								conditionsByLabels.get(label));
+								conditionsByLabels.get(label), label);
 						quantifiedPSM.addAmount(amount);
 					}
 				}
@@ -1207,14 +1207,14 @@ public class CensusOutParser extends AbstractQuantParser {
 					if (mapValues.containsKey(header)) {
 						final Double normalizedIntensity = Double.valueOf(mapValues.get(header));
 						final QuantAmount amount = new QuantAmount(normalizedIntensity, AmountType.NORMALIZED_INTENSITY,
-								conditionsByLabels.get(label));
+								conditionsByLabels.get(label), label);
 						quantifiedPSM.addAmount(amount);
 					}
 					header = getHeaderForPeptideRawIntensityInTMT11Plex(label, sLineHeaderList);
 					if (mapValues.containsKey(header)) {
 						final Double rawIntensity = Double.valueOf(mapValues.get(header));
 						final QuantAmount amount = new QuantAmount(rawIntensity, AmountType.INTENSITY,
-								conditionsByLabels.get(label));
+								conditionsByLabels.get(label), label);
 						quantifiedPSM.addAmount(amount);
 					}
 				}
@@ -1225,8 +1225,10 @@ public class CensusOutParser extends AbstractQuantParser {
 			if (mapValues.containsKey(SAM_INT)) {
 				try {
 					final double value = Double.valueOf(mapValues.get(SAM_INT));
+					final QuantificationLabel lightLabel = conditionsByLabels.keySet().stream()
+							.filter(label -> label.isLight()).findAny().get();
 					final QuantAmount amount = new QuantAmount(value, AmountType.AREA,
-							getLightCondition(conditionsByLabels));
+							getLightCondition(conditionsByLabels), lightLabel);
 					if (singleton && amount.getValue() != 0.0) {
 						amount.setSingleton(true);
 					}
@@ -1249,6 +1251,20 @@ public class CensusOutParser extends AbstractQuantParser {
 							continue;
 						}
 						usedSuffixes.add(suffix);
+						QuantificationLabel label = null;
+						switch (suffix) {
+						case "_L":
+							label = QuantificationLabel.LIGHT;
+							break;
+						case "_M":
+							label = QuantificationLabel.MEDIUM;
+							break;
+						case "_H":
+							label = QuantificationLabel.HEAVY;
+							break;
+						default:
+							break;
+						}
 						final QuantCondition quantCondition = conditionsByIndividualRatioSuffixes.get(suffix);
 
 						if (mapValues.containsKey(PEAK_AREA + suffix)) {
@@ -1267,7 +1283,8 @@ public class CensusOutParser extends AbstractQuantParser {
 									differentValuesOfPeakArea.add(stringValue);
 								}
 								final double value = Double.valueOf(stringValue);
-								final QuantAmount amount = new QuantAmount(value, AmountType.AREA, quantCondition);
+								final QuantAmount amount = new QuantAmount(value, AmountType.AREA, quantCondition,
+										label);
 								if (singleton && amount.getValue() != 0.0) {
 									amount.setSingleton(true);
 								}
@@ -1287,7 +1304,7 @@ public class CensusOutParser extends AbstractQuantParser {
 				try {
 					final double value = Double.valueOf(mapValues.get(REF_INT));
 					final QuantAmount amount = new QuantAmount(value, AmountType.AREA,
-							getHeavyCondition(conditionsByLabels));
+							getHeavyCondition(conditionsByLabels), QuantificationLabel.HEAVY);
 					if (singleton && amount.getValue() != 0.0) {
 						amount.setSingleton(true);
 					}
@@ -1304,7 +1321,7 @@ public class CensusOutParser extends AbstractQuantParser {
 				try {
 					final double value = Double.valueOf(mapValues.get(AmountType.REGRESSION_FACTOR.name()));
 					final QuantAmount amount = new QuantAmount(value, AmountType.REGRESSION_FACTOR,
-							getLightCondition(conditionsByLabels));
+							getLightCondition(conditionsByLabels), QuantificationLabel.LIGHT);
 					// add amount to PSM
 					quantifiedPSM.addAmount(amount);
 				} catch (final NumberFormatException e) {
@@ -2224,14 +2241,14 @@ public class CensusOutParser extends AbstractQuantParser {
 				if (mapValues.containsKey(header)) {
 					final Double normalizedIntensity = Double.valueOf(mapValues.get(header));
 					final QuantAmount amount = new QuantAmount(normalizedIntensity, AmountType.NORMALIZED_INTENSITY,
-							conditionsByLabels.get(label));
+							conditionsByLabels.get(label), label);
 					quantifiedProtein.addAmount(amount);
 				}
 				header = getHeaderForProteinRawIntensityInTMT6Plex(label, pLineHeaderList);
 				if (mapValues.containsKey(header)) {
 					final Double rawIntensity = Double.valueOf(mapValues.get(header));
 					final QuantAmount amount = new QuantAmount(rawIntensity, AmountType.INTENSITY,
-							conditionsByLabels.get(label));
+							conditionsByLabels.get(label), label);
 					quantifiedProtein.addAmount(amount);
 				}
 			}
@@ -2244,14 +2261,14 @@ public class CensusOutParser extends AbstractQuantParser {
 				if (mapValues.containsKey(header)) {
 					final Double normalizedIntensity = Double.valueOf(mapValues.get(header));
 					final QuantAmount amount = new QuantAmount(normalizedIntensity, AmountType.NORMALIZED_INTENSITY,
-							conditionsByLabels.get(label));
+							conditionsByLabels.get(label), label);
 					quantifiedProtein.addAmount(amount);
 				}
 				header = getHeaderForProteinRawIntensityInTMT10Plex(label, pLineHeaderList);
 				if (mapValues.containsKey(header)) {
 					final Double rawIntensity = Double.valueOf(mapValues.get(header));
 					final QuantAmount amount = new QuantAmount(rawIntensity, AmountType.INTENSITY,
-							conditionsByLabels.get(label));
+							conditionsByLabels.get(label), label);
 					quantifiedProtein.addAmount(amount);
 				}
 			}
@@ -2264,14 +2281,14 @@ public class CensusOutParser extends AbstractQuantParser {
 				if (mapValues.containsKey(header)) {
 					final Double normalizedIntensity = Double.valueOf(mapValues.get(header));
 					final QuantAmount amount = new QuantAmount(normalizedIntensity, AmountType.NORMALIZED_INTENSITY,
-							conditionsByLabels.get(label));
+							conditionsByLabels.get(label), label);
 					quantifiedProtein.addAmount(amount);
 				}
 				header = getHeaderForProteinRawIntensityInTMT11Plex(label, pLineHeaderList);
 				if (mapValues.containsKey(header)) {
 					final Double rawIntensity = Double.valueOf(mapValues.get(header));
 					final QuantAmount amount = new QuantAmount(rawIntensity, AmountType.INTENSITY,
-							conditionsByLabels.get(label));
+							conditionsByLabels.get(label), label);
 					quantifiedProtein.addAmount(amount);
 				}
 			}
