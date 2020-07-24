@@ -134,7 +134,8 @@ public class QuantAmount implements Amount {
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof QuantAmount) {
-			return toString().equals(obj.toString());
+			final boolean equals = toString().equals(obj.toString());
+			return equals;
 		}
 		return super.equals(obj);
 	}
@@ -154,8 +155,9 @@ public class QuantAmount implements Amount {
 	 */
 	@Override
 	public String toString() {
-		return "QuantAmount [value=" + value + ", amountType=" + amountType + ", combinationType=" + combinationType
-				+ ", singleton=" + singleton + ", manualSpc=" + manualSpc + ", quantCondition=" + quantCondition + "]";
+		return "QuantAmount [value=" + value + ", label=" + label + ", amountType=" + amountType + ", combinationType="
+				+ combinationType + ", singleton=" + singleton + ", manualSpc=" + manualSpc + ", quantCondition="
+				+ quantCondition + "]";
 	}
 
 	/**
