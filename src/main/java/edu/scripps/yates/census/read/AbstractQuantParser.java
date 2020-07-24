@@ -157,8 +157,9 @@ public abstract class AbstractQuantParser implements QuantParser {
 			throw new FileNotFoundException(inputFile.getAbsolutePath() + " is not found in the file system");
 		}
 		final RemoteSSHFileReference remoteFileReference = new RemoteSSHFileReference(inputFile);
-		conditionsByLabelsByFile.put(remoteFileReference, conditionsByLabels);
-
+		if (conditionsByLabels != null) {
+			conditionsByLabelsByFile.put(remoteFileReference, conditionsByLabels);
+		}
 		remoteFileRetrievers.add(remoteFileReference);
 		// clearStaticInfo();
 		checkParameters();
@@ -176,9 +177,18 @@ public abstract class AbstractQuantParser implements QuantParser {
 	}
 
 	public AbstractQuantParser(File[] inputFiles, Map<QuantificationLabel, QuantCondition>[] conditionsByLabels,
-			QuantificationLabel[] labelNumerator, QuantificationLabel[] labelDenominator) throws FileNotFoundException {
+			QuantificationLabel[] labelsNumerator, QuantificationLabel[] labelsDenominator)
+			throws FileNotFoundException {
 		for (int i = 0; i < inputFiles.length; i++) {
-			addFile(inputFiles[i], conditionsByLabels[i], labelNumerator[i], labelDenominator[i]);
+			QuantificationLabel labelNumerator = null;
+			if (labelsNumerator != null && labelsNumerator.length > i) {
+				labelNumerator = labelsNumerator[i];
+			}
+			QuantificationLabel labelDenominator = null;
+			if (labelsDenominator != null && labelsDenominator.length > i) {
+				labelDenominator = labelsDenominator[i];
+			}
+			addFile(inputFiles[i], conditionsByLabels[i], labelNumerator, labelDenominator);
 		}
 	}
 
