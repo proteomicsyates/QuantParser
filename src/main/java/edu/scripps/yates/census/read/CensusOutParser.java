@@ -276,6 +276,18 @@ public class CensusOutParser extends AbstractQuantParser {
 		return ret;
 	}
 
+	public Map<RemoteSSHFileReference, Boolean> isTMT() {
+		final Map<RemoteSSHFileReference, Boolean> ret = new THashMap<RemoteSSHFileReference, Boolean>();
+		for (final RemoteSSHFileReference file : this.remoteFileRetrievers) {
+			if (isTMT6.get(file) || isTMT10.get(file) || isTMT11.get(file)) {
+				ret.put(file, true);
+			} else {
+				ret.put(file, false);
+			}
+		}
+		return ret;
+	}
+
 	public Map<RemoteSSHFileReference, Boolean> isTMT10() throws IOException {
 		if (isTMT10 == null) {
 			isTMT10 = new THashMap<RemoteSSHFileReference, Boolean>();
@@ -628,6 +640,9 @@ public class CensusOutParser extends AbstractQuantParser {
 	}
 
 	private void checkLabels() throws IOException, WrongTMTLabels {
+		if (conditionsByLabelsByFile == null || conditionsByLabelsByFile.isEmpty()) {
+			return;
+		}
 		for (final RemoteSSHFileReference remoteFile : remoteFileRetrievers) {
 			final Set<QuantificationLabel> labels = conditionsByLabelsByFile.get(remoteFile).keySet();
 			if (isTMT6().containsKey(remoteFile) && isTMT6().get(remoteFile)) {
@@ -1149,10 +1164,9 @@ public class CensusOutParser extends AbstractQuantParser {
 				// no ratios
 			}
 			// PSM amounts
-
 			// TMT6PLEX
 			boolean isTMT6Plex = false;
-			if (!conditionsByLabels.isEmpty()) {
+			if (conditionsByLabels != null && !conditionsByLabels.isEmpty()) {
 				isTMT6Plex = isTMT6Plex(conditionsByLabels.keySet());
 			}
 			if (isTMT6Plex) {
@@ -1175,7 +1189,7 @@ public class CensusOutParser extends AbstractQuantParser {
 			}
 			// TMT10PLEX
 			boolean isTMT10Plex = false;
-			if (!conditionsByLabels.isEmpty()) {
+			if (conditionsByLabels != null && !conditionsByLabels.isEmpty()) {
 				isTMT10Plex = isTMT10Plex(conditionsByLabels.keySet());
 			}
 			if (isTMT10Plex) {
@@ -1198,7 +1212,7 @@ public class CensusOutParser extends AbstractQuantParser {
 			}
 			// TMT11PLEX
 			boolean isTMT11Plex = false;
-			if (!conditionsByLabels.isEmpty()) {
+			if (conditionsByLabels != null && !conditionsByLabels.isEmpty()) {
 				isTMT11Plex = isTMT11Plex(conditionsByLabels.keySet());
 			}
 			if (isTMT11Plex) {
@@ -2231,9 +2245,11 @@ public class CensusOutParser extends AbstractQuantParser {
 		} else {
 			// no ratios
 		}
-
 		// TMT6PLEX
-		final boolean isTMT6Plex = isTMT6Plex(conditionsByLabels.keySet());
+		boolean isTMT6Plex = false;
+		if (conditionsByLabels != null && !conditionsByLabels.isEmpty()) {
+			isTMT6Plex = isTMT6Plex(conditionsByLabels.keySet());
+		}
 		if (isTMT6Plex) {
 			for (final QuantificationLabel label : QuantificationLabel.getTMT6PlexLabels()) {
 
@@ -2254,7 +2270,10 @@ public class CensusOutParser extends AbstractQuantParser {
 			}
 		}
 		// TMT10PLEX
-		final boolean isTMT10Plex = isTMT10Plex(conditionsByLabels.keySet());
+		boolean isTMT10Plex = false;
+		if (conditionsByLabels != null && !conditionsByLabels.isEmpty()) {
+			isTMT10Plex = isTMT10Plex(conditionsByLabels.keySet());
+		}
 		if (isTMT10Plex) {
 			for (final QuantificationLabel label : QuantificationLabel.getTMT10PlexLabels()) {
 				String header = getHeaderForProteinNormalizedIntensityInTMT10Plex(label, pLineHeaderList);
@@ -2274,7 +2293,10 @@ public class CensusOutParser extends AbstractQuantParser {
 			}
 		}
 		// TMT11PLEX
-		final boolean isTMT11Plex = isTMT11Plex(conditionsByLabels.keySet());
+		boolean isTMT11Plex = false;
+		if (conditionsByLabels != null && !conditionsByLabels.isEmpty()) {
+			isTMT11Plex = isTMT11Plex(conditionsByLabels.keySet());
+		}
 		if (isTMT11Plex) {
 			for (final QuantificationLabel label : QuantificationLabel.getTMT11PlexLabels()) {
 				String header = getHeaderForProteinNormalizedIntensityInTMT10Plex(label, pLineHeaderList);
@@ -2293,6 +2315,7 @@ public class CensusOutParser extends AbstractQuantParser {
 				}
 			}
 		}
+
 		return quantifiedProtein;
 
 	}
