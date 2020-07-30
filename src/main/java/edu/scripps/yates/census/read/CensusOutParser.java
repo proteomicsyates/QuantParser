@@ -130,6 +130,8 @@ public class CensusOutParser extends AbstractQuantParser {
 
 	private Map<RemoteSSHFileReference, Boolean> isTMT11;
 
+	private Map<RemoteSSHFileReference, Boolean> isTMT4;
+
 	public CensusOutParser() {
 		super();
 	}
@@ -645,7 +647,14 @@ public class CensusOutParser extends AbstractQuantParser {
 		}
 		for (final RemoteSSHFileReference remoteFile : remoteFileRetrievers) {
 			final Set<QuantificationLabel> labels = conditionsByLabelsByFile.get(remoteFile).keySet();
-			if (isTMT6().containsKey(remoteFile) && isTMT6().get(remoteFile)) {
+			if (isTMT4().containsKey(remoteFile) && isTMT4().get(remoteFile)) {
+				final List<QuantificationLabel> tmt4 = QuantificationLabel.getTMT4PlexLabels();
+				for (final QuantificationLabel label : tmt4) {
+					if (!labels.contains(label)) {
+						throw new WrongTMTLabels("Labels in the constructor must have all TMT4 labels");
+					}
+				}
+			} else if (isTMT6().containsKey(remoteFile) && isTMT6().get(remoteFile)) {
 				final List<QuantificationLabel> tmt6 = QuantificationLabel.getTMT6PlexLabels();
 				for (final QuantificationLabel label : tmt6) {
 					if (!labels.contains(label)) {
@@ -1164,6 +1173,29 @@ public class CensusOutParser extends AbstractQuantParser {
 				// no ratios
 			}
 			// PSM amounts
+			// TMT4PLEX
+			boolean isTMT4Plex = false;
+			if (conditionsByLabels != null && !conditionsByLabels.isEmpty()) {
+				isTMT4Plex = isTMT4Plex(conditionsByLabels.keySet());
+			}
+			if (isTMT4Plex) {
+				for (final QuantificationLabel label : QuantificationLabel.getTMT4PlexLabels()) {
+					String header = getHeaderForPeptideNormalizedIntensityInTMT4Plex(label, sLineHeaderList);
+					if (mapValues.containsKey(header)) {
+						final Double normalizedIntensity = Double.valueOf(mapValues.get(header));
+						final QuantAmount amount = new QuantAmount(normalizedIntensity, AmountType.NORMALIZED_INTENSITY,
+								conditionsByLabels.get(label), label);
+						quantifiedPSM.addAmount(amount);
+					}
+					header = getHeaderForPeptideRawIntensityInTMT4Plex(label, sLineHeaderList);
+					if (mapValues.containsKey(header)) {
+						final Double rawIntensity = Double.valueOf(mapValues.get(header));
+						final QuantAmount amount = new QuantAmount(rawIntensity, AmountType.INTENSITY,
+								conditionsByLabels.get(label), label);
+						quantifiedPSM.addAmount(amount);
+					}
+				}
+			}
 			// TMT6PLEX
 			boolean isTMT6Plex = false;
 			if (conditionsByLabels != null && !conditionsByLabels.isEmpty()) {
@@ -1233,26 +1265,27 @@ public class CensusOutParser extends AbstractQuantParser {
 					}
 				}
 			}
-			// SAM_INT
-			// light peptide peak area from reconstructed
-			// chromatogram
-			if (mapValues.containsKey(SAM_INT)) {
-				try {
-					final double value = Double.valueOf(mapValues.get(SAM_INT));
-					final QuantificationLabel lightLabel = conditionsByLabels.keySet().stream()
-							.filter(label -> label.isLight()).findAny().get();
-					final QuantAmount amount = new QuantAmount(value, AmountType.AREA,
-							getLightCondition(conditionsByLabels), lightLabel);
-					if (singleton && amount.getValue() != 0.0) {
-						amount.setSingleton(true);
+			if (conditionsByLabels != null) {
+				// SAM_INT
+				// light peptide peak area from reconstructed
+				// chromatogram
+				if (mapValues.containsKey(SAM_INT)) {
+					try {
+						final double value = Double.valueOf(mapValues.get(SAM_INT));
+						final QuantificationLabel lightLabel = conditionsByLabels.keySet().stream()
+								.filter(label -> label.isLight()).findAny().get();
+						final QuantAmount amount = new QuantAmount(value, AmountType.AREA,
+								getLightCondition(conditionsByLabels), lightLabel);
+						if (singleton && amount.getValue() != 0.0) {
+							amount.setSingleton(true);
+						}
+						// add amount to PSM
+						quantifiedPSM.addAmount(amount);
+					} catch (final NumberFormatException e) {
+						// skip this
 					}
-					// add amount to PSM
-					quantifiedPSM.addAmount(amount);
-				} catch (final NumberFormatException e) {
-					// skip this
 				}
 			}
-
 			// get the peak areas of all the conditions (all the labels)
 			if (ratioDescriptors != null) {
 				final Set<String> usedSuffixes = new HashSet<String>();
@@ -1311,38 +1344,40 @@ public class CensusOutParser extends AbstractQuantParser {
 					}
 				}
 			}
-			// REF_INT
-			// heavy peptide peak area from reconstructed
-			// chromatogram
-			if (mapValues.containsKey(REF_INT)) {
-				try {
-					final double value = Double.valueOf(mapValues.get(REF_INT));
-					final QuantAmount amount = new QuantAmount(value, AmountType.AREA,
-							getHeavyCondition(conditionsByLabels), QuantificationLabel.HEAVY);
-					if (singleton && amount.getValue() != 0.0) {
-						amount.setSingleton(true);
+			if (conditionsByLabels != null) {
+				// REF_INT
+				// heavy peptide peak area from reconstructed
+				// chromatogram
+				if (mapValues.containsKey(REF_INT)) {
+					try {
+						final double value = Double.valueOf(mapValues.get(REF_INT));
+						final QuantAmount amount = new QuantAmount(value, AmountType.AREA,
+								getHeavyCondition(conditionsByLabels), QuantificationLabel.HEAVY);
+						if (singleton && amount.getValue() != 0.0) {
+							amount.setSingleton(true);
+						}
+						// add amount to PSM
+						quantifiedPSM.addAmount(amount);
+					} catch (final NumberFormatException e) {
+						// skip this
 					}
-					// add amount to PSM
-					quantifiedPSM.addAmount(amount);
-				} catch (final NumberFormatException e) {
-					// skip this
 				}
 			}
-
-			// REGRESSION_FACTOR
-			// regression score (r)
-			if (mapValues.containsKey(AmountType.REGRESSION_FACTOR.name())) {
-				try {
-					final double value = Double.valueOf(mapValues.get(AmountType.REGRESSION_FACTOR.name()));
-					final QuantAmount amount = new QuantAmount(value, AmountType.REGRESSION_FACTOR,
-							getLightCondition(conditionsByLabels), QuantificationLabel.LIGHT);
-					// add amount to PSM
-					quantifiedPSM.addAmount(amount);
-				} catch (final NumberFormatException e) {
-					// skip this
+			if (conditionsByLabels != null) {
+				// REGRESSION_FACTOR
+				// regression score (r)
+				if (mapValues.containsKey(AmountType.REGRESSION_FACTOR.name())) {
+					try {
+						final double value = Double.valueOf(mapValues.get(AmountType.REGRESSION_FACTOR.name()));
+						final QuantAmount amount = new QuantAmount(value, AmountType.REGRESSION_FACTOR,
+								getLightCondition(conditionsByLabels), QuantificationLabel.LIGHT);
+						// add amount to PSM
+						quantifiedPSM.addAmount(amount);
+					} catch (final NumberFormatException e) {
+						// skip this
+					}
 				}
 			}
-
 			// PTM localization score
 			if (localizationScore != null) {
 				parseLocalizationScore(localizationScore, quantifiedPSM);
@@ -1539,6 +1574,15 @@ public class CensusOutParser extends AbstractQuantParser {
 		}
 	}
 
+	private boolean isTMT4Plex(Collection<QuantificationLabel> labels) {
+		for (final QuantificationLabel label : labels) {
+			if (QuantificationLabel.isTMT4PLEX(label)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private boolean isTMT6Plex(Collection<QuantificationLabel> labels) {
 		for (final QuantificationLabel label : labels) {
 			if (QuantificationLabel.isTMT6PLEX(label)) {
@@ -1639,6 +1683,30 @@ public class CensusOutParser extends AbstractQuantParser {
 	 * @param label
 	 * @return
 	 */
+	private String getHeaderForPeptideNormalizedIntensityInTMT4Plex(QuantificationLabel label, List<String> headers) {
+		switch (label) {
+
+		case TMT_4PLEX_127:
+			return findStartingBy(headers, "norm_m/z_127.");
+		case TMT_4PLEX_128:
+			return findStartingBy(headers, "norm_m/z_128.");
+		case TMT_4PLEX_129:
+			return findStartingBy(headers, "norm_m/z_129.");
+		case TMT_4PLEX_130:
+			return findStartingBy(headers, "norm_m/z_130.");
+
+		default:
+			return null;
+		}
+	}
+
+	/**
+	 * Gets how the header of the peptide normalized intensity for each channel
+	 * should start
+	 *
+	 * @param label
+	 * @return
+	 */
 	private String getHeaderForPeptideNormalizedIntensityInTMT6Plex(QuantificationLabel label, List<String> headers) {
 		switch (label) {
 		case TMT_6PLEX_126:
@@ -1653,6 +1721,30 @@ public class CensusOutParser extends AbstractQuantParser {
 			return findStartingBy(headers, "norm_m/z_130.");
 		case TMT_6PLEX_131:
 			return findStartingBy(headers, "norm_m/z_131.");
+		default:
+			return null;
+		}
+	}
+
+	/**
+	 * Gets how the header of the peptide raw intensity for each channel should
+	 * start
+	 *
+	 * @param label
+	 * @return
+	 */
+	private String getHeaderForPeptideRawIntensityInTMT4Plex(QuantificationLabel label, List<String> headers) {
+		switch (label) {
+
+		case TMT_4PLEX_127:
+			return findStartingBy(headers, "m/z_127.");
+		case TMT_4PLEX_128:
+			return findStartingBy(headers, "m/z_128.");
+		case TMT_4PLEX_129:
+			return findStartingBy(headers, "m/z_129.");
+		case TMT_4PLEX_130:
+			return findStartingBy(headers, "m/z_130.");
+
 		default:
 			return null;
 		}
@@ -1841,6 +1933,31 @@ public class CensusOutParser extends AbstractQuantParser {
 	 * @param mapValues
 	 * @return
 	 */
+	private String getHeaderForProteinNormalizedIntensityInTMT4Plex(QuantificationLabel label, List<String> headers) {
+		switch (label) {
+
+		case TMT_4PLEX_127:
+			return findStartingBy(headers, "norm_total m/z_127.");
+		case TMT_4PLEX_128:
+			return findStartingBy(headers, "norm_total m/z_128.");
+		case TMT_4PLEX_129:
+			return findStartingBy(headers, "norm_total m/z_129.");
+		case TMT_4PLEX_130:
+			return findStartingBy(headers, "norm_total m/z_130.");
+
+		default:
+			return null;
+		}
+	}
+
+	/**
+	 * Gets how the header of the protein normalized intensity for each channel
+	 * should start
+	 *
+	 * @param label
+	 * @param mapValues
+	 * @return
+	 */
 	private String getHeaderForProteinNormalizedIntensityInTMT6Plex(QuantificationLabel label, List<String> headers) {
 		switch (label) {
 		case TMT_6PLEX_126:
@@ -1855,6 +1972,31 @@ public class CensusOutParser extends AbstractQuantParser {
 			return findStartingBy(headers, "norm_total m/z_130.");
 		case TMT_6PLEX_131:
 			return findStartingBy(headers, "norm_total m/z_131.");
+		default:
+			return null;
+		}
+	}
+
+	/**
+	 * Gets how the header of the protein raw intensity for each channel should
+	 * start
+	 *
+	 * @param label
+	 * @param mapValues
+	 * @return
+	 */
+	private String getHeaderForProteinRawIntensityInTMT4Plex(QuantificationLabel label, List<String> headers) {
+		switch (label) {
+
+		case TMT_4PLEX_127:
+			return findStartingBy(headers, "total m/z_127.");
+		case TMT_4PLEX_128:
+			return findStartingBy(headers, "total m/z_128.");
+		case TMT_4PLEX_129:
+			return findStartingBy(headers, "total m/z_129.");
+		case TMT_4PLEX_130:
+			return findStartingBy(headers, "total m/z_130.");
+
 		default:
 			return null;
 		}
@@ -2245,6 +2387,30 @@ public class CensusOutParser extends AbstractQuantParser {
 		} else {
 			// no ratios
 		}
+		// TMT4PLEX
+		boolean isTMT4Plex = false;
+		if (conditionsByLabels != null && !conditionsByLabels.isEmpty()) {
+			isTMT4Plex = isTMT6Plex(conditionsByLabels.keySet());
+		}
+		if (isTMT4Plex) {
+			for (final QuantificationLabel label : QuantificationLabel.getTMT4PlexLabels()) {
+
+				String header = getHeaderForProteinNormalizedIntensityInTMT4Plex(label, pLineHeaderList);
+				if (mapValues.containsKey(header)) {
+					final Double normalizedIntensity = Double.valueOf(mapValues.get(header));
+					final QuantAmount amount = new QuantAmount(normalizedIntensity, AmountType.NORMALIZED_INTENSITY,
+							conditionsByLabels.get(label), label);
+					quantifiedProtein.addAmount(amount);
+				}
+				header = getHeaderForProteinRawIntensityInTMT4Plex(label, pLineHeaderList);
+				if (mapValues.containsKey(header)) {
+					final Double rawIntensity = Double.valueOf(mapValues.get(header));
+					final QuantAmount amount = new QuantAmount(rawIntensity, AmountType.INTENSITY,
+							conditionsByLabels.get(label), label);
+					quantifiedProtein.addAmount(amount);
+				}
+			}
+		}
 		// TMT6PLEX
 		boolean isTMT6Plex = false;
 		if (conditionsByLabels != null && !conditionsByLabels.isEmpty()) {
@@ -2427,6 +2593,89 @@ public class CensusOutParser extends AbstractQuantParser {
 	 */
 	public void setSkipSingletons(boolean skipSingletons) {
 		this.skipSingletons = skipSingletons;
+	}
+
+	public Map<File, Boolean> isTMT4Files() throws IOException {
+		return getFileMapFromRemoteSSHFileReferenceMap(isTMT4());
+	}
+
+	public Map<File, Boolean> isTMT6Files() throws IOException {
+		return getFileMapFromRemoteSSHFileReferenceMap(isTMT6());
+	}
+
+	public Map<File, Boolean> isTMT10Files() throws IOException {
+		return getFileMapFromRemoteSSHFileReferenceMap(isTMT10());
+	}
+
+	public Map<File, Boolean> isTMT11Files() throws IOException {
+		return getFileMapFromRemoteSSHFileReferenceMap(isTMT11());
+	}
+
+	private Map<File, Boolean> getFileMapFromRemoteSSHFileReferenceMap(Map<RemoteSSHFileReference, Boolean> map) {
+		final Map<File, Boolean> ret = new THashMap<File, Boolean>();
+		for (final RemoteSSHFileReference file : map.keySet()) {
+			ret.put(file.getOutputFile(), map.get(file));
+		}
+		return ret;
+	}
+
+	public Map<RemoteSSHFileReference, Boolean> isTMT4() throws IOException {
+		if (isTMT4 == null) {
+			isTMT4 = new THashMap<RemoteSSHFileReference, Boolean>();
+			for (final RemoteSSHFileReference remoteFileRetriever : super.remoteFileRetrievers) {
+				BufferedReader br = null;
+				try {
+					br = new BufferedReader(
+							new InputStreamReader(new BufferedInputStream(remoteFileRetriever.getRemoteInputStream())));
+					String line;
+					final List<String> pLineHeaderList = new ArrayList<String>();
+					final List<String> sLineHeaderList = new ArrayList<String>();
+					final List<String> singletonSLineHeaderList = new ArrayList<String>();
+					while ((line = br.readLine()) != null) {
+						if (line.startsWith(H)) {
+							if (line.contains("\t")) {
+								final String[] split = line.split("\t");
+								// if second element is PLINE
+								if (split[1].equals(PLINE) && split[2].equals(LOCUS)) {
+									for (int i = 1; i < split.length; i++) {
+										pLineHeaderList.add(split[i]);
+									}
+								} else // if second element is SLINE
+								if (split[1].equals(SLINE) && split[2].equals(UNIQUE)) {
+									for (int i = 1; i < split.length; i++) {
+										sLineHeaderList.add(split[i]);
+									}
+								} else // if second element is &SLINE
+								if (split[1].equals(SINGLETON_SLINE) && split[2].equals(UNIQUE)) {
+									for (int i = 1; i < split.length; i++) {
+										if (split[i].equals(PVALUE)) {
+											continue; // SINGLETONG SLINE DOESNT
+														// HAVE PVALUES!
+										}
+										singletonSLineHeaderList.add(split[i]);
+									}
+								}
+							}
+						} else {
+							final List<String> tmtHeaders = getTMTHeaders(sLineHeaderList);
+							final boolean _isTMT4 = tmtHeaders.size() == 4;
+							isTMT4.put(remoteFileRetriever, _isTMT4);
+
+							break;
+						}
+					}
+
+				} catch (final IOException e) {
+					e.printStackTrace();
+					throw e;
+				} finally {
+					if (br != null) {
+						br.close();
+					}
+				}
+			}
+		}
+		return isTMT4;
 	}
 
 }
