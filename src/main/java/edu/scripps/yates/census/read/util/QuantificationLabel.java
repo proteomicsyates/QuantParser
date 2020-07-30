@@ -11,6 +11,12 @@ public enum QuantificationLabel {
 	HEAVY(false, false, true), //
 	MEDIUM(false, true, false), //
 	//
+	TMT_4PLEX_127(false, false, false), //
+	TMT_4PLEX_128(false, false, false), //
+	TMT_4PLEX_129(false, false, false), //
+	TMT_4PLEX_130(false, false, false), //
+
+	//
 	TMT_6PLEX_126(true, false, false), //
 	TMT_6PLEX_127(false, false, false), //
 	TMT_6PLEX_128(false, false, false), //
@@ -118,6 +124,10 @@ public enum QuantificationLabel {
 		return false;
 	}
 
+	public static boolean isTMT4PLEX(QuantificationLabel label) {
+		return getTMT4PlexLabels().contains(label);
+	}
+
 	public static boolean isTMT6PLEX(QuantificationLabel label) {
 		return getTMT6PlexLabels().contains(label);
 	}
@@ -128,6 +138,16 @@ public enum QuantificationLabel {
 
 	public static boolean isTMT11PLEX(QuantificationLabel label) {
 		return getTMT11PlexLabels().contains(label);
+	}
+
+	public static List<QuantificationLabel> getTMT4PlexLabels() {
+		final QuantificationLabel[] array = { QuantificationLabel.TMT_4PLEX_127, QuantificationLabel.TMT_4PLEX_128,
+				QuantificationLabel.TMT_4PLEX_129, QuantificationLabel.TMT_4PLEX_130 };
+		final List<QuantificationLabel> ret = new ArrayList<QuantificationLabel>();
+		for (final QuantificationLabel quantificationLabel : array) {
+			ret.add(quantificationLabel);
+		}
+		return ret;
 	}
 
 	public static List<QuantificationLabel> getTMT6PlexLabels() {
@@ -142,12 +162,11 @@ public enum QuantificationLabel {
 	}
 
 	public static List<QuantificationLabel> getTMT10PlexLabels() {
-		final QuantificationLabel[] array = { QuantificationLabel.TMT_10PLEX_126,
-				QuantificationLabel.TMT_10PLEX_127N, QuantificationLabel.TMT_10PLEX_127C,
-				QuantificationLabel.TMT_10PLEX_128N, QuantificationLabel.TMT_10PLEX_128C,
-				QuantificationLabel.TMT_10PLEX_129N, QuantificationLabel.TMT_10PLEX_129C,
-				QuantificationLabel.TMT_10PLEX_130N, QuantificationLabel.TMT_10PLEX_130C,
-				QuantificationLabel.TMT_10PLEX_131 };
+		final QuantificationLabel[] array = { QuantificationLabel.TMT_10PLEX_126, QuantificationLabel.TMT_10PLEX_127N,
+				QuantificationLabel.TMT_10PLEX_127C, QuantificationLabel.TMT_10PLEX_128N,
+				QuantificationLabel.TMT_10PLEX_128C, QuantificationLabel.TMT_10PLEX_129N,
+				QuantificationLabel.TMT_10PLEX_129C, QuantificationLabel.TMT_10PLEX_130N,
+				QuantificationLabel.TMT_10PLEX_130C, QuantificationLabel.TMT_10PLEX_131 };
 		final List<QuantificationLabel> ret = new ArrayList<QuantificationLabel>();
 		for (final QuantificationLabel quantificationLabel : array) {
 			ret.add(quantificationLabel);
@@ -156,12 +175,12 @@ public enum QuantificationLabel {
 	}
 
 	public static List<QuantificationLabel> getTMT11PlexLabels() {
-		final QuantificationLabel[] array = { QuantificationLabel.TMT_11PLEX_126,
-				QuantificationLabel.TMT_11PLEX_127N, QuantificationLabel.TMT_11PLEX_127C,
-				QuantificationLabel.TMT_11PLEX_128N, QuantificationLabel.TMT_11PLEX_128C,
-				QuantificationLabel.TMT_11PLEX_129N, QuantificationLabel.TMT_11PLEX_129C,
-				QuantificationLabel.TMT_11PLEX_130N, QuantificationLabel.TMT_11PLEX_130C,
-				QuantificationLabel.TMT_11PLEX_131, QuantificationLabel.TMT_11PLEX_131C };
+		final QuantificationLabel[] array = { QuantificationLabel.TMT_11PLEX_126, QuantificationLabel.TMT_11PLEX_127N,
+				QuantificationLabel.TMT_11PLEX_127C, QuantificationLabel.TMT_11PLEX_128N,
+				QuantificationLabel.TMT_11PLEX_128C, QuantificationLabel.TMT_11PLEX_129N,
+				QuantificationLabel.TMT_11PLEX_129C, QuantificationLabel.TMT_11PLEX_130N,
+				QuantificationLabel.TMT_11PLEX_130C, QuantificationLabel.TMT_11PLEX_131,
+				QuantificationLabel.TMT_11PLEX_131C };
 		final List<QuantificationLabel> ret = new ArrayList<QuantificationLabel>();
 		for (final QuantificationLabel quantificationLabel : array) {
 			ret.add(quantificationLabel);
