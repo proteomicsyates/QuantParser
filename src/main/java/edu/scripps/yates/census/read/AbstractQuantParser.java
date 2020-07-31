@@ -341,14 +341,14 @@ public abstract class AbstractQuantParser implements QuantParser {
 	}
 
 	/**
-	 * It clears the static maps by protein keys and psm keys in
-	 * {@link QuantifiedProteinInterface} and {@link QuantifiedPSMInterface}
-	 * classes.<br>
-	 * This method should be called at the beggining of an analysis in order to
-	 * create just one {@link QuantifiedProteinInterface} for all the replicates and
-	 * experiments for a given accession.
+	 * It clears the static quant maps<br>
+	 * It calls <code>StaticQuantMaps.clearInfo()</code> This method should be
+	 * called at the beginning of an analysis in order to create just one
+	 * {@link QuantifiedProteinInterface} for all the replicates and experiments for
+	 * a given accession.
 	 */
-	private void clearStaticInfo() {
+	public void clearStaticInfo() {
+		StaticQuantMaps.clearInfo();
 	}
 
 	protected void checkParameters() {
