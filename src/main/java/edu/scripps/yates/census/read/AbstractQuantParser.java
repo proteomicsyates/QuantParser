@@ -40,9 +40,7 @@ import edu.scripps.yates.utilities.proteomicsmodel.utils.KeyUtils;
 import edu.scripps.yates.utilities.remote.RemoteSSHFileReference;
 import edu.scripps.yates.utilities.sequence.PTMInProtein;
 import edu.scripps.yates.utilities.util.Pair;
-import gnu.trove.map.TObjectIntMap;
 import gnu.trove.map.hash.THashMap;
-import gnu.trove.map.hash.TObjectIntHashMap;
 import gnu.trove.set.hash.THashSet;
 
 public abstract class AbstractQuantParser implements QuantParser {
@@ -98,7 +96,7 @@ public abstract class AbstractQuantParser implements QuantParser {
 	private boolean chargeSensible = true;
 	private final Set<String> ratiosToCapture = new THashSet<String>();
 	private boolean reCalculatedIonsCountsReady = false;
-	private final TObjectIntMap<String> reCalculatedIonCounts = new TObjectIntHashMap<String>();
+	private final THashMap<String, Set<QuantifiedPSMInterface>> psmsByIonKey = new THashMap<String, Set<QuantifiedPSMInterface>>();
 
 	public boolean isDistinguishModifiedSequences() {
 		return distinguishModifiedSequences;
@@ -844,9 +842,16 @@ public abstract class AbstractQuantParser implements QuantParser {
 
 	@Override
 	public int getReCalculatedIonCount(QuantifiedPSMInterface psm) {
+		final Map<String, Set<QuantifiedPSMInterface>> psMsByIonKey2 = getPSMsByIonKey();
+		final String ionkey = KeyUtils.getInstance().getSequenceChargeKey(psm, true, true);
+		return psMsByIonKey2.get(ionkey).size();
+	}
+
+	@Override
+	public Map<String, Set<QuantifiedPSMInterface>> getPSMsByIonKey() {
 		if (!reCalculatedIonsCountsReady) {
 			try {
-				final Map<String, Set<QuantifiedPSMInterface>> psmsByIonKey = new THashMap<String, Set<QuantifiedPSMInterface>>();
+
 				getPSMMap().values().stream().forEach(psm2 -> {
 					final String ionkey = psm2.getFullSequence() + "-" + psm2.getChargeState();
 					if (!psmsByIonKey.containsKey(ionkey)) {
@@ -854,16 +859,13 @@ public abstract class AbstractQuantParser implements QuantParser {
 					}
 					psmsByIonKey.get(ionkey).add(psm2);
 				});
-				for (final String ionKey : psmsByIonKey.keySet()) {
-					final int size = psmsByIonKey.get(ionKey).size();
-					reCalculatedIonCounts.put(ionKey, size);
-				}
+
 				reCalculatedIonsCountsReady = true;
 			} catch (final QuantParserException e) {
 			}
 		}
-		final String ionkey = psm.getFullSequence() + "-" + psm.getChargeState();
-		return reCalculatedIonCounts.get(ionkey);
+
+		return psmsByIonKey;
 	}
 
 	@Override

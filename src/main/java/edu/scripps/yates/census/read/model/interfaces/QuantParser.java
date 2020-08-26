@@ -73,6 +73,14 @@ public interface QuantParser {
 	int getReCalculatedIonCount(QuantifiedPSMInterface psm);
 
 	/**
+	 * Returns a map of psms per ion key (full sequence + charge) in this parser
+	 * 
+	 * @param psm
+	 * @return
+	 */
+	Map<String, Set<QuantifiedPSMInterface>> getPSMsByIonKey();
+
+	/**
 	 * Regardless of how the peptides are formed (using distinguish by charge state
 	 * or PTMs), this will return the ion count of the ion that represent this
 	 * peptide, that is, the peptide's full sequence + charge
