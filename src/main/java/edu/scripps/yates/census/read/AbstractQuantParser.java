@@ -257,10 +257,11 @@ public abstract class AbstractQuantParser implements QuantParser {
 	public void addFile(RemoteSSHFileReference remoteFileReference,
 			Map<QuantificationLabel, QuantCondition> conditionsByLabels, QuantificationLabel labelNumerator,
 			QuantificationLabel labelDenominator) {
-		conditionsByLabelsByFile.put(remoteFileReference, conditionsByLabels);
+
 		QuantCondition condition1 = null;
 		QuantCondition condition2 = null;
 		if (conditionsByLabels != null) {
+			conditionsByLabelsByFile.put(remoteFileReference, conditionsByLabels);
 			for (final QuantificationLabel quantificationLabel : conditionsByLabels.keySet()) {
 				final QuantCondition condition = conditionsByLabels.get(quantificationLabel);
 				if (quantificationLabel == labelNumerator) {
@@ -287,11 +288,12 @@ public abstract class AbstractQuantParser implements QuantParser {
 	public void addFile(RemoteSSHFileReference remoteFileReference,
 			Map<QuantificationLabel, QuantCondition> conditionsByLabels, QuantificationLabel labelL,
 			QuantificationLabel labelM, QuantificationLabel labelH) {
-		conditionsByLabelsByFile.put(remoteFileReference, conditionsByLabels);
+
 		QuantCondition conditionL = null;
 		QuantCondition conditionM = null;
 		QuantCondition conditionH = null;
 		if (conditionsByLabels != null) {
+			conditionsByLabelsByFile.put(remoteFileReference, conditionsByLabels);
 			for (final QuantificationLabel quantificationLabel : conditionsByLabels.keySet()) {
 				final QuantCondition condition = conditionsByLabels.get(quantificationLabel);
 				if (quantificationLabel == labelL) {
@@ -318,6 +320,32 @@ public abstract class AbstractQuantParser implements QuantParser {
 		remoteFileRetrievers.add(remoteFileReference);
 		// clearStaticInfo();
 		checkParameters();
+	}
+
+	/**
+	 * Adds a condition by label associated to the file
+	 * 
+	 * @param file
+	 * @param condition
+	 * @param label
+	 */
+	public void addConditionByLabelInFile(File file, QuantCondition condition, QuantificationLabel label) {
+		RemoteSSHFileReference remoteFileRetriever = null;
+		for (final RemoteSSHFileReference remoteFile : this.remoteFileRetrievers) {
+			if (remoteFile.getRemoteFile().equals(file)) {
+				remoteFileRetriever = remoteFile;
+			}
+		}
+		if (remoteFileRetriever == null) {
+			remoteFileRetriever = new RemoteSSHFileReference(file);
+			this.remoteFileRetrievers.add(remoteFileRetriever);
+		}
+		if (!conditionsByLabelsByFile.containsKey(remoteFileRetriever)) {
+			final Map<QuantificationLabel, QuantCondition> map = new THashMap<QuantificationLabel, QuantCondition>();
+			this.conditionsByLabelsByFile.put(remoteFileRetriever, map);
+		}
+		this.conditionsByLabelsByFile.get(remoteFileRetriever).put(label, condition);
+
 	}
 
 	private void addRatioDescriptor(RemoteSSHFileReference remoteFileReference, RatioDescriptor ratioDescriptor) {
@@ -872,4 +900,11 @@ public abstract class AbstractQuantParser implements QuantParser {
 	public int getReCalculatedIonCount(QuantifiedPeptideInterface peptide) {
 		return getReCalculatedIonCount(peptide.getQuantifiedPSMs().iterator().next());
 	}
+
+	/**
+	 * Whether the parser can read the file
+	 * 
+	 * @return
+	 */
+	public abstract boolean canRead();
 }

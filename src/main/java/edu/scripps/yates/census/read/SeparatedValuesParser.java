@@ -449,4 +449,125 @@ public class SeparatedValuesParser extends AbstractQuantParser {
 
 	}
 
+	@Override
+	public boolean canRead() {
+		try {
+			int numDecoy = 0;
+			for (final RemoteSSHFileReference remoteFileRetriever : remoteFileRetrievers) {
+				final Map<QuantificationLabel, QuantCondition> conditionsByLabels = conditionsByLabelsByFile
+						.get(remoteFileRetriever);
+
+				final QuantificationLabel labelNumerator = ratioDescriptorsByFile.get(remoteFileRetriever).get(0)
+						.getLabel1();
+				final QuantificationLabel labelDenominator = ratioDescriptorsByFile.get(remoteFileRetriever).get(0)
+						.getLabel2();
+
+				final String experimentKey = FilenameUtils
+						.getBaseName(remoteFileRetriever.getOutputFile().getAbsolutePath());
+				log.info(experimentKey);
+				// get all the Quantified PSMs first
+				// Set<QuantifiedPSMInterface> psms = new
+				// HashSet<QuantifiedPSMInterface>();
+				final File remoteFile = remoteFileRetriever.getRemoteFile();
+				if (remoteFile == null || !remoteFile.exists())
+					continue;
+				log.info("Reading " + remoteFile.getAbsolutePath());
+				BufferedReader br = null;
+				try {
+					br = new BufferedReader(new FileReader(remoteFile));
+
+					String line;
+
+					int numLine = 0;
+					while ((line = br.readLine()) != null) {
+						numLine++;
+						if ("".equals(line.trim())) {
+							continue;
+						}
+						if (numLine > 1 && line.contains(separator)) {
+							String psmID = null;
+							String seq = null;
+							Double ratio = null;
+							Double ratioWeigth = null;
+							String proteinAcc = null;
+							final String[] split = line.split(separator);
+							if (split.length > PSM_ID_COL) {
+								psmID = split[PSM_ID_COL].trim();
+							}
+							if (split.length > SEQ_COL) {
+								seq = split[SEQ_COL].trim();
+							}
+							if (split.length > RATIO_COL && !"".equals(split[RATIO_COL])) {
+								try {
+									ratio = Double.valueOf(split[RATIO_COL]);
+								} catch (final NumberFormatException e) {
+									e.printStackTrace();
+									throw new IllegalArgumentException("Error in line:" + numLine + ", col:" + RATIO_COL
+											+ 1 + "\t" + e.getMessage());
+								}
+							}
+							if (split.length > RATIO_WEIGHT_COL && !"".equals(split[RATIO_WEIGHT_COL])) {
+								try {
+									ratioWeigth = Double.valueOf(split[RATIO_WEIGHT_COL]);
+								} catch (final NumberFormatException e) {
+									e.printStackTrace();
+									throw new IllegalArgumentException("Error in line:" + numLine + ", col:"
+											+ RATIO_WEIGHT_COL + 1 + "\t" + e.getMessage());
+								}
+							}
+							if (split.length > PROTEIN_ACC_COL) {
+								proteinAcc = split[PROTEIN_ACC_COL].trim();
+							}
+							// apply the pattern if available
+							if (decoyPattern != null) {
+								final Matcher matcher = decoyPattern.matcher(proteinAcc);
+								if (matcher.find()) {
+									log.debug("Discarding decoy: " + proteinAcc);
+									numDecoy++;
+									continue;
+								}
+							}
+							processPSMLine(psmID, seq, ratio, ratioWeigth, proteinAcc, conditionsByLabels,
+									labelNumerator, labelDenominator, experimentKey, remoteFileRetriever);
+
+							// do not read more than one line
+							break;
+						}
+
+					}
+					br.close();
+				} catch (final PeptideNotFoundInDBIndexException e) {
+					if (!super.ignoreNotFoundPeptidesInDB) {
+						throw e;
+					}
+				} catch (final IOException e) {
+					e.printStackTrace();
+					log.error(e.getMessage());
+					throw new QuantParserException(e);
+				} catch (final DBIndexStoreException e) {
+
+					e.printStackTrace();
+					log.error(e.getMessage());
+					throw new QuantParserException(e);
+				} catch (final Exception e) {
+					e.printStackTrace();
+					log.error(e.getMessage());
+					throw e;
+				} finally {
+					if (br != null) {
+						try {
+							br.close();
+						} catch (final IOException e) {
+							throw new QuantParserException(e);
+						}
+					}
+				}
+
+			}
+
+			return true;
+		} catch (final Exception e) {
+			return false;
+		}
+	}
 }

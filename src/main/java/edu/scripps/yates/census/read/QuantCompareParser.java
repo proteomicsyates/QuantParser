@@ -1,6 +1,7 @@
 package edu.scripps.yates.census.read;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -74,7 +75,11 @@ public class QuantCompareParser extends AbstractQuantParser {
 	 * @param psmLevelCensusQuantCompareFile input file that is a PSM level census
 	 *                                       quant compare file
 	 */
-	public QuantCompareParser(File psmLevelCensusQuantCompareFile) {
+	public QuantCompareParser(File psmLevelCensusQuantCompareFile) throws FileNotFoundException {
+		if (!psmLevelCensusQuantCompareFile.exists()) {
+			throw new FileNotFoundException(
+					"File '" + psmLevelCensusQuantCompareFile.getAbsolutePath() + "' not found.");
+		}
 		this.file = psmLevelCensusQuantCompareFile;
 	}
 
@@ -369,6 +374,39 @@ public class QuantCompareParser extends AbstractQuantParser {
 
 	private int getIndexByColumnAndExperiment(int experiment, String columnName) {
 		return columnsByExperiments.get(experiment).get(columnName);
+	}
+
+	@Override
+	public boolean canRead() {
+		try {
+			List<String> lines = null;
+			// check whether it is an excel file
+			if (FileUtils.isExcelFile(file)) {
+				lines = FileUtils.readLinesFromXLSX(file, "\t", 0);
+			} else {
+				lines = Files.readAllLines(this.file.toPath());
+			}
+
+			int numLine = 0;
+			for (final String line : lines) {
+				numLine++;
+				final String[] split = line.split("\t");
+
+				if (line.startsWith(H)) {
+					if (split[1].equals(GROUP_SAMPLE)) {
+						// do nothing yet. I have to figure out what is that
+						return true;
+					}
+				}
+				if (numLine > 3) {
+					return false;
+				}
+
+			}
+			return false;
+		} catch (final Exception e) {
+			return false;
+		}
 	}
 
 }

@@ -40,6 +40,7 @@ import edu.scripps.yates.census.read.util.QuantificationLabel;
 import edu.scripps.yates.dbindex.util.PeptideNotFoundInDBIndexException;
 import edu.scripps.yates.utilities.fasta.dbindex.DBIndexStoreException;
 import edu.scripps.yates.utilities.fasta.dbindex.IndexedProtein;
+import edu.scripps.yates.utilities.files.FileUtils;
 import edu.scripps.yates.utilities.proteomicsmodel.Amount;
 import edu.scripps.yates.utilities.proteomicsmodel.PTMSite;
 import edu.scripps.yates.utilities.proteomicsmodel.Ratio;
@@ -290,6 +291,42 @@ public class CensusOutParser extends AbstractQuantParser {
 		return ret;
 	}
 
+	public Map<File, Boolean> isTMTFiles() throws IOException {
+		final Map<File, Boolean> ret = new THashMap<File, Boolean>();
+
+		Map<File, Boolean> fileMap = getFileMapFromRemoteSSHFileReferenceMap(isTMT4());
+		if (fileMap != null) {
+			ret.putAll(fileMap);
+		}
+		fileMap = getFileMapFromRemoteSSHFileReferenceMap(isTMT6());
+		if (fileMap != null) {
+			for (final File file : fileMap.keySet()) {
+				if (fileMap.get(file)) {
+					ret.put(file, true);
+				}
+			}
+
+		}
+		fileMap = getFileMapFromRemoteSSHFileReferenceMap(isTMT10());
+		if (fileMap != null) {
+			for (final File file : fileMap.keySet()) {
+				if (fileMap.get(file)) {
+					ret.put(file, true);
+				}
+			}
+		}
+		fileMap = getFileMapFromRemoteSSHFileReferenceMap(isTMT11());
+		if (fileMap != null) {
+			for (final File file : fileMap.keySet()) {
+				if (fileMap.get(file)) {
+					ret.put(file, true);
+				}
+			}
+		}
+
+		return ret;
+	}
+
 	public Map<RemoteSSHFileReference, Boolean> isTMT10() throws IOException {
 		if (isTMT10 == null) {
 			isTMT10 = new THashMap<RemoteSSHFileReference, Boolean>();
@@ -412,7 +449,7 @@ public class CensusOutParser extends AbstractQuantParser {
 	 *
 	 * @param writeFiles whether to write output files necessary to run SanXot
 	 *                   program
-	 * @throws WrongTMTLabels
+	 * @throws WrongTMTLabels, IOException, QuantParserException
 	 */
 	@Override
 	protected void process() throws QuantParserException {
@@ -646,33 +683,36 @@ public class CensusOutParser extends AbstractQuantParser {
 			return;
 		}
 		for (final RemoteSSHFileReference remoteFile : remoteFileRetrievers) {
-			final Set<QuantificationLabel> labels = conditionsByLabelsByFile.get(remoteFile).keySet();
-			if (isTMT4().containsKey(remoteFile) && isTMT4().get(remoteFile)) {
-				final List<QuantificationLabel> tmt4 = QuantificationLabel.getTMT4PlexLabels();
-				for (final QuantificationLabel label : tmt4) {
-					if (!labels.contains(label)) {
-						throw new WrongTMTLabels("Labels in the constructor must have all TMT4 labels");
+			if (conditionsByLabelsByFile.containsKey(remoteFile)) {
+				final Set<QuantificationLabel> labels = conditionsByLabelsByFile.get(remoteFile).keySet();
+
+				if (isTMT4().containsKey(remoteFile) && isTMT4().get(remoteFile)) {
+					final List<QuantificationLabel> tmt4 = QuantificationLabel.getTMT4PlexLabels();
+					for (final QuantificationLabel label : tmt4) {
+						if (!labels.contains(label)) {
+							throw new WrongTMTLabels("Labels in the constructor must have all TMT4 labels");
+						}
 					}
-				}
-			} else if (isTMT6().containsKey(remoteFile) && isTMT6().get(remoteFile)) {
-				final List<QuantificationLabel> tmt6 = QuantificationLabel.getTMT6PlexLabels();
-				for (final QuantificationLabel label : tmt6) {
-					if (!labels.contains(label)) {
-						throw new WrongTMTLabels("Labels in the constructor must have all TMT6 labels");
+				} else if (isTMT6().containsKey(remoteFile) && isTMT6().get(remoteFile)) {
+					final List<QuantificationLabel> tmt6 = QuantificationLabel.getTMT6PlexLabels();
+					for (final QuantificationLabel label : tmt6) {
+						if (!labels.contains(label)) {
+							throw new WrongTMTLabels("Labels in the constructor must have all TMT6 labels");
+						}
 					}
-				}
-			} else if (isTMT10().containsKey(remoteFile) && isTMT10().get(remoteFile)) {
-				final List<QuantificationLabel> tmt10 = QuantificationLabel.getTMT10PlexLabels();
-				for (final QuantificationLabel label : tmt10) {
-					if (!labels.contains(label)) {
-						throw new WrongTMTLabels("Labels in the constructor must have all TMT10 labels");
+				} else if (isTMT10().containsKey(remoteFile) && isTMT10().get(remoteFile)) {
+					final List<QuantificationLabel> tmt10 = QuantificationLabel.getTMT10PlexLabels();
+					for (final QuantificationLabel label : tmt10) {
+						if (!labels.contains(label)) {
+							throw new WrongTMTLabels("Labels in the constructor must have all TMT10 labels");
+						}
 					}
-				}
-			} else if (isTMT11().containsKey(remoteFile) && isTMT11().get(remoteFile)) {
-				final List<QuantificationLabel> tmt11 = QuantificationLabel.getTMT11PlexLabels();
-				for (final QuantificationLabel label : tmt11) {
-					if (!labels.contains(label)) {
-						throw new WrongTMTLabels("Labels in the constructor must have all TMT11 labels");
+				} else if (isTMT11().containsKey(remoteFile) && isTMT11().get(remoteFile)) {
+					final List<QuantificationLabel> tmt11 = QuantificationLabel.getTMT11PlexLabels();
+					for (final QuantificationLabel label : tmt11) {
+						if (!labels.contains(label)) {
+							throw new WrongTMTLabels("Labels in the constructor must have all TMT11 labels");
+						}
 					}
 				}
 			}
@@ -2390,7 +2430,7 @@ public class CensusOutParser extends AbstractQuantParser {
 		// TMT4PLEX
 		boolean isTMT4Plex = false;
 		if (conditionsByLabels != null && !conditionsByLabels.isEmpty()) {
-			isTMT4Plex = isTMT6Plex(conditionsByLabels.keySet());
+			isTMT4Plex = isTMT4Plex(conditionsByLabels.keySet());
 		}
 		if (isTMT4Plex) {
 			for (final QuantificationLabel label : QuantificationLabel.getTMT4PlexLabels()) {
@@ -2678,4 +2718,35 @@ public class CensusOutParser extends AbstractQuantParser {
 		return isTMT4;
 	}
 
+	@Override
+	public boolean canRead() {
+		try {
+
+			for (final RemoteSSHFileReference remoteFileRetriever : this.remoteFileRetrievers) {
+				final File file = remoteFileRetriever.getOutputFile();
+
+				List<String> lines = null;
+
+				// check whether it is an excel file
+				if (FileUtils.isExcelFile(file)) {
+					lines = FileUtils.readLinesFromXLSX(file, "\t", 0);
+				} else {
+					lines = FileUtils.readFirstLines(file, 1);
+				}
+
+				final String line = lines.get(0);
+
+				final String[] split = line.split("\t");
+
+				if (!line.startsWith(H) || !split[1].startsWith("Census version")) {
+					return false;
+				}
+
+			}
+
+		} catch (final Exception e) {
+			return false;
+		}
+		return true;
+	}
 }

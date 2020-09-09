@@ -34,6 +34,7 @@ import edu.scripps.yates.dbindex.util.PeptideNotFoundInDBIndexException;
 import edu.scripps.yates.utilities.fasta.FastaParser;
 import edu.scripps.yates.utilities.fasta.dbindex.DBIndexStoreException;
 import edu.scripps.yates.utilities.fasta.dbindex.IndexedProtein;
+import edu.scripps.yates.utilities.files.FileUtils;
 import edu.scripps.yates.utilities.proteomicsmodel.utils.KeyUtils;
 import edu.scripps.yates.utilities.remote.RemoteSSHFileReference;
 import gnu.trove.map.hash.THashMap;
@@ -367,6 +368,36 @@ public class CensusChroParser extends AbstractIsobaricQuantParser {
 					+ localPeptideMap.size() + " peptides processed...");
 		}
 
+	}
+
+	@Override
+	public boolean canRead() {
+		try {
+
+			for (final RemoteSSHFileReference remoteFileRetriever : this.remoteFileRetrievers) {
+				final File file = remoteFileRetriever.getOutputFile();
+
+				List<String> lines = null;
+
+				// check whether it is an excel file
+				if (FileUtils.isExcelFile(file)) {
+					lines = FileUtils.readLinesFromXLSX(file, "\t", 0);
+				} else {
+					lines = FileUtils.readFirstLines(file, 10);
+				}
+
+				final String line = lines.get(0);
+
+				if (line.startsWith("<relex_chro>")) {
+					return true;
+				}
+
+			}
+
+		} catch (final Exception e) {
+			return false;
+		}
+		return false;
 	}
 
 }
