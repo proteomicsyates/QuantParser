@@ -63,12 +63,20 @@ public class QuantCompareParser extends AbstractQuantParser {
 	public static final String REPLICATE_PREFIX = "Rep_";
 	private static final String EXP_HEADER_PREFIX = "EXP_";
 
+	public static final String PREDICTED_SEQ1 = "PREDICTED_SEQ1";
+	public static final String PREDICTED_SEQ2 = "PREDICTED_SEQ2";
+	public static final String PEP1_SCORE = "PEP1_SCORE";
+	public static final String PEP2_SCORE = "PEP2_SCORE";
+	public static final String GLOBAL_FLR_SCORE = "GLOBAL_FLR_SCORE";
+	public static final String LOCAL_FLR_SCORE = "LOCAL_FLR_SCORE";
+
 	private final File file;
 	private final TIntObjectMap<TObjectIntMap<String>> columnsByExperiments = new TIntObjectHashMap<TObjectIntMap<String>>();
 	private final TObjectIntMap<String> indexByColumn = new TObjectIntHashMap<String>();
 
 	private final TIntIntMap normIntensityColumnPerExperiment = new TIntIntHashMap();
 	private final TIntObjectMap<QuantCondition> conditionByExp = new TIntObjectHashMap<QuantCondition>();
+	private static Map<String, Boolean> isExcel = new THashMap<String, Boolean>();
 
 	/**
 	 * 
@@ -89,7 +97,14 @@ public class QuantCompareParser extends AbstractQuantParser {
 			List<String> lines = null;
 			final Map<String, Set<String>> peptideToSpectraMap = new THashMap<String, Set<String>>();
 			// check whether it is an excel file
-			if (FileUtils.isExcelFile(file)) {
+			boolean excelFile;
+			if (isExcel.containsKey(file.getAbsolutePath())) {
+				excelFile = isExcel.get(file.getAbsolutePath());
+			} else {
+				excelFile = FileUtils.isExcelFile(file);
+				isExcel.put(file.getAbsolutePath(), excelFile);
+			}
+			if (excelFile) {
 				lines = FileUtils.readLinesFromXLSX(file, "\t", 0);
 			} else {
 				lines = Files.readAllLines(this.file.toPath());
@@ -150,6 +165,7 @@ public class QuantCompareParser extends AbstractQuantParser {
 						if ("NA".equals(rawFileName)) {
 							rawFileName = "NA_" + rep;
 						}
+
 						final boolean singleton = false;// not used here
 						// create a PSM per peptide
 						final List<QuantifiedPSMInterface> quantPSMs = new ArrayList<QuantifiedPSMInterface>();
@@ -195,6 +211,34 @@ public class QuantCompareParser extends AbstractQuantParser {
 						// add the rest of PSMs
 						for (final QuantifiedPSMInterface psm : quantPSMs) {
 							quantPeptide.addPSM(psm, true);
+						}
+						// we check if luciphor has been run and threshold on local or global flr have
+						// been set
+						final int idx = getIndexByColumnAndExperiment(rep, GLOBAL_FLR_SCORE);
+						if (idx > 0) {
+							try {
+								final Double globalFLR = Double.valueOf(split[idx]);
+								final Score globalFLRScore = new ScoreEx(String.valueOf(globalFLR), GLOBAL_FLR_SCORE,
+										"Global False Localization Rate", "Luciphor " + GLOBAL_FLR_SCORE);
+								quantPeptide.addScore(globalFLRScore);
+								final String predictedSeq1 = split[getIndexByColumnAndExperiment(rep, PREDICTED_SEQ1)];
+								final Score predictedSeqScore = new ScoreEx(predictedSeq1, PREDICTED_SEQ1,
+										"Predicted sequence", "Luciphor " + PREDICTED_SEQ1);
+								quantPeptide.addScore(predictedSeqScore);
+								final Double localFLR = Double
+										.valueOf(split[getIndexByColumnAndExperiment(rep, LOCAL_FLR_SCORE)]);
+								final Score localFLRScore = new ScoreEx(String.valueOf(localFLR), LOCAL_FLR_SCORE,
+										"Local False Localization Rate", "Luciphor " + LOCAL_FLR_SCORE);
+								quantPeptide.addScore(localFLRScore);
+
+								final Double luciphorPeptideScore = Double
+										.valueOf(split[getIndexByColumnAndExperiment(rep, PEP1_SCORE)]);
+								final Score luciphorPeptideScoreObj = new ScoreEx(String.valueOf(luciphorPeptideScore),
+										PEP1_SCORE, "PTM localization score for peptide", "Luciphor " + PEP1_SCORE);
+								quantPeptide.addScore(luciphorPeptideScoreObj);
+
+							} catch (final Exception e) {
+							}
 						}
 
 						// if the line already appear is because it was the same peptide with different
