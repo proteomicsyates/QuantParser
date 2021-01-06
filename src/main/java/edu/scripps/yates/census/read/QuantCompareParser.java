@@ -43,23 +43,23 @@ public class QuantCompareParser extends AbstractQuantParser {
 	private static final String H = "H";
 	private static final String GROUP_SAMPLE = "GROUP_SAMPLE";
 	private static final String SLINE = "SLINE";
-	private static final String NORM_INTENSITY = "NORM_INTENSITY";
-	private static final String PVALUE = "PVALUE";
-	private static final String QVALUE = "QVALUE";
-	private static final String PROTEIN = "PROTEIN";
-	private static final String PROTEIN_DESCRIPTION = "PROTEIN DESCRIPTION";
+	protected static final String NORM_INTENSITY = "NORM_INTENSITY";
+	protected static final String PVALUE = "PVALUE";
+	protected static final String QVALUE = "QVALUE";
+	protected static final String PROTEIN = "PROTEIN";
+	protected static final String PROTEIN_DESCRIPTION = "PROTEIN DESCRIPTION";
 	private static final String S = "S";
-	private static final String SEQUENCE = "SEQUENCE";
-	private static final String SCAN = "SCAN";
-	private static final String CSTATE = "CSTATE";
-	private static final String FILENAME = "FILENAME";
-	private static final String INTENSITY = "INTENSITY";
-	private static final String XCORR = "XCORR";
-	private static final String scoreType = "PSM-level search engine specific statistic";
-	private static final String DCN = "DCN";
-	private static final String RETENTIONTIME = "RETENTIONTIME";
-	private static final String CORRIONINJECTION_INTENSITY = "CORRIONINJECTION_INTENSITY";
-	private static final String REDUNDANCY = "REDUNDANCY";
+	protected static final String SEQUENCE = "SEQUENCE";
+	protected static final String SCAN = "SCAN";
+	protected static final String CSTATE = "CSTATE";
+	protected static final String FILENAME = "FILENAME";
+	protected static final String INTENSITY = "INTENSITY";
+	protected static final String XCORR = "XCORR";
+	protected static final String scoreType = "PSM-level search engine specific statistic";
+	protected static final String DCN = "DCN";
+	protected static final String RETENTIONTIME = "RETENTIONTIME";
+	protected static final String CORRIONINJECTION_INTENSITY = "CORRIONINJECTION_INTENSITY";
+	protected static final String REDUNDANCY = "REDUNDANCY";
 	public static final String REPLICATE_PREFIX = "Rep_";
 	private static final String EXP_HEADER_PREFIX = "EXP_";
 
@@ -70,13 +70,13 @@ public class QuantCompareParser extends AbstractQuantParser {
 	public static final String GLOBAL_FLR_SCORE = "GLOBAL_FLR_SCORE";
 	public static final String LOCAL_FLR_SCORE = "LOCAL_FLR_SCORE";
 
-	private final File file;
-	private final TIntObjectMap<TObjectIntMap<String>> columnsByExperiments = new TIntObjectHashMap<TObjectIntMap<String>>();
-	private final TObjectIntMap<String> indexByColumn = new TObjectIntHashMap<String>();
+	protected final File file;
+	protected final TIntObjectMap<TObjectIntMap<String>> columnsByExperiments = new TIntObjectHashMap<TObjectIntMap<String>>();
+	protected final TObjectIntMap<String> indexByColumn = new TObjectIntHashMap<String>();
 
-	private final TIntIntMap normIntensityColumnPerExperiment = new TIntIntHashMap();
-	private final TIntObjectMap<QuantCondition> conditionByExp = new TIntObjectHashMap<QuantCondition>();
-	private static Map<String, Boolean> isExcel = new THashMap<String, Boolean>();
+	protected final TIntIntMap normIntensityColumnPerExperiment = new TIntIntHashMap();
+	protected final TIntObjectMap<QuantCondition> conditionByExp = new TIntObjectHashMap<QuantCondition>();
+	protected static Map<String, Boolean> isExcel = new THashMap<String, Boolean>();
 
 	/**
 	 * 
