@@ -59,7 +59,7 @@
   		<artifactId>pint.annotations</artifactId>
   		<version>1.0.3-SNAPSHOT</version>
   	</dependency>
-  	 
+
   </dependencies>
   <build>
   	<resources>
