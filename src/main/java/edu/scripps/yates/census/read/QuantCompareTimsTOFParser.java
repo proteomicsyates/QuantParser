@@ -42,6 +42,10 @@ public class QuantCompareTimsTOFParser extends QuantCompareParser {
 	private static final String CCS = "CCS";
 	private static final String XIC = "XIC";
 	private static final String ESTIMATED_XIC = "ESTIMATED_XIC";
+	private static final String SCAN_NUM = "SCAN_NUM";
+	private static final String CHARGE_STATE = "CHARGE_STATE";
+	private static final Object LOCUS = "LOCUS";
+	private static final Object DESCRIPTION = "DESCRIPTION";
 
 	/**
 	 * 
@@ -75,29 +79,38 @@ public class QuantCompareTimsTOFParser extends QuantCompareParser {
 			int numLine = 0;
 			for (final String line : lines) {
 				numLine++;
-				String[] split = line.split("\t");
+				final String[] split = line.split("\t");
 
 				if (numLine == 1) {
 					// for now, we need to fix it because there are columns missing
-					split = fixLine(split).split("\t");
 					processColumns(split);
 				} else {
 
 					// first of all, check whether the line has been already seen before except for
 					// the protein columns
 					final String uniqueLineString = getUniqueLineStringWithNoProtein(split);
+					// take the sequence
+					final String rawSequence = split[indexByColumn.get(SEQUENCE)];
+					int chargeState = -1;
+					if (indexByColumn.containsKey(CHARGE_STATE)) {
+						final String chargeStateString = split[indexByColumn.get(CHARGE_STATE)];
+						try {
+							chargeState = Double.valueOf(chargeStateString).intValue();
+						} catch (final NumberFormatException e) {
+
+						}
+					}
 
 					QuantifiedPeptideInterface quantPeptide = null;
 					int repWithPeptidePresent = 0;
 					for (int rep = 1; rep <= columnsByExperiments.size(); rep++) {
-						// take the sequence
-						final String rawSequence = split[getIndexByColumnAndExperiment(rep, SEQUENCE)];
+
 						// create a PSM per experiment
 
 						// SCAN
 						int scanNumber = -1;
-						if (getIndexByColumnAndExperiment(rep, SCAN) != -1) {
-							final String scanNumberString = split[getIndexByColumnAndExperiment(rep, SCAN)];
+						if (getIndexByColumnAndExperiment(rep, SCAN_NUM) != -1) {
+							final String scanNumberString = split[getIndexByColumnAndExperiment(rep, SCAN_NUM)];
 							// if scanNumberString is NA, this psm has not been detected in this replicate,
 							// and therefore we dont create it
 							if ("NA".equals(scanNumberString)) {
@@ -111,15 +124,7 @@ public class QuantCompareTimsTOFParser extends QuantCompareParser {
 
 							}
 						}
-						int chargeState = -1;
-						if (getIndexByColumnAndExperiment(rep, CSTATE) != -1) {
-							final String chargeStateString = split[getIndexByColumnAndExperiment(rep, CSTATE)];
-							try {
-								chargeState = Double.valueOf(chargeStateString).intValue();
-							} catch (final NumberFormatException e) {
 
-							}
-						}
 						// in principle, there is no redundancy column for now:
 						int redundancy = 1;
 						if (getIndexByColumnAndExperiment(rep, REDUNDANCY) != -1) {
@@ -293,15 +298,9 @@ public class QuantCompareTimsTOFParser extends QuantCompareParser {
 					}
 					// create protein(s)
 					final List<String> accs = new ArrayList<String>();
-					// TODO
-					// HARDCODED
-					//
-					//
-					accs.add("BG505_SOSIP_D664_MD39_gp140");
-					//
-					/////////////
-					if (indexByColumn.containsKey(PROTEIN)) {
-						String proteinAccs = split[indexByColumn.get(PROTEIN)];
+
+					if (indexByColumn.containsKey(LOCUS)) {
+						String proteinAccs = split[indexByColumn.get(LOCUS)];
 						proteinAccs = removeQuotes(proteinAccs);
 
 						if (proteinAccs.contains(",")) {
@@ -314,8 +313,8 @@ public class QuantCompareTimsTOFParser extends QuantCompareParser {
 						}
 					}
 					final List<String> descriptions = new ArrayList<String>();
-					if (indexByColumn.containsKey(PROTEIN_DESCRIPTION)) {
-						String proteinDescriptions = split[indexByColumn.get(PROTEIN_DESCRIPTION)];
+					if (indexByColumn.containsKey(DESCRIPTION)) {
+						String proteinDescriptions = split[indexByColumn.get(DESCRIPTION)];
 						proteinDescriptions = removeQuotes(proteinDescriptions);
 
 						if (proteinDescriptions.contains(",")) {
@@ -352,42 +351,6 @@ public class QuantCompareTimsTOFParser extends QuantCompareParser {
 		} catch (final IOException e) {
 			throw new QuantParserException(e);
 		}
-	}
-
-	/**
-	 * this method is temporal until Titus fixes the file generation
-	 * 
-	 * @param line
-	 * @return
-	 */
-	private String fixLine(String[] headers) {
-		final List<String> newCols = new ArrayList<String>();
-		final Pattern pattern = Pattern.compile("^(.+)_(\\d+)$");
-
-		for (final String header : headers) {
-			final Matcher matcher = pattern.matcher(header);
-			final boolean matchFound = matcher.find();
-			int exp = -1;
-			if (matchFound) {
-				exp = Integer.valueOf(matcher.group(2));
-			}
-			if (header.startsWith("SCAN_NUM")) {
-				newCols.add(SEQUENCE + "_" + exp);
-			} else if (header.startsWith("CCS")) {
-				newCols.add(CSTATE + "_" + exp);
-				newCols.add(header);
-			} else {
-				newCols.add(header);
-			}
-		}
-		final StringBuilder sb = new StringBuilder();
-		for (final String newCol : newCols) {
-			if (!"".equals(sb.toString())) {
-				sb.append("\t");
-			}
-			sb.append(newCol);
-		}
-		return sb.toString();
 	}
 
 	private String getUniqueLineStringWithNoProtein(String[] split) {
@@ -466,9 +429,7 @@ public class QuantCompareTimsTOFParser extends QuantCompareParser {
 
 			final String line = lines.get(0);
 
-			final String[] split = line.split("\t");
-
-			if (split[0].startsWith("FILENAME_")) {
+			if (line.startsWith("SEQUENCE\tCHARGE_STATE\tFILENAME_")) {
 
 				return true;
 
