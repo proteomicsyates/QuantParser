@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 
+import edu.scripps.yates.census.analysis.QuantCondition;
 import edu.scripps.yates.census.read.model.QuantifiedPSM;
 import edu.scripps.yates.census.read.model.QuantifiedPeptide;
 import edu.scripps.yates.census.read.model.QuantifiedProtein;
@@ -292,6 +293,13 @@ public class QuantCompareTimsTOFParser extends QuantCompareParser {
 					}
 					// create protein(s)
 					final List<String> accs = new ArrayList<String>();
+					// TODO
+					// HARDCODED
+					//
+					//
+					accs.add("BG505_SOSIP_D664_MD39_gp140");
+					//
+					/////////////
 					if (indexByColumn.containsKey(PROTEIN)) {
 						String proteinAccs = split[indexByColumn.get(PROTEIN)];
 						proteinAccs = removeQuotes(proteinAccs);
@@ -422,6 +430,8 @@ public class QuantCompareTimsTOFParser extends QuantCompareParser {
 			final boolean matchFound = matcher.find();
 			if (matchFound) {
 				exp = Integer.valueOf(matcher.group(2));
+				final String conditionName = REPLICATE_PREFIX + exp;
+				conditionByExp.put(exp, new QuantCondition(conditionName));
 				if (!columnsByExperiments.containsKey(exp)) {
 					columnsByExperiments.put(exp, new TObjectIntHashMap<String>());
 				}
