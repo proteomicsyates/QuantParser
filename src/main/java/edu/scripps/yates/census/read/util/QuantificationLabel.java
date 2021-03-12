@@ -46,7 +46,23 @@ public enum QuantificationLabel {
 	TMT_11PLEX_130C(false, false, false), //
 	TMT_11PLEX_131(false, false, true), //
 	TMT_11PLEX_131C(false, false, true), //
-
+	//
+	TMT_16PLEX_126(true, false, false), //
+	TMT_16PLEX_127N(false, false, false), //
+	TMT_16PLEX_127C(false, false, false), //
+	TMT_16PLEX_128N(false, false, false), //
+	TMT_16PLEX_128C(false, false, false), //
+	TMT_16PLEX_129N(false, false, false), //
+	TMT_16PLEX_129C(false, false, false), //
+	TMT_16PLEX_130N(false, false, false), //
+	TMT_16PLEX_130C(false, false, false), //
+	TMT_16PLEX_131N(false, false, false), //
+	TMT_16PLEX_131C(false, false, false), //
+	TMT_16PLEX_132N(false, false, false), //
+	TMT_16PLEX_132C(false, false, false), //
+	TMT_16PLEX_133N(false, false, false), //
+	TMT_16PLEX_133C(false, false, false), //
+	TMT_16PLEX_134(false, false, true), //
 	//
 	N14(true, false, false), //
 	N15(false, false, true);
@@ -140,6 +156,10 @@ public enum QuantificationLabel {
 		return getTMT11PlexLabels().contains(label);
 	}
 
+	public static boolean isTMT16PLEX(QuantificationLabel label) {
+		return getTMT16PlexLabels().contains(label);
+	}
+
 	public static List<QuantificationLabel> getTMT4PlexLabels() {
 		final QuantificationLabel[] array = { QuantificationLabel.TMT_4PLEX_127, QuantificationLabel.TMT_4PLEX_128,
 				QuantificationLabel.TMT_4PLEX_129, QuantificationLabel.TMT_4PLEX_130 };
@@ -186,5 +206,52 @@ public enum QuantificationLabel {
 			ret.add(quantificationLabel);
 		}
 		return ret;
+	}
+
+	public static List<QuantificationLabel> getTMT16PlexLabels() {
+		final QuantificationLabel[] array = { QuantificationLabel.TMT_16PLEX_126, QuantificationLabel.TMT_16PLEX_127N,
+				QuantificationLabel.TMT_16PLEX_127C, QuantificationLabel.TMT_16PLEX_128N,
+				QuantificationLabel.TMT_16PLEX_128C, QuantificationLabel.TMT_16PLEX_129N,
+				QuantificationLabel.TMT_16PLEX_129C, QuantificationLabel.TMT_16PLEX_130N,
+				QuantificationLabel.TMT_16PLEX_130C, QuantificationLabel.TMT_16PLEX_131N,
+				QuantificationLabel.TMT_16PLEX_131C, QuantificationLabel.TMT_16PLEX_132N,
+				QuantificationLabel.TMT_16PLEX_132C, QuantificationLabel.TMT_16PLEX_133N,
+				QuantificationLabel.TMT_16PLEX_133C, QuantificationLabel.TMT_16PLEX_134 };
+		final List<QuantificationLabel> ret = new ArrayList<QuantificationLabel>();
+		for (final QuantificationLabel quantificationLabel : array) {
+			ret.add(quantificationLabel);
+		}
+		return ret;
+	}
+
+	public static List<QuantificationLabel> getTMTPlexLabels(int plex) {
+		if (plex == 4) {
+			return getTMT4PlexLabels();
+		} else if (plex == 6) {
+			return getTMT6PlexLabels();
+		} else if (plex == 10) {
+			return getTMT10PlexLabels();
+		} else if (plex == 11) {
+			return getTMT11PlexLabels();
+		} else if (plex == 16) {
+			return getTMT16PlexLabels();
+		}
+		throw new IllegalArgumentException(
+				"TMT plex " + plex + " is not yet supported. Contact salvador@scripps.edu to fix that!");
+	}
+
+	public static int getTMTPlex(QuantificationLabel label) {
+		if (getTMT4PlexLabels().contains(label)) {
+			return 4;
+		} else if (getTMT6PlexLabels().contains(label)) {
+			return 6;
+		} else if (getTMT10PlexLabels().contains(label)) {
+			return 10;
+		} else if (getTMT11PlexLabels().contains(label)) {
+			return 11;
+		} else if (getTMT16PlexLabels().contains(label)) {
+			return 16;
+		}
+		throw new IllegalArgumentException("Label " + label + " is not detected as a TMT label");
 	}
 }
