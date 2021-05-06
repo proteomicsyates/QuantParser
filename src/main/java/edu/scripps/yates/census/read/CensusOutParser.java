@@ -364,7 +364,7 @@ public class CensusOutParser extends AbstractQuantParser {
 								}
 								itWasPeptides = false;
 								final QuantifiedProteinInterface quantifiedProtein = processProteinLine(line,
-										pLineHeaderList, conditionsByLabels, ratioDescriptors);
+										pLineHeaderList, conditionsByLabels, ratioDescriptors, experimentKey);
 								proteinGroup.add(quantifiedProtein);
 							} catch (final DiscardProteinException e) {
 								numDecoy++;
@@ -1229,7 +1229,7 @@ public class CensusOutParser extends AbstractQuantParser {
 					if (newQuantifiedProtein.getTaxonomies() != null) {
 						taxonomies.addAll(newQuantifiedProtein.getTaxonomies());
 					}
-					localProteinMap.put(proteinKey, newQuantifiedProtein);
+					final QuantifiedProteinInterface tmp = localProteinMap.put(proteinKey, newQuantifiedProtein);
 					// add to protein-experiment map
 					addToMap(experimentKey, experimentToProteinsMap, proteinKey);
 					// add psm to the protein
@@ -2032,22 +2032,13 @@ public class CensusOutParser extends AbstractQuantParser {
 	}
 
 	private QuantifiedProteinInterface processProteinLine(String line, List<String> pLineHeaderList,
-			Map<QuantificationLabel, QuantCondition> conditionsByLabels, List<RatioDescriptor> ratioDescriptors)
-			throws DiscardProteinException {
+			Map<QuantificationLabel, QuantCondition> conditionsByLabels, List<RatioDescriptor> ratioDescriptors,
+			String experimentKey) throws DiscardProteinException {
 		// new protein
 		final MyHashMap<String, String> mapValues = getMapFromPLine(pLineHeaderList, line);
 		final String proteinACC = mapValues.get(LOCUS);
 
 		QuantifiedProteinInterface quantifiedProtein = null;
-		if (StaticQuantMaps.proteinMap.containsKey(proteinACC)) {
-			quantifiedProtein = StaticQuantMaps.proteinMap.getItem(proteinACC);
-		} else {
-			quantifiedProtein = new QuantifiedProtein(proteinACC, isIgnoreTaxonomies());
-			final String description = mapValues.get(DESCRIPTION);
-			quantifiedProtein.setDescription(description);
-		}
-		StaticQuantMaps.proteinMap.addItem(quantifiedProtein);
-
 		// apply the pattern if available
 		if (decoyPattern != null) {
 			final Matcher matcher = decoyPattern.matcher(proteinACC);
@@ -2056,6 +2047,19 @@ public class CensusOutParser extends AbstractQuantParser {
 				throw new DiscardProteinException("Protein " + proteinACC + " is DECOY.");
 			}
 		}
+
+		if (StaticQuantMaps.proteinMap.containsKey(proteinACC)) {
+			quantifiedProtein = StaticQuantMaps.proteinMap.getItem(proteinACC);
+		} else {
+			quantifiedProtein = new QuantifiedProtein(proteinACC, proteinACC, isIgnoreTaxonomies(), true);
+			final String description = mapValues.get(DESCRIPTION);
+			quantifiedProtein.setDescription(description);
+		}
+		StaticQuantMaps.proteinMap.addItem(quantifiedProtein);
+
+		final QuantifiedProteinInterface tmp = localProteinMap.put(proteinACC, quantifiedProtein);
+		// add to protein-experiment map
+		addToMap(experimentKey, experimentToProteinsMap, proteinACC);
 
 		// if we have ratios
 		if (ratioDescriptors != null && !ratioDescriptors.isEmpty()) {
