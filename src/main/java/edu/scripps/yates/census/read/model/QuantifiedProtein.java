@@ -21,6 +21,7 @@ import edu.scripps.yates.utilities.proteomicsmodel.Accession;
 import edu.scripps.yates.utilities.proteomicsmodel.PSM;
 import edu.scripps.yates.utilities.proteomicsmodel.Ratio;
 import edu.scripps.yates.utilities.proteomicsmodel.enums.AggregationLevel;
+import edu.scripps.yates.utilities.proteomicsmodel.factories.AccessionEx;
 import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.set.hash.THashSet;
 
@@ -42,12 +43,22 @@ public class QuantifiedProtein extends AbstractProtein implements QuantifiedProt
 
 	}
 
-	public QuantifiedProtein(String proteinACC, String key, boolean ignoreTaxonomy) {
+	public QuantifiedProtein(String proteinACC, String key, boolean ignoreTaxonomy, boolean takeAccAsItIs) {
 		setKey(key);
-		final Accession acc = FastaParser.getACC(proteinACC);
+		Accession acc = null;
+		if (!takeAccAsItIs) {
+			acc = FastaParser.getACC(proteinACC);
+		} else {
+			final Accession tmp = FastaParser.getACC(proteinACC);
+			acc = new AccessionEx(proteinACC, tmp.getAccessionType());
+		}
 		super.setPrimaryAccession(acc);
 		setIgnoreTaxonomy(ignoreTaxonomy);
 
+	}
+
+	public QuantifiedProtein(String proteinACC, String key, boolean ignoreTaxonomy) {
+		this(proteinACC, key, ignoreTaxonomy, false);
 	}
 
 	/**
