@@ -98,18 +98,22 @@ public abstract class AbstractQuantParser implements QuantParser {
 	private boolean reCalculatedIonsCountsReady = false;
 	private final THashMap<String, Set<QuantifiedPSMInterface>> psmsByIonKey = new THashMap<String, Set<QuantifiedPSMInterface>>();
 
+	@Override
 	public boolean isDistinguishModifiedSequences() {
 		return distinguishModifiedSequences;
 	}
 
+	@Override
 	public void setDistinguishModifiedSequences(boolean distinguishModifiedSequences) {
 		this.distinguishModifiedSequences = distinguishModifiedSequences;
 	}
 
+	@Override
 	public boolean isChargeSensible() {
 		return chargeSensible;
 	}
 
+	@Override
 	public void setChargeSensible(boolean chargeSensible) {
 		this.chargeSensible = chargeSensible;
 	}

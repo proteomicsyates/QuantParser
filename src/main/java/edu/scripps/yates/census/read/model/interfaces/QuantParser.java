@@ -89,4 +89,31 @@ public interface QuantParser {
 	 * @return
 	 */
 	int getReCalculatedIonCount(QuantifiedPeptideInterface peptide);
+
+	/**
+	 * referring to peptide grouping option
+	 * 
+	 * @return
+	 */
+	boolean isChargeSensible();
+
+	/**
+	 * referring to peptide grouping option
+	 * 
+	 * @param chargeStateSensible
+	 */
+	void setChargeSensible(boolean chargeStateSensible);
+
+	/**
+	 * Referring to peptide grouping option
+	 * 
+	 */
+	boolean isDistinguishModifiedSequences();
+
+	/**
+	 * Referring to peptide grouping option
+	 * 
+	 * @param distinguishModifiedSequences
+	 */
+	void setDistinguishModifiedSequences(boolean distinguishModifiedSequences);
 }
