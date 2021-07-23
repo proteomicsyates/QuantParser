@@ -77,10 +77,9 @@ public class MaxLFQuantParser extends AbstractQuantParser {
 	private static final String PRECURSOR_SCAN = "Precursor full scan number";
 	private static final String ID = "id";
 	private static final String LEADING_PROTEINS = "Leading proteins";
-
 	private static final String LEADING_RAZOR_PROTEIN = "Leading razor protein";
-
 	private static final String GENES = "Gene names";
+	private static final String EXPERIMENT = "Experiment";
 
 	public MaxLFQuantParser() {
 		super();
@@ -227,6 +226,7 @@ public class MaxLFQuantParser extends AbstractQuantParser {
 			// QuantifiedPeptide.getQuantifiedPeptides(getPSMMap().values(),
 			// distinguishModifiedPeptides));
 			// }
+
 		}
 	}
 
@@ -283,6 +283,7 @@ public class MaxLFQuantParser extends AbstractQuantParser {
 						}
 						final QuantifiedPSMInterface psm = new QuantifiedPSM(sequence, peptideToSpectraMap, scanNumber,
 								chargeState, rawFileName, false, isDistinguishModifiedSequences(), isChargeSensible());
+
 						ret.put(id, psm);
 					}
 				} finally {
@@ -410,6 +411,17 @@ public class MaxLFQuantParser extends AbstractQuantParser {
 				}
 				StaticQuantMaps.addRawFileName(rawFileName);
 
+				//
+				String experimentId = null;
+				if (mapValues.containsKey(EXPERIMENT)) {
+					experimentId = mapValues.get(EXPERIMENT);
+				} else {
+					experimentId = rawFileName;
+				}
+				if (condition == null) {
+					condition = new QuantCondition(experimentId);
+				}
+
 				// see the psm references
 				final List<QuantifiedPSMInterface> psmsOfPeptide = new ArrayList<QuantifiedPSMInterface>();
 				final TIntList psmIDs = new TIntArrayList();
@@ -428,25 +440,43 @@ public class MaxLFQuantParser extends AbstractQuantParser {
 				}
 				for (final int psmId : psmIDs.toArray()) {
 					final QuantifiedPSMInterface psm = psmsById.get(psmId);
+					// set condition to peptide
+					psm.addCondition(condition);
 					psmsOfPeptide.add(psm);
 				}
 
 				QuantifiedPeptideInterface peptide = new QuantifiedPeptide(psmsOfPeptide.get(0), isIgnoreTaxonomies(),
 						isDistinguishModifiedSequences(), isChargeSensible());
+
 				// add ptms
 				for (final PTM ptm : ptms) {
 					peptide.addPTM(ptm);
 				}
+				// after adding ptms, we get the key
+				final String peptideKey = KeyUtils.getInstance().getSequenceChargeKey(peptide,
+						isDistinguishModifiedSequences(), isChargeSensible());
+
+				// we dont use this because mazquant evidences can have multiple
+				// peptides+PTM+charges with different intensities
+				if (StaticQuantMaps.peptideMap.containsKey(peptideKey)) {
+					peptide = StaticQuantMaps.peptideMap.getItem(peptideKey);
+				}
+				StaticQuantMaps.peptideMap.addItem(peptide);
+				// add to map
+				if (!localPeptideMap.containsKey(peptide.getKey())) {
+					localPeptideMap.put(peptide.getKey(), peptide);
+				}
+
 				// add psms to peptide and ptms to psms
-				if (psmsOfPeptide.size() > 1) {
-					for (int i = 1; i < psmsOfPeptide.size(); i++) {
-						final QuantifiedPSMInterface psm = psmsOfPeptide.get(i);
-						peptide.addPSM(psm, true);
-						for (final PTM ptm : ptms) {
-							psm.addPTM(ptm);
-						}
+
+				for (int i = 0; i < psmsOfPeptide.size(); i++) {
+					final QuantifiedPSMInterface psm = psmsOfPeptide.get(i);
+					peptide.addPSM(psm, true);
+					for (final PTM ptm : ptms) {
+						psm.addPTM(ptm);
 					}
 				}
+
 				// PIF
 				if (mapValues.containsKey(PIF)) {
 					try {
@@ -481,19 +511,7 @@ public class MaxLFQuantParser extends AbstractQuantParser {
 				// localization score
 				final String localizationScore = null; // TODO
 
-				final String peptideKey = KeyUtils.getInstance().getSequenceChargeKey(peptide,
-						isDistinguishModifiedSequences(), isChargeSensible());
-				// in case of TMT, the psm may have been created before
-				if (StaticQuantMaps.peptideMap.containsKey(peptideKey)) {
-					peptide = StaticQuantMaps.peptideMap.getItem(peptideKey);
-				}
-				StaticQuantMaps.peptideMap.addItem(peptide);
-
 				// psms.add(quantifiedPSM);
-				// add to map
-				if (!localPeptideMap.containsKey(peptide.getKey())) {
-					localPeptideMap.put(peptide.getKey(), peptide);
-				}
 
 				// Peptide intensity: amounts
 
@@ -706,4 +724,5 @@ public class MaxLFQuantParser extends AbstractQuantParser {
 		}
 		return true;
 	}
+
 }
