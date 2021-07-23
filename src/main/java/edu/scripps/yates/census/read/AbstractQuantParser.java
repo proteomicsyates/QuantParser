@@ -218,7 +218,9 @@ public abstract class AbstractQuantParser implements QuantParser {
 			QuantificationLabel label2, QuantCondition cond2) throws FileNotFoundException {
 		final Map<QuantificationLabel, QuantCondition> map = new THashMap<QuantificationLabel, QuantCondition>();
 		map.put(label1, cond1);
-		map.put(label2, cond2);
+		if (label2 != null && cond2 != null) {
+			map.put(label2, cond2);
+		}
 		addFile(inputFile, map, label1, label2);
 	}
 
