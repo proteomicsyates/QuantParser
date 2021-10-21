@@ -527,7 +527,7 @@ public class CensusOutParser extends AbstractQuantParser {
 		if (conditionsByLabelsByFile == null || conditionsByLabelsByFile.isEmpty()) {
 			return;
 		}
-		if (getTmtPlex() != null) {
+		if (getTmtPlex() != null & getTmtPlex() > 0) {
 			final int tmtPlex = getTmtPlex();
 			final List<QuantificationLabel> possibleLabels = QuantificationLabel.getTMTPlexLabels(tmtPlex);
 
