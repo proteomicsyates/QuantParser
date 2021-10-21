@@ -264,6 +264,9 @@ public class CensusOutParser extends AbstractQuantParser {
 				}
 			}
 		}
+		if (tmtPlex == 0) {
+			tmtPlex = null;
+		}
 		return tmtPlex;
 	}
 
