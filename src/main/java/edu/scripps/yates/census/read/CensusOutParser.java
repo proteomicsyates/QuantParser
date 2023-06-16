@@ -264,9 +264,9 @@ public class CensusOutParser extends AbstractQuantParser {
 				}
 			}
 		}
-		if (tmtPlex == 0) {
-			tmtPlex = null;
-		}
+//		if (tmtPlex == 0) {
+//			tmtPlex = null;
+//		}
 		return tmtPlex;
 	}
 
@@ -960,7 +960,7 @@ public class CensusOutParser extends AbstractQuantParser {
 						}
 					}
 					// TMT
-					if (getTmtPlex() != null) {
+					if (getTmtPlex() != 0) {
 						final int plex = getTmtPlex();
 						final List<QuantificationLabel> labels = QuantificationLabel.getTMTPlexLabels(plex);
 						if (labels.contains(labelNumerator) && labels.contains(labelDenominator)) {
@@ -1035,7 +1035,7 @@ public class CensusOutParser extends AbstractQuantParser {
 				// no ratios
 			}
 			int plex = 0;
-			if (getTmtPlex() != null) {
+			if (getTmtPlex() != 0) {
 				plex = getTmtPlex();
 				final List<QuantificationLabel> labels = QuantificationLabel.getTMTPlexLabels(plex);
 				for (int channel = 1; channel <= plex; channel++) {
